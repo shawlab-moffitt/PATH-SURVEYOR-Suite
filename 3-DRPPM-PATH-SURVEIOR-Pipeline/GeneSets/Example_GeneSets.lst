@@ -1,0 +1,6 @@
+MSigDB	GeneSets/MSigDB/MSigDB_HS_GeneSet.zip
+LINCS_DN	GeneSets/LINCS_L1000/LINCS_L1000_DN_GeneSet.zip
+LINCS_UP	GeneSets/LINCS_L1000/LINCS_L1000_UP_GeneSet.zip
+ERstress	GeneSets/ER_Stress/ERstress_GeneSet.txt
+ImmuneSig	GeneSets/ImmuneSig/ImmuneSignatures.txt
+CellMarker	GeneSets/CellMarker/CellMarker_gsNsym_HS_v2.txt

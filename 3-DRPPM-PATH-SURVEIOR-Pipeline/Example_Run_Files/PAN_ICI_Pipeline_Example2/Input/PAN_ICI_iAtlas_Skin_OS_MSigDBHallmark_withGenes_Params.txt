@@ -1,0 +1,11 @@
+Project_Name	Pan_ICI_iAtlas_Skin_OS
+Expression_Matrix_file	Example_Run_Files/Pan_ICI_iAtlas_Expr_Skin.zip
+Meta_Data_File	Example_Run_Files/Pan_ICI_iAtlas_Meta_Skin.txt
+Gene_Set_File	GeneSets/MSigDB/MSigDB_Hallmark_GeneSets.txt
+Gene_Set_Name	MSigDB.Hallmark
+Output_File_Path	
+Survival_Time_Label	OS.time
+Survival_ID_Label	OS
+Rank_Genes	TRUE
+Covariate_Column_Label	
+Covariate_Reference	

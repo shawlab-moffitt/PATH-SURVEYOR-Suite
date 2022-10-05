@@ -1,0 +1,11 @@
+Project_Name	
+Expression_Matrix_file	
+Meta_Data_File	
+Gene_Set_File	
+Gene_Set_Name	
+Output_File_Path	
+Survival_Time_Label	
+Survival_ID_Label	
+Rank_Genes	
+Covariate_Column_Label	
+Covariate_Reference	
