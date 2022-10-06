@@ -111,17 +111,17 @@ git clone https://github.com/shawlab-moffitt/DRPPM-PATH-SURVIOER-Pipeline.git
 
 | Parameter | User Input |
 | --- | --- |
-| Project_Name | [User_Defined] |
-| Expression_Matrix_file | [~/Path/To/Expression.txt] |
-| Meta_Data_File | [~/Path/To/Meta.txt] |
-| Gene_Set_File | [~/Path/To/GeneSetFile.[txt/tsv/gmt/RData] or ~/Path/To/GeneSetFiles.lst] |
-| Gene_Set_Name | [Desired Name for gene set (optional)]
-| Output_File_Path | [~/Path/To/Output/Folder/] |
-| Survival_Time_Label | [OS.time/EFS.time/PFI.time/ect (choose one)] |
-| Survival_ID_Label | [OS/EFS/PFI/ect (choose one)] |
+| Project_Name | [User Defined Project Name] |
+| Expression_Matrix_file | [Expression Matrix File] |
+| Meta_Data_File | [Clinical Meta Information File] |
+| Gene_Set_File | [Gene Set File] |
+| Gene_Set_Name | [Name of Gene Set]
+| Output_File_Path | [Path to Output Directory] |
+| Survival_Time_Label | [Survival/Event Time Column Name] |
+| Survival_ID_Label | [Survival/Event ID Column Name] |
 | Rank_Genes | [TRUE or FALSE] |
-| Covariate_Column_Label | [optional] |
-| Covariate_Reference | [optional] |
+| Covariate_Column_Label | [Covariate Column Name (Optional)] |
+| Covariate_Reference | [Covariate Reference Feature (Optional)] |
 
 ## Running the script
 
