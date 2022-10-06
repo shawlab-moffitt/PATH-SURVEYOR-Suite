@@ -116,6 +116,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-PATH-SURVIOER-Pipeline.git
 | Meta_Data_File | [Clinical Meta Information File] |
 | Gene_Set_File | [Gene Set File] |
 | Gene_Set_Name | [Name of Gene Set]
+| Jaccard_Top_Hits | [Number of Top Pathways for Jaccard Connectivity] |
 | Output_File_Path | [Path to Output Directory] |
 | Survival_Time_Label | [Survival/Event Time Column Name] |
 | Survival_ID_Label | [Survival/Event ID Column Name] |
