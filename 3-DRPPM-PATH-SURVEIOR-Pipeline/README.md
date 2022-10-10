@@ -121,6 +121,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-PATH-SURVIOER-Pipeline.git
 | Survival_Time_Label | [Survival/Event Time Column Name] |
 | Survival_ID_Label | [Survival/Event ID Column Name] |
 | Rank_Genes | [TRUE or FALSE] |
+| Perform_GSEA | [TRUE or FALSE] |
 | Covariate_Column_Label | [Covariate Column Name (Optional)] |
 | Covariate_Reference | [Covariate Reference Feature (Optional)] |
 
