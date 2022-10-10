@@ -1,4 +1,4 @@
-# DRPPM-Pre-Rank-GSEA
+# DRPPM-Hazard-Ratio-Ranked-GSEA
 
 # Introduction
 
