@@ -4,7 +4,16 @@
 
 The integration of patient genome expression data, phenotype data, and clinical data can serve as an integral resource for patient prognosis. The DRPPM PATH SURVEIOR Suite: **Path**way level **Surv**ival **E**xam**i**nat**or** serves to do just that, by examining the interaction of gene or gene set pathway expression with cilinical data to discover prominent features that play a role in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards underlying features affective survival. Through a systematic Cox proportional regression pipeline the expression of individual genes or gene set pathways is linked with a hazard ratio and p.values to determine signifigance and patient risk, which can be followed by interactive visualization in the suite of R Shiny applications.
 
-Users can download and employ all of the tools locally and perform gain this in-depth perspective of their own data. To start, we provide example skin and kidney cancer data from the PAN ICI (Immune Checkpoint Inhibition) iAtlas database. 
+Users can download and employ all of the tools locally to perform analyses and gain an in-depth perspective of their own data. To start, we provide example skin and kidney cancer data from the PAN ICI (Immune Checkpoint Inhibition) iAtlas database. Additionally, we provied a comprehensive set of pathways which havew been derieved from a variety of databases, such as MSigDB, LINCS L1000, Cell Marker, as well as derived gene sets focusing on ER stress and immune signatures. The example data and provided gene sets will be referenced and utilized throughout the guided overview of the DRPPM-PATH-SURVEIOR Suite of tools. 
+
+## The DRPPM-PATH-SURVEIOR Family
+
+* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp
+* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/3-DRPPM-PATH-SURVEIOR-Pipeline
+* R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/4-DRPPM-Jaccard_Connectivity_App
+* R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App
+
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/mian_schematic.PNG?raw=true)
 
 
 
