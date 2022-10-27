@@ -16,7 +16,105 @@ Users can download and employ all of the tools locally to perform analyses and g
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/blob/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp/App_Demo_Pictures/mian_schematic.PNG?raw=true)
 
 
+# Installation
 
+* Install DRPPM-PATH-SURVEIOR Suite GitHub repository
+  * git clone https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite.git
+  * Download and unzip repository https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/archive/refs/heads/main.zip
+* Set working directory to DRPPM-PATH-SURVEIOR-Suite folder
+* Install required R packages
+  * Suite of tools was built on R version 4.1
+  * R script for package installation is provided in the “1-Getting_Started” folder
+  * https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/blob/main/1-Getting_Started/1-R_Package_Installation/R_Package_Installation.R
+
+# Required Files
+
+* Gene Expression File
+  * Tab delimited matrix with gene symbols in the first column and sample names as the first-row header
+  * Remove duplicate gene symbols
+  * Depending on the size, users may want to remove lowly expressed genes to reduce load time
+* Clinical Meta Information File
+  * Tab-delimited file which should contain a first column of sample names matching the names in the expression matrix, followed by event and time-to-event information, as well as additional covariates or pre-processed scores
+*	Clinical Feature Parameter File
+  * Tab-delimited two-column file where the first column consists of column names of the “Clinical Meta Information File” and the second column defining the column type
+    * **SampleName** (mandatory): Contains sample names matching the expression data 
+    * **SurvivalTime** (mandatory): Contains the overall survival time in days for the samples (can be other types of survival)
+    * **SurvivalID** (mandatory): Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
+    * **SampleType**: Higher level grouping of patient samples 
+    * **Feature** (optional): Clinical or non-clinical features that can be included in the Cox-hazard analysis model.
+
+# Immune Deconvolution
+
+*	Script
+  * 1-Getting_Started/2-Immune_Deconvolution/Immune_Deconvolution.R
+  * Only available for R version 4.1 or greater
+*	Input
+  * ProjectName: A descriptive name for your project/data
+  * File inputs: Supply the path and file name or your expression matrix, clinical meta information, and clinical meta feature parameter files
+  * Output_Path: Provide a path to write the output files to
+  * Immune Deconvolution Methods: Indicate with TRUE or FALSE which methods to run
+*	Output
+  * Updated clinical meta information and clinical meta feature parameter file which can be used as input to the interactive Shiny app
+
+More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/1-Getting_Started/2-Immune_Deconvolution
+
+# DRPPM-PATH-SURVEIOR: Interactive Mode
+
+*	Script
+  * DRPPM-PATH-SURVEIOR-Suite/2-DRPPM-PATH-SURVEIOR-InteractiveApp/app.R
+*	Input
+  * Project Name: A descriptive name for your project/data
+  * File inputs: Supply the path and file name or your expression matrix, clinical meta information, and clinical meta feature parameter files
+  * Advanced User Input
+    * Pre-set UI input options to be chosen upon startup, further described in GitHub README
+  * Gene Set and Markdown files
+    * These are proved files in the GitHub repository. Please ensure the path to these files are correct.
+
+More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp
+
+# DRPPM-PATH-SURVEIOR: Pipeline Mode
+
+*	cript
+  * Scripts to run in R Studio and in a command line interface found here: DRPPM-PATH-SURVEIOR-Suite/3-DRPPM-PATH-SURVEIOR-Pipeline/
+*	Input
+  * Parameter File: Tab-delimited two-column file containing input file paths and run parameters described in the GitHub https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline#parameter-file
+    * Pathway Level: When ranking gene set pathways according to Cox proportional hazards, a gene set file and name is required. Users can include a number of top pathways ranked on significance, and a Jaccard connectivity matrix will be included in the output
+    * Gene Level: When ranking individual genes, no gene set file is required, though, if one is included, users can select to perform GSEA with a hazard ratio ranked list of genes upon Cox regression completion.
+*	Output
+  * ssGSEA score table (gene set file required)
+  * Median Cut-Point table
+  * Cox Proportional Hazard Regression output for all pathways or genes
+  * Jaccard Connectivity Matrix (gene set file required)
+  * Hazard Ratio Ranked GSEA (gene set file required)
+
+More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/3-DRPPM-PATH-SURVEIOR-Pipeline
+
+# DRPPM-PATH-SURVEIOR: Jaccard Connectivity
+
+*	Script
+  * DRPPM-PATH-SURVEIOR-Suite/4-DRPPM-Jaccard_Connectivity_App/app.R
+*	Input
+  * Gene Set File: 
+    * GeneSet_Data/Comprehensive_GeneSet.Rdata
+  * User-Derived (Input upon app start-up)
+    * CoxPH output file from DRPPM-PATH-SURVEIOR Pipeline pathway analysis
+    * CoxPH output file from DRPPM-PATH-SURVEIOR Pipeline gene analysis 
+*	For gene cluster annotation (Optional) 
+    * GMT file of gene set pathways is also accepted
+
+More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/4-DRPPM-Jaccard_Connectivity_App
+
+# DRPPM-PATH-SURVEIOR: Hazard Ratio Ranked GSEA
+
+*	Script
+    * DRPPM-PATH-SURVEIOR-Suite/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App/app.R
+*	Input
+    * Gene Set File:
+      * GeneSet_Data/GeneSets.zip
+    * User-Derived (Input upon app start-up)
+      * CoxPH output file from DRPPM-PATH-SURVEIOR Pipeline gene analysis
+
+More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App
 
 # Disclamer
 
