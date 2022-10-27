@@ -45,16 +45,17 @@ Users can download and employ all of the tools locally to perform analyses and g
 
 # Immune Deconvolution
 
-*	Script
+* Script
   * 1-Getting_Started/2-Immune_Deconvolution/Immune_Deconvolution.R
   * Only available for R version 4.1 or greater
-*	Input
-  *	ProjectName: A descriptive name for your project/data
+* Input
+  * ProjectName: A descriptive name for your project/data
   * File inputs: Supply the path and file name or your expression matrix, clinical meta information, and clinical meta feature parameter files
   * Output_Path: Provide a path to write the output files to
   * Immune Deconvolution Methods: Indicate with TRUE or FALSE which methods to run
-*	Output
+* Output
   * Updated clinical meta information and clinical meta feature parameter file which can be used as input to the interactive Shiny app
+
 
 More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/1-Getting_Started/2-Immune_Deconvolution
 
