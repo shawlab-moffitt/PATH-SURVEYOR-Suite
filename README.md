@@ -13,7 +13,7 @@ Users can download and employ all of the tools locally to perform analyses and g
 * R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/4-DRPPM-Jaccard_Connectivity_App
 * R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/mian_schematic.PNG?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/blob/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp/App_Demo_Pictures/mian_schematic.PNG?raw=true)
 
 
 
