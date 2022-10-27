@@ -49,7 +49,7 @@ Users can download and employ all of the tools locally to perform analyses and g
   * 1-Getting_Started/2-Immune_Deconvolution/Immune_Deconvolution.R
   * Only available for R version 4.1 or greater
 *	Input
-  * ProjectName: A descriptive name for your project/data
+  *	ProjectName: A descriptive name for your project/data
   * File inputs: Supply the path and file name or your expression matrix, clinical meta information, and clinical meta feature parameter files
   * Output_Path: Provide a path to write the output files to
   * Immune Deconvolution Methods: Indicate with TRUE or FALSE which methods to run
@@ -63,7 +63,7 @@ More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Su
 *	Script
   * DRPPM-PATH-SURVEIOR-Suite/2-DRPPM-PATH-SURVEIOR-InteractiveApp/app.R
 *	Input
-  * Project Name: A descriptive name for your project/data
+  *	Project Name: A descriptive name for your project/data
   * File inputs: Supply the path and file name or your expression matrix, clinical meta information, and clinical meta feature parameter files
   * Advanced User Input
     * Pre-set UI input options to be chosen upon startup, further described in GitHub README
@@ -74,7 +74,7 @@ More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Su
 
 # DRPPM-PATH-SURVEIOR: Pipeline Mode
 
-*	cript
+*	Script
   * Scripts to run in R Studio and in a command line interface found here: DRPPM-PATH-SURVEIOR-Suite/3-DRPPM-PATH-SURVEIOR-Pipeline/
 *	Input
   * Parameter File: Tab-delimited two-column file containing input file paths and run parameters described in the GitHub https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline#parameter-file
