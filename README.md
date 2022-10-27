@@ -75,13 +75,13 @@ More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Su
 
 # DRPPM-PATH-SURVEIOR: Pipeline Mode
 
-*	Script
+* Script
   * Scripts to run in R Studio and in a command line interface found here: DRPPM-PATH-SURVEIOR-Suite/3-DRPPM-PATH-SURVEIOR-Pipeline/
-*	Input
+* Input
   * Parameter File: Tab-delimited two-column file containing input file paths and run parameters described in the GitHub https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline#parameter-file
     * Pathway Level: When ranking gene set pathways according to Cox proportional hazards, a gene set file and name is required. Users can include a number of top pathways ranked on significance, and a Jaccard connectivity matrix will be included in the output
     * Gene Level: When ranking individual genes, no gene set file is required, though, if one is included, users can select to perform GSEA with a hazard ratio ranked list of genes upon Cox regression completion.
-*	Output
+* Output
   * ssGSEA score table (gene set file required)
   * Median Cut-Point table
   * Cox Proportional Hazard Regression output for all pathways or genes
