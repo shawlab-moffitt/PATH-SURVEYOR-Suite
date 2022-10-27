@@ -61,15 +61,15 @@ More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Su
 
 # DRPPM-PATH-SURVEIOR: Interactive Mode
 
-*	Script
+* Script
   * DRPPM-PATH-SURVEIOR-Suite/2-DRPPM-PATH-SURVEIOR-InteractiveApp/app.R
-*	Input
-  *	Project Name: A descriptive name for your project/data
+* Input
+  * Project Name: A descriptive name for your project/data
   * File inputs: Supply the path and file name or your expression matrix, clinical meta information, and clinical meta feature parameter files
   * Advanced User Input
     * Pre-set UI input options to be chosen upon startup, further described in GitHub README
   * Gene Set and Markdown files
-    * These are proved files in the GitHub repository. Please ensure the path to these files are correct.
+    * These are proved files in the GitHub repository. Please ensure the path to these files are correct
 
 More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp
 
