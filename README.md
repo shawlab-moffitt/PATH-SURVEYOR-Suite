@@ -92,24 +92,24 @@ More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Su
 
 # DRPPM-PATH-SURVEIOR: Jaccard Connectivity
 
-*	Script
+* Script
   * DRPPM-PATH-SURVEIOR-Suite/4-DRPPM-Jaccard_Connectivity_App/app.R
-*	Input
+* Input
   * Gene Set File: 
     * GeneSet_Data/Comprehensive_GeneSet.Rdata
   * User-Derived (Input upon app start-up)
     * CoxPH output file from DRPPM-PATH-SURVEIOR Pipeline pathway analysis
     * CoxPH output file from DRPPM-PATH-SURVEIOR Pipeline gene analysis 
-*	For gene cluster annotation (Optional) 
+* For gene cluster annotation (Optional) 
     * GMT file of gene set pathways is also accepted
 
 More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/4-DRPPM-Jaccard_Connectivity_App
 
 # DRPPM-PATH-SURVEIOR: Hazard Ratio Ranked GSEA
 
-*	Script
+* Script
     * DRPPM-PATH-SURVEIOR-Suite/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App/app.R
-*	Input
+* Input
     * Gene Set File:
       * GeneSet_Data/GeneSets.zip
     * User-Derived (Input upon app start-up)
