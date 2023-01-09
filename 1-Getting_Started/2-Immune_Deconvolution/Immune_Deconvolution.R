@@ -5,13 +5,13 @@
 
 ProjectName <- "PANICI_SkinCancer"
 
-Expression_Matrix_File <- "~/R/data/Pan_ICI_Checkpoint/iatlas-ici-genes_norm_max_IGH_v2.txt"
+Expression_Matrix_File <- "Test_Input_Data/Expression_Data_PAN_ICI_iAtlas_SkinCancer.zip"
 
-Meta_Data_File <- "~/R/data/Pan_ICI_Checkpoint/Subset_Data/Skin/Pan_ICI_iAtlas_Meta_Skin.txt"
+Meta_Data_File <- "Test_Input_Data/Clinical_Data_PAN_ICI_iAtlas_SkinCancer.txt"
 
-Meta_Data_Param_File <- "~/R/data/Pan_ICI_Checkpoint/Pan_ICI_iAtlas_MetaData_Params.txt"
+Meta_Data_Param_File <- "Test_Input_Data/Clinical_Parameters_PAN_ICI_iAtlas_SkinCancer.txt"
 
-Output_Path <- "~/R/data/Pan_ICI_Checkpoint/Subset_Data/Skin/"
+Output_Path <- "Test_Output_Data/"
 
 quantiseq <- TRUE
 mcp_counter <- TRUE
@@ -28,9 +28,10 @@ cibersort <- TRUE
 cibersort_abs <- TRUE
 
 # CIBERSORT.R path and file name
-CIBERSORT_Script <- "~/R/data/Cibersort/cibersort/CIBERSORT.R"
+CIBERSORT_Script <- "Path/To/CIBERSORT.R"
 # LM22 path and file name
-LM22_File <- "~/R/data/Cibersort/cibersort/LM22.txt"
+LM22_File <- "Path/To/LM22.txt"
+
 
 
 

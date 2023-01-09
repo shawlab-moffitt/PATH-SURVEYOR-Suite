@@ -3,7 +3,9 @@
 
 ####----Gene Set File Input----####
 
-GeneSet_File <- "~/R/data/GeneSetData/Comprehensive/GeneSets.zip"
+GeneSet_File <- "GeneSet_Data/GeneSets.zip"
+
+set.seed(100)
 
 
 ############################ Copyright 2022 Moffitt Cancer Center ############################
@@ -33,21 +35,10 @@ if (any(installed_packages_BIOC == FALSE)) {
 invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
-####----Read In and Sort File----####
+
+####----Read In File----####
 
 GeneSet <- as.data.frame(read_delim(GeneSet_File, delim = '\t', col_names = T))
-msigdb <- GeneSet[which(GeneSet$GeneSet == "msigdb"),]
-msigdb_mm <- GeneSet[which(GeneSet$GeneSet == "msigdb_mm"),]
-hallmark <- msigdb[which(grepl("HALLMARK",msigdb$term)),]
-hallmark_mm <- msigdb_mm[which(grepl("HALLMARK",msigdb_mm$term)),]
-lincsu <- GeneSet[which(GeneSet$GeneSet == "lincsu"),]
-lincsd <- GeneSet[which(GeneSet$GeneSet == "lincsd"),]
-cellm <- GeneSet[which(GeneSet$GeneSet == "cellm"),]
-cellm_mm <- GeneSet[which(GeneSet$GeneSet == "cellm_mm"),]
-immunesig <- GeneSet[which(GeneSet$GeneSet == "ImmuneSig"),]
-erstress <- GeneSet[which(GeneSet$GeneSet == "ERStress"),]
-GeneSet_mm <- GeneSet[which(GeneSet$GeneSet %in% c("msigdb_mm","cellm_mm")),]
-
 
 
 #increase file upload size
@@ -121,22 +112,6 @@ ui <-
 
 server <- function(input, output, session) {
   
-  #output$rendGeneSetChosen <- renderUI({
-  #  
-  #  if (input$SpecimenType == "Human") {
-  #    radioButtons("GeneSetChosen","Choose Gene Set:",
-  #                 choices = c("MSigDB - Hallmark","MSigDB - All","LINCS L1000 Up-Regulated","LINCS L1000 Down-Regulated","Cell Marker","ER Stress","Immune Signatures","All Gene Sets","User Upload"),
-  #                 selected = "MSigDB - Hallmark", inline = F)
-  #  }
-  #  else if (input$SpecimenType == "Mouse") {
-  #    radioButtons("GeneSetChosen","Choose Gene Set:",
-  #                 choices = c("MSigDB - Hallmark" = "MSigDB - Hallmark - Mouse","MSigDB - All" = "MSigDB - All - Mouse","Cell Marker" = "Cell Marker - Mouse","All Gene Sets" = "All Gene Sets - Mouse","User Upload"),
-  #                 selected = "MSigDB - Hallmark - Mouse", inline = F)
-  #  }
-  #  
-  #  
-  #  
-  #})
   
   output$rendSpecimenType <- renderUI({
     
@@ -148,21 +123,25 @@ server <- function(input, output, session) {
     
   })
   
+  
   output$rendGeneSetChosen <- renderUI({
     
+    data_options <- unique(GeneSet[,3])
+    data_options_HS <- grep("_mm",data_options,value = T, invert = T)
+    
     if (input$UserUploadCheck == FALSE) {
-      
-      if (input$SpecimenType == "Human") {
-        selectInput("GeneSetChosen","Choose Gene Set:",
-                    choices = c("MSigDB - Hallmark","MSigDB - All","LINCS L1000 Up-Regulated","LINCS L1000 Down-Regulated","Cell Marker","ER Stress","Immune Signatures","All Gene Sets"),
-                    selected = "MSigDB - Hallmark")
+      if (!is.null(input$SpecimenType)) {
+        if (input$SpecimenType == "Human") {
+          selectInput("GeneSetChosen","Choose Gene Set:",
+                      choices = c("MSigDB - Hallmark",data_options_HS),
+                      selected = "MSigDB - Hallmark")
+        }
+        else if (input$SpecimenType == "Mouse") {
+          selectInput("GeneSetChosen","Choose Gene Set:",
+                      choices = c("MSigDB - Hallmark" = "Hallmark_mm","MSigDB" = "msigdb_mm","Cell Marker" = "cellm_mm"),
+                      selected = "MSigDB - Hallmark")
+        }
       }
-      else if (input$SpecimenType == "Mouse") {
-        selectInput("GeneSetChosen","Choose Gene Set:",
-                    choices = c("MSigDB - Hallmark" = "MSigDB - Hallmark - Mouse","MSigDB - All" = "MSigDB - All - Mouse","Cell Marker" = "Cell Marker - Mouse","All Gene Sets" = "All Gene Sets - Mouse"),
-                    selected = "MSigDB - Hallmark - Mouse")
-      }
-      
     }
     
   })
@@ -262,66 +241,95 @@ server <- function(input, output, session) {
     }
     else {
       
-      if (input$GeneSetChosen == "MSigDB - All") {
+      gs_chosen <- input$GeneSetChosen
+      
+      if (gs_chosen == "MSigDB - Hallmark") {
         
-        gmt <- msigdb[,c(1,2)]
-        
-      }
-      else if (input$GeneSetChosen == "MSigDB - All - Mouse") {
-        
-        gmt <- msigdb_mm[,c(1,2)]
-        
-      }
-      else if (input$GeneSetChosen == "LINCS L1000 Up-Regulated") {
-        
-        gmt <- lincsu[,c(1,2)]
+        msigdb_sub <- GeneSet[which(GeneSet[,3] == "MSigDB"),]
+        GeneSet_sub <- msigdb_sub[which(grepl("HALLMARK",msigdb_sub$term)),]
+        gmt <- GeneSet_sub[,c(1,2)]
         
       }
-      else if (input$GeneSetChosen == "LINCS L1000 Down-Regulated") {
+      else if (gs_chosen == "Hallmark_mm") {
         
-        gmt <- lincsd[,c(1,2)]
-        
-      }
-      else if (input$GeneSetChosen == "Cell Marker") {
-        
-        gmt <- cellm[,c(1,2)]
+        msigdb_sub <- GeneSet[which(GeneSet[,3] == "msigdb_mm"),]
+        GeneSet_sub <- msigdb_sub[which(grepl("HALLMARK",msigdb_sub$term)),]
+        gmt <- GeneSet_sub[,c(1,2)]
         
       }
-      else if (input$GeneSetChosen == "Cell Marker - Mouse") {
+      else {
         
-        gmt <- cellm_mm[,c(1,2)]
-        
-      }
-      else if (input$GeneSetChosen == "All Gene Sets") {
-        
-        gmt <- GeneSet[,c(1,2)]
+        GeneSet_sub <- GeneSet[which(GeneSet[,3] == gs_chosen),]
+        gmt <- GeneSet_sub[,c(1,2)]
         
       }
-      else if (input$GeneSetChosen == "All Gene Sets - Mouse") {
-        
-        gmt <- GeneSet_mm[,c(1,2)]
-        
-      }
-      else if (input$GeneSetChosen == "MSigDB - Hallmark") {
-        
-        gmt <- hallmark[,c(1,2)]
-        
-      }
-      else if (input$GeneSetChosen == "MSigDB - Hallmark - Mouse") {
-        
-        gmt <- hallmark_mm[,c(1,2)]
-        
-      }
-      else if (input$GeneSetChosen == "ER Stress") {
-        
-        gmt <- erstress[,c(1,2)]
-        
-      }
-      else if (input$GeneSetChosen == "Immune Signatures") {
-        
-        gmt <- immunesig[,c(1,2)]
-        
-      }
+      
+      #if (gs_chosen == "MSigDB") {
+      #  
+      #  GeneSet_sub <- GeneSet[which(GeneSet[,3] == gs_chosen),]
+      #  gmt <- GeneSet_sub[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "MSigDB_mm") {
+      #  
+      #  gmt <- msigdb_mm[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "LINCS L1000 Up-Regulated") {
+      #  
+      #  gmt <- lincsu[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "LINCS L1000 Down-Regulated") {
+      #  
+      #  gmt <- lincsd[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "Cell Marker") {
+      #  
+      #  gmt <- cellm[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "Cell Marker_mm") {
+      #  
+      #  gmt <- cellm_mm[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "All Gene Sets") {
+      #  
+      #  gmt <- GeneSet[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "All Gene Sets_mm") {
+      #  
+      #  gmt <- GeneSet_mm[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "MSigDB - Hallmark") {
+      #  
+      #  gmt <- hallmark[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "MSigDB - Hallmark_mm") {
+      #  
+      #  gmt <- hallmark_mm[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "ER Stress") {
+      #  
+      #  gmt <- erstress[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "Immune Signatures") {
+      #  
+      #  gmt <- immunesig[,c(1,2)]
+      #  
+      #}
+      #else if (gs_chosen == "TCGA") {
+      #  
+      #  gmt <- tcga_global[,c(1,2)]
+      #  
+      #}
       
     }
     
@@ -564,48 +572,51 @@ server <- function(input, output, session) {
     genes1 <- as.matrix(res_df[which(res_df$ID==geneset_name),"core_enrichment"])
     genes2 <- strsplit(genes1,"/")
     GeneSymbol <- as.data.frame(genes2)
-    colnames(GeneSymbol)[1] <- "Gene_Symbol"
-    GeneSymbol$Leading_Edge_Rank <- as.numeric(rownames(GeneSymbol))
-    GeneSymbol <- GeneSymbol[,c("Leading_Edge_Rank","Gene_Symbol")]
-    
-    ranking_df <- stack(geneList)
-    uploaded_df <- user_gl_df()
-    if (input$UserGeneListheaderCheck == TRUE) {
-      if (ncol(uploaded_df) == 2) {
-        rank_col_name <- colnames(uploaded_df)[2]
-      }
-      if (ncol(uploaded_df) == 1) {
-        rank_col_name <- "Overall_Rank"
-      }
-      if (ncol(uploaded_df) > 2) {
-        if (colnames(uploaded_df)[2] == "Hazard_Ratio" | colnames(uploaded_df)[2] == "estimate") {
-          rank_col_name <- "Hazard_Ratio"
+    if (ncol(GeneSymbol) > 0) {
+      colnames(GeneSymbol)[1] <- "Gene_Symbol"
+      GeneSymbol$Leading_Edge_Rank <- as.numeric(rownames(GeneSymbol))
+      GeneSymbol <- GeneSymbol[,c("Leading_Edge_Rank","Gene_Symbol")]
+      
+      ranking_df <- stack(geneList)
+      uploaded_df <- user_gl_df()
+      if (input$UserGeneListheaderCheck == TRUE) {
+        if (ncol(uploaded_df) == 2) {
+          rank_col_name <- colnames(uploaded_df)[2]
         }
-        else {
+        if (ncol(uploaded_df) == 1) {
+          rank_col_name <- "Overall_Rank"
+        }
+        if (ncol(uploaded_df) > 2) {
+          if (colnames(uploaded_df)[2] == "Hazard_Ratio" | colnames(uploaded_df)[2] == "estimate") {
+            rank_col_name <- "Hazard_Ratio"
+          }
+          else {
+            rank_col_name <- "Overall_Rank"
+          }
+        }
+      }
+      if (input$UserGeneListheaderCheck == FALSE) {
+        if (ncol(uploaded_df) == 2) {
+          rank_col_name <- "User_Uploaded_Ranking"
+        }
+        if (ncol(uploaded_df) != 2) {
           rank_col_name <- "Overall_Rank"
         }
       }
-    }
-    if (input$UserGeneListheaderCheck == FALSE) {
-      if (ncol(uploaded_df) == 2) {
-        rank_col_name <- "User_Uploaded_Ranking"
+      
+      colnames(ranking_df) <- c(rank_col_name,"Gene_Symbol")
+      
+      Leading_Merge <- merge(GeneSymbol,ranking_df,by = "Gene_Symbol",all.x = T)
+      if (NES < 0) {
+        Leading_Merge <- Leading_Merge[order(Leading_Merge[,1]),]
       }
-      if (ncol(uploaded_df) != 2) {
-        rank_col_name <- "Overall_Rank"
+      else if (NES > 0) {
+        Leading_Merge <- Leading_Merge[order(Leading_Merge[,1], decreasing = F),]
       }
+      Leading_Merge <- Leading_Merge[,c("Leading_Edge_Rank","Gene_Symbol",rank_col_name)]
+      Leading_Merge
     }
     
-    colnames(ranking_df) <- c(rank_col_name,"Gene_Symbol")
-    
-    Leading_Merge <- merge(GeneSymbol,ranking_df,by = "Gene_Symbol",all.x = T)
-    if (NES < 0) {
-      Leading_Merge <- Leading_Merge[order(Leading_Merge[,1]),]
-    }
-    else if (NES > 0) {
-      Leading_Merge <- Leading_Merge[order(Leading_Merge[,1], decreasing = F),]
-    }
-    Leading_Merge <- Leading_Merge[,c("Leading_Edge_Rank","Gene_Symbol",rank_col_name)]
-    Leading_Merge
     
   })
   
@@ -640,6 +651,7 @@ server <- function(input, output, session) {
   )
   
 }
+
 
 
 

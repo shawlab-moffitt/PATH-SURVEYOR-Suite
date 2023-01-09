@@ -1,9 +1,9 @@
 
 
 
-####----Gene Set File----####
+####---- Read in Files----####
 
-GeneSet_File <- "~/R/ShinyAppDev/DRPPM_PATH_SURVEIOR/GeneSet_Data/GeneSet_List.RData"
+GeneSet_File <- "GeneSet_Data/Comprehensive_GeneSet.RData"
 
 
 ############################ Copyright 2022 Moffitt Cancer Center ############################
@@ -15,10 +15,13 @@ GeneSet_File <- "~/R/ShinyAppDev/DRPPM_PATH_SURVEIOR/GeneSet_Data/GeneSet_List.R
 ##############################################################################################
 
 
+
+
 ####----Install and load packages----####
 
 packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","ggdendro","factoextra",
               "dplyr","DT","viridis","readr","shinycssloaders","stringr","tools","plotly","reshape2")
+
 
 installed_packages <- packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
@@ -32,6 +35,7 @@ if (any(installed_packages_BIOC == FALSE)) {
   BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
 }
 invisible(lapply(bioCpacks, library, character.only = TRUE))
+
 
 
 # R Data list load function for naming
@@ -52,13 +56,30 @@ jaccard <- function(a, b) {
   return (1-(intersection/union))
 }
 
+#CV function for variance
+cv <- function(x){
+  (sd(x)/mean(x))*100
+}
+
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  legend
+}
+
+## Initial Pathway Selected
+Path_Selec <- NULL
+
 shinytheme("sandstone")
 
 #increase file upload size
-options(shiny.maxRequestSize=50*1024^2)
+options(shiny.maxRequestSize=5000*1024^2)
+
+
 
 ui <- 
-  navbarPage("{ Jaccard Pathway Connectivity Index }",
+  navbarPage("{ Connectivity Index }",
              
              ####----Intra-Pathway Connectivity----####
              
@@ -67,6 +88,7 @@ ui <-
                         title = "Pathway Connectivity",
                         sidebarLayout(
                           sidebarPanel(
+                            width = 3,
                             tabsetPanel(
                               
                               ####----Pathway Input----####
@@ -79,8 +101,6 @@ ui <-
                                                 fileInput("UserPathwayFile","Upload File (.gmt/.tsv/.txt)",
                                                           accept = c(".gmt",".tsv",".txt")),
                                                 uiOutput("rendTopFeatureSelect"),
-                                                #numericInput("TopFeatureSelect","Top Number of Features to Process:",
-                                                #             value = 50, min = 3, width = "250px")
                                          ),
                                          column(3,
                                                 checkboxInput("HeaderCheckIntra","Header",value = T)
@@ -170,13 +190,17 @@ ui <-
                               ####----Jaccard Heatmap----####
                               
                               tabPanel("Heatmap",
-                                       withSpinner(jqui_resizable(plotOutput('JaccHeatmapIntra', width = "100%", height = "800px")), type = 6)
+                                       withSpinner(jqui_resizable(plotOutput('JaccHeatmapIntra', width = "100%", height = "800px")), type = 6),
+                                       downloadButton("dnldJaccHeatmapIntraPDF","Download as PDF"),
+                                       downloadButton("dnldJaccHeatmapIntraSVG","Download as SVG")
                               ),
                               
                               ####----Jaccard Clustering----####
                               
                               tabPanel("Clustering",
-                                       uiOutput("rendJaccDendo")
+                                       uiOutput("rendJaccDendo"),
+                                       downloadButton("dnldJaccDendoPDF","Download as PDF"),
+                                       downloadButton("dnldJaccDendoSVG","Download as SVG")
                               ),
                               
                               ####----Jaccard Cluster Annotation----####
@@ -193,6 +217,106 @@ ui <-
                       )
                       
                       
+             ),
+             tabPanel("Matrix Clustering",
+                      fluidPage(
+                        title = "Matrix Clustering",
+                        sidebarLayout(
+                          sidebarPanel(
+                            width = 3,
+                            tabsetPanel(
+                              ####----Cluster Parameters----####
+                              
+                              tabPanel("Cluster Parameters",
+                                       p(),
+                                       fileInput("UserMatrixFile","Upload Matrix", accept = c(".txt",".tsv",".csv")),
+                                       hr(),
+                                       h4("Clustering Parameters"),
+                                       fluidRow(
+                                         column(4,
+                                                selectInput("ClustMethodMat","Clustering Method:",
+                                                            choices = c("ward.D", "complete", "ward.D2", "single", "average", "mcquitty", "median", "centroid"))
+                                         ),
+                                         column(8,
+                                                numericInput("NumClustersMat", step = 1, label = "Number of Clusters (Cut Tree with ~k)", value = 10)
+                                         )
+                                       ),
+                                       checkboxInput("ViewClustTabMat","View Cluster Results Table"),
+                                       uiOutput("rendClustTabMat"),
+                                       downloadButton("dnldClustTabMat","Download Cluster Result"),
+                                       hr(),
+                                       h4("SIF Download"),
+                                       checkboxInput("PrevSIFMat","Preview SIF File",value = F),
+                                       uiOutput("rendSIFPreviewMat"),
+                                       downloadButton("dnldSIFTabMat","Download SIF File")
+                              ),
+                              tabPanel("Figure Parameters",
+                                       p(),
+                                       h4("Heatmap Parameters"),
+                                       selectInput("ColorPaletteMat", "Select Color Palette:",
+                                                   choices = c("Red/Blue" = "original",
+                                                               "OmniBlueRed" = "OmniBlueRed",
+                                                               "LightBlue/BlackRed" = "LightBlueBlackRed",
+                                                               "Green/Black/Red" = "GreenBlackRed",
+                                                               "Yellow/Green/Blue" = "YlGnBu","Inferno" = "Inferno",
+                                                               "Viridis" = "Viridis","Plasma" = "Plasma",
+                                                               "Reds" = "OrRd","Blues" = "PuBu","Greens" = "Greens")),
+                                       fluidRow(
+                                         column(6,
+                                                checkboxInput("HeatColNamesMat","Show Heatmap Column Names", value = T),
+                                                numericInput("HeatColFontMat", "Heatmap Column Font Size:",
+                                                             min = 5, max = 75,
+                                                             value = 12, step = 1),
+                                                numericInput("HeatColDendHeightMat","Column Dendrogram Height:",
+                                                             value = 50, step = 1)
+                                         ),
+                                         column(6,
+                                                checkboxInput("HeatRowNamesMat","Show Heatmap Row Names", value = T),
+                                                numericInput("HeatRowFontMat", "Heatmap Row Font Size:",
+                                                             min = 5, max = 75,
+                                                             value = 9, step = 1),
+                                                numericInput("HeatRowDendHeightMat","Row Dendrogram Height:",
+                                                             value = 50, step = 1)
+                                         )
+                                       ),
+                                       hr(),
+                                       h4("Connectivity Visualization Parameters"),
+                                       selectInput("ConnViewMat","View Connectivity as:",
+                                                   choices = c("Phylogeny" = "phylogenic","Dendrogram" = "rectangle","Circular" = "circular")),
+                                       uiOutput("rendPhyloLayoutMat"),
+                                       fluidRow(
+                                         column(6,
+                                                checkboxInput("ShowConnLabelsMat","Show Labels:",value = T)
+                                         ),
+                                         column(6,
+                                                numericInput("ConnFontSizeMat","Font Size:",
+                                                             value = 0.4, step = 0.1)
+                                         )
+                                       )
+                              )
+                            )
+                          ),
+                          mainPanel(
+                            tabsetPanel(
+                              tabPanel("Table Preview",
+                                       p(),
+                                       div(DT::dataTableOutput("UserMatrixPreview"), style = "font-size:12px")
+                              ),
+                              tabPanel("Heatmap",
+                                       p(),
+                                       withSpinner(jqui_resizable(plotOutput('UserMatrixHeatmap', width = "100%", height = "800px")), type = 6),
+                                       downloadButton("dnldUserMatrixHeatmapPDF","Download as PDF"),
+                                       downloadButton("dnldUserMatrixHeatmapSVG","Download as SVG")
+                              ),
+                              tabPanel("Clustering",
+                                       uiOutput("rendUserMatixCLustering"),
+                                       downloadButton("dnldUserMatixCLusteringPDF","Download as PDF"),
+                                       downloadButton("dnldUserMatixCLusteringSVG","Download as SVG")
+                              )
+                            )
+                          )
+                        )
+                      )
              )
   )
 
@@ -200,7 +324,26 @@ ui <-
 
 server <- function(input, output, session) {
   
+  ####----Jaccard Connectivity----####
+  
   ####----Render UI----####
+  
+  output$rendTopFeatureSelect <- renderUI({
+    
+    req(input$UserPathwayFile)
+    header_check <- input$HeaderCheckIntra
+    gs.u <- input$UserPathwayFile
+    ext <- tools::file_ext(gs.u$datapath)
+    ranked_file <- as.data.frame(read_delim(gs.u$datapath, delim = '\t', col_names = header_check, comment = "#"))
+    
+    if (ext == "txt" | ext == "tsv") {
+      if (ncol(ranked_file) > 2) {
+        numericInput("TopFeatureSelect","Top Number of Features to Process:",
+                     value = 50, min = 3, width = "250px")
+      }
+    }
+    
+  })
   
   output$rendClustTabIntra <- renderUI({
     
@@ -292,20 +435,6 @@ server <- function(input, output, session) {
     
   })
   
-  output$rendTopFeatureSelect <- renderUI({
-    
-    req(input$UserPathwayFile)
-    header_check <- input$HeaderCheckIntra
-    gs.u <- input$UserPathwayFile
-    ext <- tools::file_ext(gs.u$datapath)
-    
-    if (ext == "txt" | ext == "tsv") {
-      numericInput("TopFeatureSelect","Top Number of Features to Process:",
-                   value = 50, min = 3, width = "250px")
-    }
-    
-  })
-  
   ## User Upload gene set list reactive
   user_gs <- reactive({
     
@@ -317,10 +446,19 @@ server <- function(input, output, session) {
     ranked_file <- user_file_loaded()
     
     if (ext == "gmt") {
-      paths <- as.vector(ranked_file[,1])
-      paths <- gsub("[[:punct:]]",".",paths)
-      gs_u <- gs[unique(paths)]
-      gs_u2 <- Filter(Negate(is.null), gs_u)
+      gmt <- read.gmt(gs.u$datapath)
+      gmt <- gmt[which(gmt[,2] != "NA"),]
+      gs_u2 <- list()
+      for (i in unique(gmt[,1])){
+        gs_u2[[i]] <- gmt[gmt[,1] == i,]$gene
+      }
+    }
+    else if (ncol(ranked_file) == 2) {
+      ranked_file <- ranked_file[which(ranked_file[,2] != "NA"),]
+      gs_u2 <- list()
+      for (i in unique(ranked_file[,1])){
+        gs_u2[[i]] <- ranked_file[ranked_file[,1] == i,][,2]
+      }
     }
     else {
       TopFeat <- input$TopFeatureSelect
@@ -356,7 +494,6 @@ server <- function(input, output, session) {
     
   })
   
-  
   ## Jaccard Matrix Generation
   jacc_react_Intra <- reactive({
     
@@ -389,68 +526,6 @@ server <- function(input, output, session) {
       jac_df_Intra
       
     }
-    
-  })
-  
-  ####----Data Tables----####
-  
-  ## Gene Set Category table for tab 1
-  output$GeneSetCategoryTable <- DT::renderDataTable({
-    
-    DT::datatable(GeneSetCatTable,
-                  selection = list(mode = 'single', selected = 1),
-                  options = list(keys = TRUE,
-                                 searchHighlight = TRUE,
-                                 pageLength = 10,
-                                 lengthMenu = c("10", "25", "50", "100")),
-                  rownames = F)
-    
-  })
-  
-  
-  
-  ## Jaccard Matrix Table - INTRA pathway
-  output$JaccTableIntra <- DT::renderDataTable({
-    
-    ## Jaccard Table
-    jacc_df <- as.data.frame(jacc_react_Intra())
-    colnames(jacc_df) <- gsub("[[:punct:]]", " ",colnames(jacc_df))
-    
-    DT::datatable(jacc_df,
-                  extensions = "FixedColumns",
-                  options = list(lengthMenu = c(10,20,50,100,1000,5000,10000),
-                                 pageLength = 20,
-                                 scrollX = TRUE,
-                                 autoWidth = TRUE,
-                                 fixedColumns = list(leftColumns = 1)),
-                  selection=list(mode = "multiple")) %>%
-      formatRound(columns = c(1:ncol(jacc_df)), digits = 4)
-    
-  })
-  
-  ## Cluster Table
-  output$ClustTabIntra <- DT::renderDataTable({
-    
-    ## Data matrix
-    jacc_df <- jacc_react_Intra()
-    jacc_mat <- as.matrix(jacc_df)
-    clust_me <- input$ClustMethodIntra
-    
-    hm_res <- pheatmap::pheatmap(jacc_mat,
-                                 clustering_method = clust_me,
-                                 silent = T)
-    
-    jacc_df <- jacc_react_Intra()
-    cut_k <- input$NumClusters
-    clustTab <- data.frame(Pathways = rownames(jacc_df),
-                           Cluster = cutree(hm_res$tree_row,k = cut_k))
-    
-    DT::datatable(clustTab,
-                  options = list(keys = TRUE,
-                                 searchHighlight = TRUE,
-                                 pageLength = 10,
-                                 lengthMenu = c("10", "25", "50", "100")),
-                  rownames = F)
     
   })
   
@@ -513,6 +588,53 @@ server <- function(input, output, session) {
     
   })
   
+  ####----Data Tables----####
+  
+  ## Jaccard Matrix Table - INTRA pathway
+  output$JaccTableIntra <- DT::renderDataTable({
+    
+    ## Jaccard Table
+    jacc_df <- as.data.frame(jacc_react_Intra())
+    colnames(jacc_df) <- gsub("[[:punct:]]", " ",colnames(jacc_df))
+    
+    DT::datatable(jacc_df,
+                  extensions = "FixedColumns",
+                  options = list(lengthMenu = c(10,20,50,100,1000,5000,10000),
+                                 pageLength = 20,
+                                 scrollX = TRUE,
+                                 autoWidth = TRUE,
+                                 fixedColumns = list(leftColumns = 1)),
+                  selection=list(mode = "multiple")) %>%
+      formatRound(columns = c(1:ncol(jacc_df)), digits = 4)
+    
+  })
+  
+  ## Cluster Table
+  output$ClustTabIntra <- DT::renderDataTable({
+    
+    ## Data matrix
+    jacc_df <- jacc_react_Intra()
+    jacc_mat <- as.matrix(jacc_df)
+    clust_me <- input$ClustMethodIntra
+    
+    hm_res <- pheatmap::pheatmap(jacc_mat,
+                                 clustering_method = clust_me,
+                                 silent = T)
+    
+    jacc_df <- jacc_react_Intra()
+    cut_k <- input$NumClusters
+    clustTab <- data.frame(Pathways = rownames(jacc_df),
+                           Cluster = cutree(hm_res$tree_row,k = cut_k))
+    
+    DT::datatable(clustTab,
+                  options = list(keys = TRUE,
+                                 searchHighlight = TRUE,
+                                 pageLength = 10,
+                                 lengthMenu = c("10", "25", "50", "100")),
+                  rownames = F)
+    
+  })
+  
   output$ClusterTabAnno <- DT::renderDataTable({
     
     df5 <- ClusterTabAnno_react()
@@ -529,8 +651,7 @@ server <- function(input, output, session) {
   
   output$SIFPreview <- DT::renderDataTable({
     
-    jacc_df <- jacc_react_Intra()
-    dist_cutoff <- input$JaccDistCutoff
+    jacc_df <- user_matrix_loaded()
     jacc_df <- as.data.frame(jacc_df)
     jacc_df_melt <- melt(jacc_df)
     jacc_cols <- colnames(jacc_df)
@@ -551,7 +672,7 @@ server <- function(input, output, session) {
   ####----Plots----####
   
   ## Jaccard Heatmap - INTRA
-  output$JaccHeatmapIntra <- renderPlot({
+  JaccHeatmapIntra_react <- reactive({
     
     ## User inputs
     row_font <- input$HeatRowFontIntra
@@ -599,21 +720,29 @@ server <- function(input, output, session) {
     else if (col_pall == "GreenBlackRed") {
       hmcols<- colorRampPalette(c("green","black","red"))(length(bk)-1)
     }
-    pheatmap::pheatmap(jacc_mat,
-                       fontsize_row = row_font,
-                       fontsize_col = col_font,
-                       show_rownames = row_name,
-                       show_colnames = col_name,
-                       treeheight_col = col_dend,
-                       treeheight_row = row_dend,
-                       angle_col = 90,
-                       border_color = NA,
-                       clustering_method = clust_me,
-                       color = hmcols)
+    heat <- pheatmap::pheatmap(jacc_mat,
+                               fontsize_row = row_font,
+                               fontsize_col = col_font,
+                               show_rownames = row_name,
+                               show_colnames = col_name,
+                               treeheight_col = col_dend,
+                               treeheight_row = row_dend,
+                               angle_col = 90,
+                               border_color = NA,
+                               clustering_method = clust_me,
+                               color = hmcols)
+    heat
     
   })
   
-  output$JaccDendoIntra <- renderPlotly({
+  output$JaccHeatmapIntra <- renderPlot({
+    
+    heat <- JaccHeatmapIntra_react()
+    heat
+    
+  })
+  
+  JaccDendoIntra_react <- reactive({
     
     VisType <- input$ConnView
     
@@ -707,7 +836,14 @@ server <- function(input, output, session) {
     
   })
   
-  output$JaccDendoIntraCirc <- renderPlot({
+  output$JaccDendoIntra <- renderPlotly({
+    
+    gp <- JaccDendoIntra_react()
+    gp
+    
+  })
+  
+  JaccDendoIntraCirc_react <- reactive({
     
     VisType <- input$ConnView
     
@@ -734,8 +870,429 @@ server <- function(input, output, session) {
     
   })
   
-  ####----Download Handlers----####
+  output$JaccDendoIntraCirc <- renderPlot({
+    
+    f <- JaccDendoIntraCirc_react()
+    f
+    
+  })
   
+  
+  ####----Matrix Clustering----####
+  
+  ####----Render UI----####
+  
+  output$rendClustTabMat <- renderUI({
+    
+    if (input$ViewClustTabMat == TRUE) {
+      
+      div(DT::dataTableOutput("ClustTabMat"), style = "font-size:10px; height:400px; overflow-X: scroll")
+      
+    }
+    
+  })
+  
+  output$rendSIFPreviewMat <- renderUI({
+    
+    if (input$PrevSIFMat == TRUE) {
+      
+      div(DT::dataTableOutput("SIFPreviewMat"), style = "font-size:10px; height:400px; overflow-X: scroll")
+      
+    }
+    
+  })
+  
+  output$rendUserMatixCLustering <- renderUI({
+    
+    VisType <- input$ConnViewMat
+    if (VisType == "rectangle" | VisType == "phylogenic") {
+      
+      withSpinner(jqui_resizable(plotlyOutput('JaccDendoMat', width = "100%", height = "900px")), type = 6)
+      
+    }
+    else if (VisType == "circular") {
+      
+      withSpinner(jqui_resizable(plotOutput('JaccDendoMatCirc', width = "100%", height = "900px")), type = 6)
+      
+    }
+    
+  })
+  
+  output$rendPhyloLayoutMat <- renderUI({
+    
+    if (input$ConnViewMat == "phylogenic") {
+      
+      selectInput("PhyloLayoutMat","Choose Phylogenic Tree Layout:",
+                  choices = c("Auto Layout" = "layout.auto",
+                              "Force Directed (DrL) Layout" = "layout_with_drl",
+                              "Tree Layout" = "layout_as_tree",
+                              "GEM Layout" = "layout.gem",
+                              "Mulitdimensional Scaling Layout" = "layout.mds",
+                              "Large Graph Layout" = "layout_with_lgl"))
+      
+    }
+    
+  })
+  
+  ####----Reactives----####
+  
+  user_matrix_loaded <- reactive({
+    
+    gs.u <- input$UserMatrixFile
+    ext <- tools::file_ext(gs.u$datapath)
+    req(gs.u)
+    validate(need(ext == c("tsv","txt","csv"), "Please upload .tsv, .txt, or .csv file"))
+    
+    if (ext == "csv") {
+      matrix.u <- as.data.frame(read_delim(gs.u$datapath, delim = ',', col_names = T))
+    }
+    else {
+      matrix.u <- as.data.frame(read_delim(gs.u$datapath, delim = '\t', col_names = T))
+    }
+    
+    
+    matrix.u
+    
+  })
+  
+  
+  ####----Data Tables----####
+  
+  output$UserMatrixPreview <- DT::renderDataTable({
+    
+    df <- user_matrix_loaded()
+    
+    DT::datatable(df,
+                  extensions = "FixedColumns",
+                  options = list(lengthMenu = c(10,20,50,100,1000,5000,10000),
+                                 pageLength = 20,
+                                 scrollX = TRUE,
+                                 autoWidth = TRUE,
+                                 fixedColumns = list(leftColumns = 1)),
+                  rownames = F,
+                  selection=list(mode = "multiple")) %>%
+      formatRound(columns = c(2:ncol(df)), digits = 4)
+    
+    
+  })
+  
+  ## Cluster Table
+  output$ClustTabMat <- DT::renderDataTable({
+    
+    ## Data matrix
+    df <- user_matrix_loaded()
+    rownames(df) <- df[,1]
+    df <- df[,-1]
+    df_mat <- as.matrix(df)
+    clust_me <- input$ClustMethodMat
+    
+    hm_res <- pheatmap::pheatmap(df_mat,
+                                 clustering_method = clust_me,
+                                 silent = T)
+    
+    cut_k <- input$NumClustersMat
+    clustTab <- data.frame(Pathways = rownames(df),
+                           Cluster = cutree(hm_res$tree_row,k = cut_k))
+    
+    DT::datatable(clustTab,
+                  options = list(keys = TRUE,
+                                 searchHighlight = TRUE,
+                                 pageLength = 10,
+                                 lengthMenu = c("10", "25", "50", "100")),
+                  rownames = F)
+    
+  })
+  
+  output$SIFPreviewMat <- DT::renderDataTable({
+    
+    df <- user_matrix_loaded()
+    rownames(df) <- df[,1]
+    df <- df[,-1]
+    df <- as.data.frame(df)
+    df_melt <- melt(df)
+    df_cols <- colnames(df)
+    df_melt$Sample_B <- rep_len(df_cols,length.out = nrow(df_melt))
+    colnames(df_melt)[c(1,2)] <- c("Sample_A","Distance")
+    df_melt <- df_melt[which(df_melt$Sample_A != df_melt$Sample_B),]
+    df_melt <- df_melt[!duplicated(t(apply(df_melt,1,sort))),]
+    DT::datatable(df_melt,
+                  options = list(keys = TRUE,
+                                 searchHighlight = TRUE,
+                                 pageLength = 10,
+                                 lengthMenu = c("10", "25", "50", "100")),
+                  rownames = F)
+    
+  })
+  
+  ####----Plots----####
+  
+  UserMatrixHeatmap_react <- reactive({
+    
+    ## User inputs
+    row_font <- input$HeatRowFontMat
+    col_font <- input$HeatColFontMat
+    row_name <- input$HeatRowNamesMat
+    col_name <- input$HeatColNamesMat
+    col_pall <- input$ColorPaletteMat
+    clust_me <- input$ClustMethodMat
+    row_dend <- input$HeatRowDendHeightMat
+    col_dend <- input$HeatColDendHeightMat
+    
+    ## Data matrix
+    jacc_df <- user_matrix_loaded()
+    rownames(jacc_df) <- jacc_df[,1]
+    jacc_df <- jacc_df[,-1]
+    jacc_mat <- as.matrix(jacc_df)
+    
+    ## Color choice
+    minimum = min(jacc_mat)
+    maximum = max(jacc_mat)
+    bk = c(seq(minimum,minimum/2, length=100), seq(minimum/2,maximum/2,length=100),seq(maximum/2,maximum,length=100))
+    #Heatmap color
+    col_sets <- c("OrRd","PuBu","Greens","YlGnBu")
+    if (col_pall == "original") {
+      HeatMap_Colors <- c("dark blue","blue","white","red", "dark red")
+      hmcols <- colorRampPalette(HeatMap_Colors)(length(bk)-1)
+    }
+    else if (col_pall %in% col_sets) {
+      HeatMap_Colors <- brewer.pal(n = 5, col_pall)
+      hmcols <- colorRampPalette(HeatMap_Colors)(length(bk)-1)
+    }
+    else if (col_pall == "Inferno") {
+      hmcols <- inferno(500)
+    }
+    else if (col_pall == "Viridis") {
+      hmcols <- viridis(500)
+    }
+    else if (col_pall == "Plasma") {
+      hmcols <- plasma(500)
+    }
+    else if (col_pall == "OmniBlueRed") {
+      hmcols<- colorRampPalette(c("#1984C5", "#22A7F0", "#63BFF0", "#A7D5ED", "#E2E2E2", "#E1A692", "#DE6E56", "#E14B31", "#C23728"))(length(bk)-1)
+    }
+    else if (col_pall == "LightBlueBlackRed") {
+      hmcols<- colorRampPalette(c("#34C5FD","black","red"))(length(bk)-1)
+    }
+    else if (col_pall == "GreenBlackRed") {
+      hmcols<- colorRampPalette(c("green","black","red"))(length(bk)-1)
+    }
+    heat <- pheatmap::pheatmap(jacc_mat,
+                               fontsize_row = row_font,
+                               fontsize_col = col_font,
+                               show_rownames = row_name,
+                               show_colnames = col_name,
+                               treeheight_col = col_dend,
+                               treeheight_row = row_dend,
+                               angle_col = 90,
+                               border_color = NA,
+                               clustering_method = clust_me,
+                               color = hmcols)
+    heat
+    
+  })
+  
+  ## Jaccard Heatmap - INTRA
+  output$UserMatrixHeatmap <- renderPlot({
+    
+    heat <- UserMatrixHeatmap_react()
+    heat
+    
+  })
+  
+  JaccDendoMat_react <- reactive({
+    
+    VisType <- input$ConnViewMat
+    
+    if (VisType == "rectangle" | VisType == "phylogenic") {
+      
+      jacc_mat <- user_matrix_loaded()
+      rownames(jacc_mat) <- jacc_mat[,1]
+      jacc_mat <- jacc_mat[,-1]
+      clust_me <- input$ClustMethodMat
+      nclust <- input$NumClustersMat
+      LableChoice <- input$ShowConnLabelsMat
+      FontSize <- input$ConnFontSizeMat
+      
+      
+      hc <- hclust(dist(jacc_mat), method = clust_me)
+      hc_dend <- as.dendrogram(hc)
+      dend_data <- dendro_data(hc_dend)
+      lab_order <- label(dend_data)[3]
+      lab_vect <- lab_order$label
+      clust_df <- data.frame(Pathways = rownames(jacc_mat),cluster = cutree(hc,k = nclust))
+      clust_df2 <- clust_df[match(lab_vect,clust_df$Pathways),]
+      colnames(clust_df2)[1] <- "label"
+      clust_df2$cluster <- as.factor(clust_df2$cluster)
+      
+      dend_data[["labels"]] <- merge(dend_data[["labels"]],clust_df2, by="label")
+      
+      if (VisType == "rectangle") {
+        
+        FontSize <- FontSize * 6
+        g <- ggdendrogram(dend_data,
+                          rotate = TRUE,
+                          theme_dendro = TRUE,
+                          leaf_labels = F,
+                          segments = T,
+                          labels = F) + 
+          labs(title = "") +
+          scale_y_continuous(expand = c(0.4, 0))
+        if (LableChoice == TRUE) {
+          g <- g + geom_text(data=label(dend_data), aes(x, y, label=label, hjust=1, color=cluster),size=FontSize)
+        }
+        
+        gp <- ggplotly(g)
+        
+      }
+      else if (VisType == "phylogenic") {
+        
+        if (is.null(input$PhyloLayout) == TRUE) {
+          PhyloLayout <- "layout.auto"
+        }
+        else if (is.null(input$PhyloLayout) == FALSE) {
+          PhyloLayout <- input$PhyloLayout
+        }
+        
+        
+        if (LableChoice == TRUE) {
+          k = nclust
+          gp <- ggplotly(
+            fviz_dend(
+              hc_dend,
+              cex = FontSize,
+              k = nclust,
+              show_labels = TRUE,
+              type = "phylogenic",
+              phylo_layout = PhyloLayout)
+          )
+          for(i in seq(k, 1)){
+            gp$x$data[[i+1]]$text <- gp$x$data[[i+1+k]]$text
+          }
+          
+        }
+        else if (LableChoice == FALSE) {
+          k = nclust
+          gp <- ggplotly(
+            fviz_dend(
+              hc,
+              cex = FontSize,
+              k = k,
+              show_labels = TRUE,
+              type = "phylogenic",
+              phylo_layout = PhyloLayout)
+          )
+          gp$x$data[[1]]$text <- NA 
+          for(i in seq(k, 1)){
+            gp$x$data[[i+1]]$text <- gp$x$data[[i+1+k]]$text
+            gp$x$data[[i + 1 + k]] <- NULL
+          }
+          
+        }
+        
+      }
+      gp
+    }
+    
+  })
+  
+  output$JaccDendoMat <- renderPlotly({
+    
+    gp <- JaccDendoMat_react()
+    gp
+    
+  })
+  
+  JaccDendoMatCirc_react <- reactive({
+    
+    VisType <- input$ConnViewMat
+    
+    if (VisType == "circular") {
+      
+      jacc_mat <- user_matrix_loaded()
+      clust_me <- input$ClustMethodMat
+      nclust <- input$NumClustersMat
+      LableChoice <- input$ShowConnLabelsMat
+      FontSize <- input$ConnFontSizeMat
+      
+      hc <- hclust(dist(jacc_mat), method = clust_me)
+      hc_dend <- as.dendrogram(hc)
+      f <- fviz_dend(hc_dend, k = nclust, cex = FontSize, color_labels_by_k = T, type = "circular", show_labels = LableChoice) +
+        theme(legend.position="none") +
+        labs(title = "") +
+        theme(axis.ticks.x = element_blank(),axis.text.x = element_blank(),axis.title.x = element_blank(),
+              axis.ticks.y = element_blank(),axis.text.y = element_blank(),axis.title.y = element_blank())
+      
+      
+      f
+      
+    }
+    
+  })
+  
+  output$JaccDendoMatCirc <- renderPlot({
+    
+    f <- JaccDendoMatCirc_react()
+    f
+    
+  })
+  
+  
+  ####----Downloads----####
+  
+  ####----Jaccard----####
+  
+  output$dnldJaccHeatmapIntraPDF <- downloadHandler(
+    filename = function() {
+      gs.u <- input$UserPathwayFile
+      TopFeat <- input$TopFeatureSelect
+      file_name <- gs.u$name
+      file_name <- tools::file_path_sans_ext(gs.u)
+      paste(file_name,"_Top",TopFeat,"_JaccardHeatmap.pdf", sep = '')
+    },
+    content = function(file) {
+      heat <- JaccHeatmapIntra_react()
+      ggsave(file,heat, width = 10, height = 12)
+    }
+  )
+  output$dnldJaccHeatmapIntraSVG <- downloadHandler(
+    filename = function() {
+      gs.u <- input$UserPathwayFile
+      TopFeat <- input$TopFeatureSelect
+      file_name <- gs.u$name
+      file_name <- tools::file_path_sans_ext(gs.u)
+      paste(file_name,"_Top",TopFeat,"_JaccardHeatmap.svg", sep = '')
+    },
+    content = function(file) {
+      heat <- JaccHeatmapIntra_react()
+      ggsave(file,heat, width = 10, height = 12)
+    }
+  )
+  output$dnldJaccDendoPDF <- downloadHandler(
+    filename = function() {
+      gs.u <- input$UserPathwayFile
+      TopFeat <- input$TopFeatureSelect
+      file_name <- gs.u$name
+      file_name <- tools::file_path_sans_ext(gs.u)
+      paste(file_name,"_Top",TopFeat,"_JaccardCluster.pdf", sep = '')
+    },
+    content = function(file) {
+      dendo <- JaccDendoIntra_react()
+      ggsave(file, dendo, width = 10, height = 8)
+    }
+  )
+  output$dnldJaccDendoSVG <- downloadHandler(
+    filename = function() {
+      gs.u <- input$UserPathwayFile
+      TopFeat <- input$TopFeatureSelect
+      file_name <- gs.u$name
+      file_name <- tools::file_path_sans_ext(gs.u)
+      paste(file_name,"_Top",TopFeat,"_JaccardCluster.svg", sep = '')
+    },
+    content = function(file) {
+      dendo <- JaccDendoIntra_react()
+      ggsave(file, dendo, width = 10, height = 8)
+    }
+  )
   ## Download Cluster Table - INTRA
   output$dnldClustTabIntra <- downloadHandler(
     filename = function() {
@@ -766,7 +1323,6 @@ server <- function(input, output, session) {
       
     }
   )
-  
   output$dnldSIFTabIntra <- downloadHandler(
     filename = function() {
       
@@ -837,7 +1393,118 @@ server <- function(input, output, session) {
     }
   )
   
+  ####----Matrix Clustering----####
+  
+  output$dnldUserMatrixHeatmapPDF <- downloadHandler(
+    filename = function() {
+      gs.u <- input$UserMatrixFile
+      file_name <- gs.u$name
+      file_name <- tools::file_path_sans_ext(gs.u)
+      paste(file_name,"_Heatmap.pdf", sep = '')
+    },
+    content = function(file) {
+      heat <- UserMatrixHeatmap_react()
+      ggsave(file, heat, width = 10, height = 12)
+    }
+  )
+  output$dnldUserMatrixHeatmapSVG <- downloadHandler(
+    filename = function() {
+      gs.u <- input$UserMatrixFile
+      file_name <- gs.u$name
+      file_name <- tools::file_path_sans_ext(gs.u)
+      paste(file_name,"_Heatmap.svg", sep = '')
+    },
+    content = function(file) {
+      heat <- UserMatrixHeatmap_react()
+      ggsave(file, heat, width = 10, height = 12)
+    }
+  )
+  output$dnldUserMatixCLusteringPDF <- downloadHandler(
+    filename = function() {
+      gs.u <- input$UserMatrixFile
+      file_name <- gs.u$name
+      file_name <- tools::file_path_sans_ext(gs.u)
+      paste(file_name,"_ClusterFigure.pdf", sep = '')
+    },
+    content = function(file) {
+      dendo <- JaccDendoIntra_react()
+      ggsave(file, dendo, width = 10, height = 8)
+    }
+  )
+  output$dnldUserMatixCLusteringSVG <- downloadHandler(
+    filename = function() {
+      gs.u <- input$UserMatrixFile
+      file_name <- gs.u$name
+      file_name <- tools::file_path_sans_ext(gs.u)
+      paste(file_name,"_ClusterFigure.svg", sep = '')
+    },
+    content = function(file) {
+      dendo <- JaccDendoIntra_react()
+      ggsave(file, dendo, width = 10, height = 8)
+    }
+  )
+  ## Download Cluster Table - INTRA
+  output$dnldClustTabMat <- downloadHandler(
+    filename = function() {
+      
+      gs.u <- input$UserMatrixFile
+      file_name <- gs.u$name
+      file_name <- tools::file_path_sans_ext(gs.u)
+      paste(file_name,"_Cluster_Result.txt", sep = '')
+      
+    },
+    content = function(file) {
+      
+      ## Data matrix
+      df <- user_matrix_loaded()
+      rownames(df) <- df[,1]
+      df <- df[,-1]
+      df_mat <- as.matrix(df)
+      clust_me <- input$ClustMethodMat
+      
+      hm_res <- pheatmap::pheatmap(df_mat,
+                                   clustering_method = clust_me,
+                                   silent = T)
+      
+      cut_k <- input$NumClustersMat
+      clustTab <- data.frame(Pathways = rownames(df),
+                             Cluster = cutree(hm_res$tree_row,k = cut_k))
+      write_delim(clustTab,file,delim = '\t')
+      
+    }
+  )
+  
+  output$dnldSIFTabMat <- downloadHandler(
+    filename = function() {
+      
+      gs.u <- input$UserMatrixFile
+      file_name <- gs.u$name
+      file_name <- tools::file_path_sans_ext(gs.u)
+      paste(file_name,"_sif_dend.sif", sep = '')
+      
+    },
+    content = function(file) {
+      
+      df <- user_matrix_loaded()
+      rownames(df) <- df[,1]
+      df <- df[,-1]
+      df <- as.data.frame(df)
+      df_melt <- melt(df)
+      df_cols <- colnames(df)
+      df_melt$Sample_B <- rep_len(df_cols,length.out = nrow(df_melt))
+      colnames(df_melt)[c(1,2)] <- c("Sample_A","Distance")
+      df_melt <- df_melt[which(df_melt$Sample_A != df_melt$Sample_B),]
+      df_melt <- df_melt[!duplicated(t(apply(df_melt,1,sort))),]
+      write_delim(df_melt,file,delim = '\t')
+      
+      
+    }
+  )
+  
+  
+  
 }
+
 
 
 # Run the application

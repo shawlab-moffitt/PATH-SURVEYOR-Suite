@@ -2,13 +2,13 @@
 
 ####----Input----####
 
-ProjectName <- "Pan ICI Checkpoint iAtlas"
+ProjectName <- "Pan ICI Checkpoint iAtlas - Skin Cancer"
 
-ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip"
+ExpressionMatrix_file <- "Example_Data/Expression_Data_PAN_ICI_iAtlas_SkinCancer.zip"
 
-MetaData_file <- "Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_ImmDeconv.txt"
+MetaData_file <- "Example_Data/Clinical_Data_PAN_ICI_iAtlas_SkinCancer.txt"
 
-MetaParam_File <- "Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_Params_ImmDeconv.txt"
+MetaParam_File <- "Example_Data/Clinical_Parameters_PAN_ICI_iAtlas_SkinCancer.txt"
 
 
 ##--Advanced Set-Up--##
@@ -19,11 +19,14 @@ PreSelect_SamplyType <- NULL
 PreSelect_Feature <- "All"
 # An option from the meta or NULL
 PreSelect_SubFeature <- NULL
-PreSelect_SecondaryFeature <- NULL
+PreSelect_SecondaryFeature <- "Responder"
 
 # DO NOT CHANGE - only adjust file path if needed
 GeneSet_File <- "GeneSet_Data/GeneSet_List.RData"
 GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable.zip"
+About_MD_File <- "App_Markdowns/PurposeAndMethods.Rmd"
+
+
 
 ############################ Copyright 2022 Moffitt Cancer Center ############################
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -45,7 +48,7 @@ if (immudecon_check == TRUE) {
 }
 packages <- c("shiny","shinythemes","shinyjqui","gtsummary","tidyr","RColorBrewer",
               "dplyr","DT","ggplot2","ggpubr","tibble","survival","pheatmap","stringr",
-              "readr","shinycssloaders","survminer","gridExtra","viridis","plotly")
+              "readr","shinycssloaders","survminer","gridExtra","viridis","plotly","ggrepel")
 
 installed_packages <- packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
@@ -606,14 +609,17 @@ ui <-
                                          )
                                        ),
                                        fluidRow(
-                                         column(4,
+                                         column(3,
                                                 selectInput("SurvLegendPos","Legend Position",choices = c("right","left","top","bottom","none"))
                                          ),
-                                         column(4,
+                                         column(3,
                                                 checkboxInput("ShowPval","Show P.Value",value = T)
                                          ),
-                                         column(4,
+                                         column(3,
                                                 checkboxInput("ShowConfInt","Show Confidence Interval",value = F)
+                                         ),
+                                         column(3,
+                                                checkboxInput("ShowMedSurvLine","Show Median Survival Line",value = F)
                                          )
                                        ),
                                        hr(),
@@ -691,7 +697,7 @@ ui <-
                                                   p(),
                                                   htmlOutput("BINSurvDescrip", style = "font-size:14px;"),
                                                   hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("SplotBIN", width = SurvPlot_Height, height = SurvPlot_Width)), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("SplotBIN", width = "850px", height = "550px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldSplotBIN_SVG","Download as SVG"),
                                                     downloadButton("dnldSplotBIN_PDF","Download as PDF")
@@ -721,7 +727,7 @@ ui <-
                                                   p(),
                                                   htmlOutput("QuartSurvDescrip", style = "font-size:14px;"),
                                                   hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("Splot", width = SurvPlot_Height, height = SurvPlot_Width)), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("Splot", width = "850px", height = "550px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldSplot_SVG","Download as SVG"),
                                                     downloadButton("dnldSplot_PDF","Download as PDF")
@@ -751,7 +757,7 @@ ui <-
                                                   p(),
                                                   htmlOutput("CutPSurvDescrip", style = "font-size:14px;"),
                                                   hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("ScutPointPlot", width = SurvPlot_Height, height = SurvPlot_Width)), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("ScutPointPlot", width = "850px", height = "550px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldScutPointPlot_SVG","Download as SVG"),
                                                     downloadButton("dnldScutPointPlot_PDF","Download as PDF")
@@ -781,7 +787,7 @@ ui <-
                                                   p(),
                                                   htmlOutput("QuantSurvDescrip", style = "font-size:14px;"),
                                                   hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("SquantPlot", width = SurvPlot_Height, height = SurvPlot_Width)), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("SquantPlot", width = "850px", height = "550px")), type = 6),
                                                   numericInput("QuantPercent","Top/Bottom Cut-Point Quantile Cutoff (%)", value = 25, min = 0, max = 100),
                                                   fluidRow(
                                                     downloadButton("dnldSquantPlot_SVG","Download as SVG"),
@@ -812,7 +818,7 @@ ui <-
                                                   p(),
                                                   htmlOutput("Quant2SurvDescrip", style = "font-size:14px;"),
                                                   hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("SquantPlot2", width = SurvPlot_Height, height = SurvPlot_Width)), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("SquantPlot2", width = "850px", height = "550px")), type = 6),
                                                   numericInput("QuantPercent2","Above/Below User Quantile Cut-Point (%)", value = 25, min = 0, max = 100),
                                                   fluidRow(
                                                     downloadButton("dnldSquantPlot2_SVG","Download as SVG"),
@@ -872,7 +878,7 @@ ui <-
                                                 uiOutput("rendSurvFeatVariableUni"),
                                          ),
                                          column(7,
-                                                htmlOutput("UnivarSummExpl", style = "font-size:14px;"),
+                                                #htmlOutput("UnivarSummExpl", style = "font-size:14px;"),
                                          )
                                        ),
                                        tabsetPanel(
@@ -882,7 +888,7 @@ ui <-
                                          
                                          tabPanel("Survival Plot",
                                                   p(),
-                                                  withSpinner(jqui_resizable(plotOutput("featSplot", width = SurvPlot_Height, height = SurvPlot_Width)), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("featSplot", width = "850px", height = "550px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldfeatSplot_SVG","Download as SVG"),
                                                     downloadButton("dnldfeatSplot_PDF","Download as PDF")
@@ -1090,7 +1096,7 @@ ui <-
                                                     
                                                     tabPanel("Survival Plot",
                                                              p(),
-                                                             withSpinner(jqui_resizable(plotOutput("featSplotBi", width = SurvPlot_Height, height = SurvPlot_Width)), type = 6),
+                                                             withSpinner(jqui_resizable(plotOutput("featSplotBi", width = "850px", height = "550px")), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldfeatSplotBi_SVG","Download as SVG"),
                                                                downloadButton("dnldfeatSplotBi_PDF","Download as PDF")
@@ -1332,12 +1338,6 @@ ui <-
                         mainPanel(
                           tabPanel("Purpose and Methods",
                                    uiOutput("rendPurposeAndMethodsMD")
-                                   #tabsetPanel(
-                                   #  tabPanel("Purpose and Methods",
-                                   #           uiOutput("rendPurposeAndMethodsMD")),
-                                   #  tabPanel("Tutorial",
-                                   #           uiOutput("rendTutorialMD"))
-                                   #)
                           )
                         )
                       )
@@ -1360,7 +1360,7 @@ server <- function(input, output, session) {
     if (length(unique(meta[,metacol_sampletype])) > 1) {
       
       SampleTypeChoices <- unique(meta[,metacol_sampletype])
-      SampleTypeChoices <- c(SampleTypeChoices,"All_Sample_Types")
+      SampleTypeChoices <- c("All_Sample_Types",SampleTypeChoices)
       selectInput("SampleTypeSelection",paste("Select Sample Type (",metacol_sampletype,"):",sep = ""),
                   choices = SampleTypeChoices, selected = PreSelect_SamplyType)
       
@@ -1375,13 +1375,13 @@ server <- function(input, output, session) {
       
       if (input$SampleTypeSelection == "All_Sample_Types") {
         
-        FeatureChoices <- c(metacol_sampletype,metacol_feature,"All_Features")
+        FeatureChoices <- c("All_Features",metacol_sampletype,metacol_feature)
         selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
         
       }
       else if (input$SampleTypeSelection != "All_Sample_Types") {
         
-        FeatureChoices <- c(metacol_feature,"All_Features")
+        FeatureChoices <- c("All_Features",metacol_feature)
         selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
         
       }
@@ -1389,7 +1389,7 @@ server <- function(input, output, session) {
     }
     else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       
-      FeatureChoices <- c(metacol_feature,"All_Features")
+      FeatureChoices <- c("All_Features",metacol_feature)
       selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
       
     }
@@ -1933,13 +1933,13 @@ server <- function(input, output, session) {
       if (input$SampleTypeSelection != "All_Sample_Types") {
         
         selectInput("BoxplotFeature","Select Feature:",
-                    choices = metacol_feature)
+                    choices = metacol_feature, selected = PreSelect_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
         
         selectInput("BoxplotFeature","Select Feature:",
-                    choices = c(metacol_sampletype,metacol_feature))
+                    choices = c(metacol_sampletype,metacol_feature), selected = PreSelect_SecondaryFeature)
         
       }
       
@@ -1947,7 +1947,7 @@ server <- function(input, output, session) {
     else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       
       selectInput("BoxplotFeature","Select Feature:",
-                  choices = metacol_feature)
+                  choices = metacol_feature, selected = PreSelect_SecondaryFeature)
       
     }
     
@@ -2205,7 +2205,7 @@ server <- function(input, output, session) {
     
     if (input$UserGSoption == "Text Box Input") {
       
-      textInput("userGeneSetTextName","Custom Gene Set Name")
+      textInput("userGeneSetTextName","Custom Gene Set Name", value = "Custom Gene Set")
       
     }
     
@@ -2254,13 +2254,13 @@ server <- function(input, output, session) {
       if (input$SampleTypeSelection != "All_Sample_Types") {
         
         selectInput("ScatterFeature","Select Feature:",
-                    choices = metacol_feature)
+                    choices = metacol_feature, selected = PreSelect_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
         
         selectInput("ScatterFeature","Select Feature:",
-                    choices = c(metacol_sampletype,metacol_feature))
+                    choices = c(metacol_sampletype,metacol_feature), selected = PreSelect_SecondaryFeature)
         
       }
       
@@ -2268,7 +2268,7 @@ server <- function(input, output, session) {
     else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       
       selectInput("ScatterFeature","Select Feature:",
-                  choices = metacol_feature)
+                  choices = metacol_feature, selected = PreSelect_SecondaryFeature)
       
     }
     
@@ -2728,6 +2728,7 @@ server <- function(input, output, session) {
     if (input$GeneSetTabs == 1) {
       if (geneset_name %in% decon_score_cols) {
         ssGSEA <- meta[,c("SampleName",geneset_name)]
+        ssGSEA <- ssGSEA[!is.na(ssGSEA[,2]),]
       }
       else {
         ## Perform ssGSEA with gs and new subset data
@@ -2890,6 +2891,13 @@ server <- function(input, output, session) {
     xaxlim <- input$SurvXaxis * 365.25
     surv_time_col <- input$SurvivalType_time
     showLegend <- input$SurvLegendPos
+    showMedSurv <- input$ShowMedSurvLine
+    if (showMedSurv == T) {
+      showMedSurv <- "hv"
+    }
+    else if (showMedSurv == F) {
+      showMedSurv <- "none"
+    }
     
     ## Survival Function
     fit <- survfit(Surv(time,ID) ~ MedianCutP, data = meta_ssgsea_sdf, type="kaplan-meier")
@@ -2978,10 +2986,24 @@ server <- function(input, output, session) {
                          font.y = c(14, "plain"),
                          font.tickslab = c(12, "plain"),
                          legend = showLegend,
-                         risk.table.height = 0.20
+                         risk.table.height = 0.20,
+                         surv.median.line = showMedSurv
     )
+    if (showMedSurv != "none") {
+      MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+      MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+      MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+      MedSurvItem_df <- MedSurvItem_df %>%
+        mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+      rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+      if (nrow(MedSurvItem_df) > 1) {
+        ggsurv$plot <- ggsurv$plot +
+          geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+      }
+    }
     if (!is.null(input$SurvXaxis)) {
       ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+      ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
     }
     
     ggsurv$table <- ggsurv$table + theme_cleantable()
@@ -3247,6 +3269,13 @@ server <- function(input, output, session) {
     xaxlim <- input$SurvXaxis * 365.25
     surv_time_col <- input$SurvivalType_time
     showLegend <- input$SurvLegendPos
+    showMedSurv <- input$ShowMedSurvLine
+    if (showMedSurv == T) {
+      showMedSurv <- "hv"
+    }
+    else if (showMedSurv == F) {
+      showMedSurv <- "none"
+    }
     
     ## Survival Function
     fit <- survfit(Surv(time,ID) ~ QuartileCutP, data = meta_ssgsea_sdf, type="kaplan-meier")
@@ -3334,10 +3363,24 @@ server <- function(input, output, session) {
                          font.y = c(14, "plain"),
                          font.tickslab = c(12, "plain"),
                          legend = showLegend,
-                         risk.table.height = 0.20
+                         risk.table.height = 0.20,
+                         surv.median.line = showMedSurv
     )
+    if (showMedSurv != "none") {
+      MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+      MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+      MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+      MedSurvItem_df <- MedSurvItem_df %>%
+        mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+      rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+      if (nrow(MedSurvItem_df) > 1) {
+        ggsurv$plot <- ggsurv$plot +
+          geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+      }
+    }
     if (!is.null(input$SurvXaxis)) {
       ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+      ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
     }
     
     ggsurv$table <- ggsurv$table + theme_cleantable()
@@ -3610,6 +3653,14 @@ server <- function(input, output, session) {
     xaxlim <- input$SurvXaxis * 365.25
     surv_time_col <- input$SurvivalType_time
     showLegend <- input$SurvLegendPos
+    showMedSurv <- input$ShowMedSurvLine
+    if (showMedSurv == T) {
+      showMedSurv <- "hv"
+    }
+    else if (showMedSurv == F) {
+      showMedSurv <- "none"
+    }
+    
     
     ## Survival Function
     fit <- survfit(Surv(time,ID) ~ OptimalCutP, data = meta_ssgsea_sdf, type="kaplan-meier")
@@ -3697,10 +3748,24 @@ server <- function(input, output, session) {
                          font.y = c(14, "plain"),
                          font.tickslab = c(12, "plain"),
                          legend = showLegend,
-                         risk.table.height = 0.20
+                         risk.table.height = 0.20,
+                         surv.median.line = showMedSurv
     )
+    if (showMedSurv != "none") {
+      MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+      MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+      MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+      MedSurvItem_df <- MedSurvItem_df %>%
+        mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+      rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+      if (nrow(MedSurvItem_df) > 1) {
+        ggsurv$plot <- ggsurv$plot +
+          geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+      }
+    }
     if (!is.null(input$SurvXaxis)) {
       ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+      ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
     }
     
     ggsurv$table <- ggsurv$table + theme_cleantable()
@@ -3980,6 +4045,13 @@ server <- function(input, output, session) {
     xaxlim <- input$SurvXaxis * 365.25
     surv_time_col <- input$SurvivalType_time
     showLegend <- input$SurvLegendPos
+    showMedSurv <- input$ShowMedSurvLine
+    if (showMedSurv == T) {
+      showMedSurv <- "hv"
+    }
+    else if (showMedSurv == F) {
+      showMedSurv <- "none"
+    }
     
     ## Survival Function
     fit <- survfit(Surv(time,ID) ~ TopBottomCutP, data = meta_ssgsea_sdf, type="kaplan-meier")
@@ -4067,10 +4139,24 @@ server <- function(input, output, session) {
                          font.y = c(14, "plain"),
                          font.tickslab = c(12, "plain"),
                          legend = showLegend,
-                         risk.table.height = 0.20
+                         risk.table.height = 0.20,
+                         surv.median.line = showMedSurv
     )
+    if (showMedSurv != "none") {
+      MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+      MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+      MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+      MedSurvItem_df <- MedSurvItem_df %>%
+        mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+      rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+      if (nrow(MedSurvItem_df) > 1) {
+        ggsurv$plot <- ggsurv$plot +
+          geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+      }
+    }
     if (!is.null(input$SurvXaxis)) {
       ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+      ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
     }
     
     ggsurv$table <- ggsurv$table + theme_cleantable()
@@ -4335,6 +4421,13 @@ server <- function(input, output, session) {
     xaxlim <- input$SurvXaxis * 365.25
     surv_time_col <- input$SurvivalType_time
     showLegend <- input$SurvLegendPos
+    showMedSurv <- input$ShowMedSurvLine
+    if (showMedSurv == T) {
+      showMedSurv <- "hv"
+    }
+    else if (showMedSurv == F) {
+      showMedSurv <- "none"
+    }
     
     ## Survival Function
     fit <- survfit(Surv(time,ID) ~ UserCutP, data = meta_ssgsea_sdf, type="kaplan-meier")
@@ -4421,10 +4514,24 @@ server <- function(input, output, session) {
                          font.y = c(14, "plain"),
                          font.tickslab = c(12, "plain"),
                          legend = showLegend,
-                         risk.table.height = 0.20
+                         risk.table.height = 0.20,
+                         surv.median.line = showMedSurv
     )
+    if (showMedSurv != "none") {
+      MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+      MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+      MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+      MedSurvItem_df <- MedSurvItem_df %>%
+        mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+      rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+      if (nrow(MedSurvItem_df) > 1) {
+        ggsurv$plot <- ggsurv$plot +
+          geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+      }
+    }
     if (!is.null(input$SurvXaxis)) {
       ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+      ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
     }
     
     ggsurv$table <- ggsurv$table + theme_cleantable()
@@ -4635,12 +4742,12 @@ server <- function(input, output, session) {
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
         meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature] != "Inf"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
-        ## Re-Perform Stat functions
-        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
-        meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
-        meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
+        ### Re-Perform Stat functions
+        #meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        #meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
+        #meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        #meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        #meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
         
       }
       
@@ -4737,6 +4844,14 @@ server <- function(input, output, session) {
     xaxlim <- input$SurvXaxis * 365.25
     surv_time_col <- input$SurvivalType_time
     showLegend <- input$SurvLegendPos
+    showMedSurv <- input$ShowMedSurvLine
+    if (showMedSurv == T) {
+      showMedSurv <- "hv"
+    }
+    else if (showMedSurv == F) {
+      showMedSurv <- "none"
+    }
+    
     
     Feature <- colnames(meta_ssgsea_sdf)[4]
     
@@ -4789,10 +4904,24 @@ server <- function(input, output, session) {
                          font.y = c(14, "plain"),
                          font.tickslab = c(12, "plain"),
                          legend = showLegend,
-                         risk.table.height = 0.20
+                         risk.table.height = 0.20,
+                         surv.median.line = showMedSurv
     )
+    if (showMedSurv != "none") {
+      MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+      MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+      MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+      MedSurvItem_df <- MedSurvItem_df %>%
+        mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+      rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+      if (nrow(MedSurvItem_df) > 1) {
+        ggsurv$plot <- ggsurv$plot +
+          geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+      }
+    }
     if (!is.null(input$SurvXaxis)) {
       ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+      ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
     }
     
     ggsurv$table <- ggsurv$table + theme_cleantable()
@@ -4847,7 +4976,7 @@ server <- function(input, output, session) {
       Feature <- paste("<b>",Feature,"</b> - <b>",SubFeature,"</b></li>",sep = "")
       line2 <- paste("<li>The dataset is filtered by ",Feature,sep = "")
     }
-    if (Feature == "All_Features") {
+    else if (Feature == "All_Features") {
       line2 <- NULL
     }
     if (contCheck == TRUE) {
@@ -5012,12 +5141,12 @@ server <- function(input, output, session) {
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
         meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
-        ## Re-Perform Stat functions
-        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
-        meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
-        meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
+        ### Re-Perform Stat functions
+        #meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        #meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
+        #meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        #meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        #meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
         
       }
       if (input$BiVarAddNAcheck2 == TRUE) {
@@ -5026,12 +5155,12 @@ server <- function(input, output, session) {
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
         meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
-        ## Re-Perform Stat functions
-        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
-        meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
-        meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
+        ### Re-Perform Stat functions
+        #meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        #meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
+        #meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        #meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        #meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
         
       }
       
@@ -5423,12 +5552,12 @@ server <- function(input, output, session) {
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
         meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
-        ## Re-Perform Stat functions
-        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
-        meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
-        meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
+        ### Re-Perform Stat functions
+        #meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        #meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
+        #meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        #meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        #meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
         
       }
       if (input$BiVarIntNAcheck2 == TRUE) {
@@ -5437,12 +5566,12 @@ server <- function(input, output, session) {
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
         meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
-        ## Re-Perform Stat functions
-        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
-        meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
-        meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
+        ### Re-Perform Stat functions
+        #meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        #meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
+        #meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        #meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        #meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
         
       }
       
@@ -5612,6 +5741,13 @@ server <- function(input, output, session) {
       meta_ssgsea_sdf <- BiVarIntFeature_react()
       Feature1 <- colnames(meta_ssgsea_sdf)[4]
       Feature2 <- colnames(meta_ssgsea_sdf)[5]
+      showMedSurv <- input$ShowMedSurvLine
+      if (showMedSurv == T) {
+        showMedSurv <- "hv"
+      }
+      else if (showMedSurv == F) {
+        showMedSurv <- "none"
+      }
       
       ## Determine type of survival data - OS/EFS/PFS?
       SurvDateType <- sub("\\..*","",surv_time_col)
@@ -5662,10 +5798,24 @@ server <- function(input, output, session) {
                            font.y = c(14, "plain"),
                            font.tickslab = c(12, "plain"),
                            legend = showLegend,
-                           risk.table.height = 0.20
+                           risk.table.height = 0.20,
+                           surv.median.line = showMedSurv
       )
+      if (showMedSurv != "none") {
+        MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+        MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+        MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+        MedSurvItem_df <- MedSurvItem_df %>%
+          mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+        rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+        if (nrow(MedSurvItem_df) > 1) {
+          ggsurv$plot <- ggsurv$plot +
+            geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+        }
+      }
       if (!is.null(input$SurvXaxis)) {
         ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+        ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
       }
       
       ggsurv$table <- ggsurv$table + theme_cleantable()
@@ -5764,18 +5914,12 @@ server <- function(input, output, session) {
       geneset_name <- names(geneset)
       
       if (input$UniVarNAcheck == TRUE) {
-        
         # Remove NA_unknown
-        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
-        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature] != "Inf"),]
-        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
-        ## Re-Perform Stat functions
-        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$QuartileCutP <- paste("", meta_ssgsea$VAR_Q, sep="")
-        meta_ssgsea$MedianCutP <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
-        meta_ssgsea$TopBottomCutP <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
-        meta_ssgsea$UserCutP <- quantile_conversion2(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff2)
-        
+        for (i in Feature) {
+          meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,i]) == FALSE),]
+          meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,i] != "Inf"),]
+          meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,i],ignore.case = T, invert = T),]
+        }
       }
       
       ## Subset columns needed for plot and rename for surv function
@@ -7111,6 +7255,376 @@ server <- function(input, output, session) {
     content = function(file) {
       p <- SquantPlot2_react()
       ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  ####----DNLD PATH Density----####
+  
+  ## binary
+  output$dnldssgseaBINDensity_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        scoreMethodLab <- "RawGeneExpression"
+        #if (input$RawOrSS == "Raw Gene Expression") {
+        #  scoreMethodLab <- "RawGeneExpression"
+        #}
+        #else if (input$RawOrSS == "Rank Normalized") {
+        #  scoreMethodLab <- scoreMethod
+        #}
+      }
+      else if (input$GeneSetTabs != 2) {
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "PreProcessed"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPDensity.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPDensity.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ssgseaBINDensity_react()
+      ggsave(file,p,width = 10, height = 8)
+      
+    }
+  )
+  output$dnldssgseaBINDensity_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        scoreMethodLab <- "RawGeneExpression"
+        #if (input$RawOrSS == "Raw Gene Expression") {
+        #  scoreMethodLab <- "RawGeneExpression"
+        #}
+        #else if (input$RawOrSS == "Rank Normalized") {
+        #  scoreMethodLab <- scoreMethod
+        #}
+      }
+      else if (input$GeneSetTabs != 2) {
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "PreProcessed"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPDensity.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPDensity.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ssgseaBINDensity_react()
+      ggsave(file,p,width = 10, height = 8)
+      
+    }
+  )
+  
+  ## cut p
+  output$dnldssgseaCutPDensity_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        scoreMethodLab <- "RawGeneExpression"
+        #if (input$RawOrSS == "Raw Gene Expression") {
+        #  scoreMethodLab <- "RawGeneExpression"
+        #}
+        #else if (input$RawOrSS == "Rank Normalized") {
+        #  scoreMethodLab <- scoreMethod
+        #}
+      }
+      else if (input$GeneSetTabs != 2) {
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "PreProcessed"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointDensity.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointDensity.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ssgseaCutPDensity_react()
+      ggsave(file,p,width = 10, height = 8)
+      
+    }
+  )
+  output$dnldssgseaCutPDensity_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        scoreMethodLab <- "RawGeneExpression"
+        #if (input$RawOrSS == "Raw Gene Expression") {
+        #  scoreMethodLab <- "RawGeneExpression"
+        #}
+        #else if (input$RawOrSS == "Rank Normalized") {
+        #  scoreMethodLab <- scoreMethod
+        #}
+      }
+      else if (input$GeneSetTabs != 2) {
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "PreProcessed"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointDensity.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointDensity.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ssgseaCutPDensity_react()
+      ggsave(file,p,width = 10, height = 8)
+      
+    }
+  )
+  
+  ## Quantile
+  output$dnldssgseaQuantDensity_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        scoreMethodLab <- "RawGeneExpression"
+        #if (input$RawOrSS == "Raw Gene Expression") {
+        #  scoreMethodLab <- "RawGeneExpression"
+        #}
+        #else if (input$RawOrSS == "Rank Normalized") {
+        #  scoreMethodLab <- scoreMethod
+        #}
+      }
+      else if (input$GeneSetTabs != 2) {
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "PreProcessed"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileDensity.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileDensity.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ssgseaQuantDensity_react()
+      ggsave(file,p,width = 10, height = 8)
+      
+    }
+  )
+  output$dnldssgseaQuantDensity_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        scoreMethodLab <- "RawGeneExpression"
+        #if (input$RawOrSS == "Raw Gene Expression") {
+        #  scoreMethodLab <- "RawGeneExpression"
+        #}
+        #else if (input$RawOrSS == "Rank Normalized") {
+        #  scoreMethodLab <- scoreMethod
+        #}
+      }
+      else if (input$GeneSetTabs != 2) {
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "PreProcessed"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileDensity.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileDensity.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ssgseaQuantDensity_react()
+      ggsave(file,p,width = 10, height = 8)
+      
+    }
+  )
+  
+  ## cutoff
+  output$dnldssgseaQuant2Density_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        scoreMethodLab <- "RawGeneExpression"
+        #if (input$RawOrSS == "Raw Gene Expression") {
+        #  scoreMethodLab <- "RawGeneExpression"
+        #}
+        #else if (input$RawOrSS == "Rank Normalized") {
+        #  scoreMethodLab <- scoreMethod
+        #}
+      }
+      else if (input$GeneSetTabs != 2) {
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "PreProcessed"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffDensity.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffDensity.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ssgseaQuant2Density_react()
+      ggsave(file,p,width = 10, height = 8)
+      
+    }
+  )
+  output$dnldssgseaQuant2Density_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        scoreMethodLab <- "RawGeneExpression"
+        #if (input$RawOrSS == "Raw Gene Expression") {
+        #  scoreMethodLab <- "RawGeneExpression"
+        #}
+        #else if (input$RawOrSS == "Rank Normalized") {
+        #  scoreMethodLab <- scoreMethod
+        #}
+      }
+      else if (input$GeneSetTabs != 2) {
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "PreProcessed"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffDensity.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffDensity.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ssgseaQuant2Density_react()
+      ggsave(file,p,width = 10, height = 8)
       
     }
   )
