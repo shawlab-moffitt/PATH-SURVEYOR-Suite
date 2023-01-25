@@ -3105,10 +3105,12 @@ server <- function(input, output, session) {
     meta_ssgsea_sdf <- merge(meta[,c("SampleName",surv_time_col,surv_id_col)],ssGSEA[,c("SampleName",geneset_name)], by = "SampleName")
     
     if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
-      res.cut <- surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
-      cutp <- res.cut$cutpoint[["cutpoint"]]
-      res.cat <- surv_categorize(res.cut)
-      ssGSEA$OptimalCutP <- res.cat[,3]
+      if (length(meta_ssgsea_sdf[,4]) > 1) {
+        res.cut <- surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
+        cutp <- res.cut$cutpoint[["cutpoint"]]
+        res.cat <- surv_categorize(res.cut)
+        ssGSEA$OptimalCutP <- res.cat[,3]
+      }
     }
     
     
