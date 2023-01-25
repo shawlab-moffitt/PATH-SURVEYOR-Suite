@@ -2800,10 +2800,12 @@ server <- function(input, output, session) {
     #colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
     
     if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
-      res.cut <- surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
-      cutp <- res.cut$cutpoint[["cutpoint"]]
-      res.cat <- surv_categorize(res.cut)
-      ssGSEA$OptimalCutP <- res.cat[,3]
+      if (length(meta_ssgsea_sdf[,4]) > 1) {
+        res.cut <- surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
+        cutp <- res.cut$cutpoint[["cutpoint"]]
+        res.cat <- surv_categorize(res.cut)
+        ssGSEA$OptimalCutP <- res.cat[,3]
+      }
     }
     
     
