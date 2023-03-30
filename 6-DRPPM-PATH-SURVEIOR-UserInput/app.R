@@ -3479,13 +3479,14 @@ server <- function(input, output, session) {
     
     tab <- MedianCutPTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
   })
@@ -3864,13 +3865,14 @@ server <- function(input, output, session) {
     
     tab <- QuatileCutPTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
     
@@ -4258,13 +4260,14 @@ server <- function(input, output, session) {
     
     tab <- OptimalCutPTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
   })
@@ -4642,13 +4645,14 @@ server <- function(input, output, session) {
     
     tab <- TopBottomCutPTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
   })
@@ -5012,13 +5016,14 @@ server <- function(input, output, session) {
     
     tab <- UserCutPTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
   })
@@ -5355,13 +5360,14 @@ server <- function(input, output, session) {
     
     tab <- UniVarFeatTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("Coxh Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
   })
@@ -5605,13 +5611,14 @@ server <- function(input, output, session) {
     
     tab <- BiVarAddTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("Coxh Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],xph[4],sep = "\n")
     cat(text)
     
   })
@@ -5983,13 +5990,14 @@ server <- function(input, output, session) {
     
     tab <- BiVarIntTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("Coxh Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],xph[4],xph[5],sep = "\n")
     cat(text)
     
   })
