@@ -66,6 +66,7 @@ invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
 
+
 ####----Read In Files----####
 
 ##--Meta--##
@@ -98,8 +99,21 @@ meta[,1] <- gsub("[[:punct:]]","_",meta[,1])
 
 ##--Expression--##
 expr <- as.data.frame(read_delim(ExpressionMatrix_file,delim = '\t', col_names = T))
+expr <- expr %>% 
+  mutate(across(where(is.character), str_trim))
+colnames(expr)[1] <- "Symbol"
+if (TRUE %in% duplicated(expr[,1])) {
+  expr <- expr %>%
+    group_by(Symbol) %>%
+    summarise_all(max)
+}
 rownames(expr) <- expr[,1]
 expr <- expr[,-1]
+num_test <- apply(expr,2, is.numeric)
+if (any(num_test) == FALSE) {
+  expr <- mutate_all(expr, function(x) as.numeric(as.character(x)))
+  
+}
 ## Replace any special characters to make uniform with expression
 colnames(expr) <- gsub("[[:punct:]]","_",colnames(expr))
 
@@ -515,8 +529,12 @@ decon_score_cols <- gsub("_PreProcessedScore","",decon_score_cols)
 metacol_feature <- c(metacol_feature_noPreProcessedScore,decon_score_cols)
 colnames(meta) <- gsub("_PreProcessedScore","",colnames(meta))
 
-
 ####----UI----####
+
+##--Advanced Setup--##
+SurvPlot_Height <- "550px"
+SurvPlot_Width <- "850px"
+
 
 ui <-
   navbarPage(paste("{ ",ProjectName," Survival Analysis }",sep = ""),
@@ -530,152 +548,236 @@ ui <-
                           ####----Sidebar Panel----####
                           
                           sidebarPanel(
-                            tabsetPanel(
-                              id = "survside",
-                              
-                              ##--Sample Parameters--##
-                              
-                              tabPanel("Sample Parameters",
-                                       p(),
-                                       uiOutput("rendSampleTypeSelection"),
-                                       uiOutput("rendFeatureSelection"),
-                                       uiOutput("rendSubFeatureSelection"),
-                                       fluidRow(
-                                         column(6,
-                                                uiOutput("rendSurvivalType_time")
-                                         ),
-                                         column(6,
-                                                uiOutput("rendSurvivalType_id")
-                                         )
-                                       ),
-                                       uiOutput("rendScoreMethodBox"),
-                                       tabsetPanel(
-                                         id = "GeneSetTabs",
-                                         tabPanel("Gene Sets",
-                                                  p(),
-                                                  uiOutput("rendGeneSetCat_Select"),
-                                                  uiOutput("rendGeneSetTable"),
-                                                  value = 1
-                                         ),
-                                         tabPanel("Single Genes",
-                                                  #radioButtons("RawOrSS","Survival Analysis By:",
-                                                  #             choices = c("Raw Gene Expression","Rank Normalized"),
-                                                  #             selected = "Raw Gene Expression", inline = T),
-                                                  uiOutput("rendGeneGeneSetTable"),
-                                                  value = 2
-                                         ),
-                                         tabPanel("User Gene Set",
-                                                  p(),
-                                                  radioButtons("UserGSoption","",choices = c("Gene Set Upload","Text Box Input"), inline = T),
-                                                  uiOutput("renduserGeneSet"),
-                                                  uiOutput("renduserGeneSetTextName"),
-                                                  uiOutput("renduserGeneSetText"),
-                                                  uiOutput("rendUserGeneSetTable"),
-                                                  value = 3
-                                         )
-                                       ),
-                                       uiOutput("rendViewGeneSetGenes"),
-                                       uiOutput("rendGenesInGeneSetTab")
-                              ),
-                              
-                              ##--Survival Parameters--##
-                              
-                              tabPanel("Risk Strat Parameters",
-                                       p(),
-                                       h4("Risk Stratification Plot Parameters"),
-                                       fluidRow(
-                                         column(6,
-                                                numericInput("cutoffTime1","High-Risk Survival Time Cutoff:", value = 364, min = 0, step = 1),
-                                                selectInput("survStatus1","Survival Status Below Cutoff:", choices = c("1","0","0/1"), selected = "1")
-                                         ),
-                                         column(6,
-                                                numericInput("cutoffTime0","Low-Risk Survival Time Cutoff:", value = 365, min = 0, step = 1),
-                                                selectInput("survStatus0","Survival Status Above Cutoff:", choices = c("1","0","0/1"), selected = "0")
-                                         )
-                                       )
-                              ),
-                              
-                              ##--Figure Parameters--##
-                              
-                              tabPanel("Figure Parameters",
-                                       p(),
-                                       h4("Survival Plot Parameters"),
-                                       fluidRow(
-                                         column(4,
-                                                uiOutput("rendSurvXaxis")
-                                         ),
-                                         column(8,
-                                                uiOutput("rendSurvPlotTitle")
-                                         )
-                                       ),
-                                       fluidRow(
-                                         column(3,
-                                                selectInput("SurvLegendPos","Legend Position",choices = c("right","left","top","bottom","none"))
-                                         ),
-                                         column(3,
-                                                checkboxInput("ShowPval","Show P.Value",value = T)
-                                         ),
-                                         column(3,
-                                                checkboxInput("ShowConfInt","Show Confidence Interval",value = F)
-                                         ),
-                                         column(3,
-                                                checkboxInput("ShowMedSurvLine","Show Median Survival Line",value = F)
-                                         )
-                                       ),
-                                       hr(),
-                                       h4("Boxplot Parameters"),
-                                       fluidRow(
-                                         column(6,
-                                                numericInput("boxplotFont","Boxplot Font Size:", value = 15, step = 1),
-                                                selectInput("boxoptselec","Boxplot Stat Compare Method:", choices = c("none","wilcox.test","t.test","kruskal.test","anova")) 
-                                         ),
-                                         column(6,
-                                                numericInput("boxplotDot", "Boxplot Dot Size:", value = 0.75, step = 0.25),
-                                                selectInput("boxplotTextAngle","X-Axis Text Orientation",
-                                                            choices = c("Horizontal (0 degrees)" = "0","Angled (45 degrees)" = "45","Vertical (90 degrees)" = "90","Stagger"))
-                                         )
-                                       ),
-                                       hr(),
-                                       h4("Heatmap Parameters"),
-                                       selectInput("ClusterMethod", "Select Cluster Method",
-                                                   choices = c("complete", "ward.D", "ward.D2", "single", "average", "mcquitty", "median", "centroid")),
-                                       fluidRow(
-                                         column(6,
-                                                numericInput("heatmapFontR", "Heatmap Row Font Size:", value = 9, step = 1)
-                                         ),
-                                         column(6,
-                                                numericInput("heatmapFontC", "Heatmap Column Font Size:", value = 10, step = 1)
-                                         )
-                                       ),
-                                       selectInput("ColorPaletteHeat", "Select Color Palette:",
-                                                   choices = c("Red/Blue" = "original",
-                                                               "OmniBlueRed" = "OmniBlueRed",
-                                                               "LightBlue/BlackRed" = "LightBlueBlackRed",
-                                                               "Green/Black/Red" = "GreenBlackRed",
-                                                               "Yellow/Green/Blue" = "YlGnBu","Inferno" = "Inferno",
-                                                               "Viridis" = "Viridis","Plasma" = "Plasma",
-                                                               "Reds" = "OrRd","Blues" = "PuBu","Greens" = "Greens")
-                                       ),
-                                       hr(),
-                                       h4("Forest Plot Parameters"),
-                                       numericInput("ForestFontSize","Font Size",value = 1),
-                                       hr(),
-                                       h4("Linearity Plot Parameters"),
-                                       fluidRow(
-                                         column(4,
-                                                numericInput("linAxisFont","X/Y Axis Font Size",
-                                                             value = 14, step = 1)
-                                         ),
-                                         column(4,
-                                                numericInput("linTickFont","Axis Tick Font Size",
-                                                             value = 10, step = 1)
-                                         ),
-                                         column(4,
-                                                numericInput("linMainFont","Title Font Size",
-                                                             value = 16, step = 1)
-                                         )
-                                       )
-                              )
+                            conditionalPanel(condition = "input.SurvPanels == '1' | input.SurvPanels == '2' | input.SurvPanels == '3' | input.SurvPanels == '4'",
+                                             tabsetPanel(
+                                               id = "survside",
+                                               
+                                               ##--Sample Parameters--##
+                                               
+                                               tabPanel("Sample Parameters",
+                                                        p(),
+                                                        uiOutput("rendSampleTypeSelection"),
+                                                        uiOutput("rendFeatureSelection"),
+                                                        uiOutput("rendSubFeatureSelection"),
+                                                        fluidRow(
+                                                          column(6,
+                                                                 uiOutput("rendSurvivalType_time")
+                                                          ),
+                                                          column(6,
+                                                                 uiOutput("rendSurvivalType_id")
+                                                          )
+                                                        ),
+                                                        uiOutput("rendScoreMethodBox"),
+                                                        tabsetPanel(
+                                                          id = "GeneSetTabs",
+                                                          tabPanel("Gene Sets",
+                                                                   p(),
+                                                                   uiOutput("rendGeneSetCat_Select"),
+                                                                   uiOutput("rendGeneSetTable"),
+                                                                   value = 1
+                                                          ),
+                                                          tabPanel("Single Genes",
+                                                                   #radioButtons("RawOrSS","Survival Analysis By:",
+                                                                   #             choices = c("Raw Gene Expression","Rank Normalized"),
+                                                                   #             selected = "Raw Gene Expression", inline = T),
+                                                                   uiOutput("rendGeneGeneSetTable"),
+                                                                   value = 2
+                                                          ),
+                                                          tabPanel("User Gene Set",
+                                                                   p(),
+                                                                   radioButtons("UserGSoption","",choices = c("Gene Set Upload","Text Box Input"), inline = T),
+                                                                   uiOutput("renduserGeneSet"),
+                                                                   uiOutput("renduserGeneSetTextName"),
+                                                                   uiOutput("renduserGeneSetText"),
+                                                                   uiOutput("rendUserGeneSetTable"),
+                                                                   value = 3
+                                                          )
+                                                        ),
+                                                        uiOutput("rendViewGeneSetGenes"),
+                                                        uiOutput("rendGenesInGeneSetTab")
+                                               ),
+                                               
+                                               ##--Survival Parameters--##
+                                               
+                                               tabPanel("Risk Strat Parameters",
+                                                        p(),
+                                                        h4("Risk Stratification Plot Parameters"),
+                                                        fluidRow(
+                                                          column(6,
+                                                                 numericInput("cutoffTime1","High-Risk Survival Time Cutoff:", value = 364, min = 0, step = 1),
+                                                                 selectInput("survStatus1","Survival Status Below Cutoff:", choices = c("1","0","0/1"), selected = "1")
+                                                          ),
+                                                          column(6,
+                                                                 numericInput("cutoffTime0","Low-Risk Survival Time Cutoff:", value = 365, min = 0, step = 1),
+                                                                 selectInput("survStatus0","Survival Status Above Cutoff:", choices = c("1","0","0/1"), selected = "0")
+                                                          )
+                                                        )
+                                               ),
+                                               
+                                               ##--Figure Parameters--##
+                                               
+                                               tabPanel("Figure Parameters",
+                                                        p(),
+                                                        h4("Survival Plot Parameters"),
+                                                        fluidRow(
+                                                          column(4,
+                                                                 uiOutput("rendSurvXaxis")
+                                                          ),
+                                                          column(8,
+                                                                 uiOutput("rendSurvPlotTitle")
+                                                          )
+                                                        ),
+                                                        fluidRow(
+                                                          column(3,
+                                                                 selectInput("SurvLegendPos","Legend Position",choices = c("right","left","top","bottom","none"))
+                                                          ),
+                                                          column(3,
+                                                                 checkboxInput("ShowPval","Show P.Value",value = T)
+                                                          ),
+                                                          column(3,
+                                                                 checkboxInput("ShowConfInt","Show Confidence Interval",value = F)
+                                                          ),
+                                                          column(3,
+                                                                 checkboxInput("ShowMedSurvLine","Show Median Survival Line",value = F)
+                                                          )
+                                                        ),
+                                                        hr(),
+                                                        h4("Boxplot Parameters"),
+                                                        fluidRow(
+                                                          column(6,
+                                                                 numericInput("boxplotFont","Boxplot Font Size:", value = 15, step = 1),
+                                                                 selectInput("boxoptselec","Boxplot Stat Compare Method:", choices = c("none","wilcox.test","t.test","kruskal.test","anova")) 
+                                                          ),
+                                                          column(6,
+                                                                 numericInput("boxplotDot", "Boxplot Dot Size:", value = 0.75, step = 0.25),
+                                                                 selectInput("boxplotTextAngle","X-Axis Text Orientation",
+                                                                             choices = c("Horizontal (0 degrees)" = "0","Angled (45 degrees)" = "45","Vertical (90 degrees)" = "90","Stagger"))
+                                                          )
+                                                        ),
+                                                        hr(),
+                                                        h4("Heatmap Parameters"),
+                                                        selectInput("ClusterMethod", "Select Cluster Method",
+                                                                    choices = c("complete", "ward.D", "ward.D2", "single", "average", "mcquitty", "median", "centroid")),
+                                                        fluidRow(
+                                                          column(6,
+                                                                 numericInput("heatmapFontR", "Heatmap Row Font Size:", value = 9, step = 1)
+                                                          ),
+                                                          column(6,
+                                                                 numericInput("heatmapFontC", "Heatmap Column Font Size:", value = 10, step = 1)
+                                                          )
+                                                        ),
+                                                        selectInput("ColorPaletteHeat", "Select Color Palette:",
+                                                                    choices = c("Red/Blue" = "original",
+                                                                                "OmniBlueRed" = "OmniBlueRed",
+                                                                                "LightBlue/BlackRed" = "LightBlueBlackRed",
+                                                                                "Green/Black/Red" = "GreenBlackRed",
+                                                                                "Yellow/Green/Blue" = "YlGnBu","Inferno" = "Inferno",
+                                                                                "Viridis" = "Viridis","Plasma" = "Plasma",
+                                                                                "Reds" = "OrRd","Blues" = "PuBu","Greens" = "Greens")
+                                                        ),
+                                                        hr(),
+                                                        h4("Forest Plot Parameters"),
+                                                        numericInput("ForestFontSize","Font Size",value = 1),
+                                                        hr(),
+                                                        h4("Linearity Plot Parameters"),
+                                                        fluidRow(
+                                                          column(4,
+                                                                 numericInput("linAxisFont","X/Y Axis Font Size",
+                                                                              value = 14, step = 1)
+                                                          ),
+                                                          column(4,
+                                                                 numericInput("linTickFont","Axis Tick Font Size",
+                                                                              value = 10, step = 1)
+                                                          ),
+                                                          column(4,
+                                                                 numericInput("linMainFont","Title Font Size",
+                                                                              value = 16, step = 1)
+                                                          )
+                                                        )
+                                               )
+                                             )
+                            ),
+                            conditionalPanel(condition = "input.SurvPanels == '5'",
+                                             tabsetPanel(
+                                               tabPanel("Input Parameters",
+                                                        p(),
+                                                        h4("Sample Selection"),
+                                                        uiOutput("rendSampleTypeSelection_lasso"),
+                                                        uiOutput("rendFeatureSelection_lasso"),
+                                                        uiOutput("rendSubFeatureSelection_lasso"),
+                                                        h4("Feature Selection"),
+                                                        textInput("LassoModelName","Lasso Model Name:",value = "Custom_Lasso_Model"),
+                                                        uiOutput("rendLassoFeatureSelection_lasso"),
+                                                        h4("Lasso Parameters"),
+                                                        fluidRow(
+                                                          column(6,
+                                                                 uiOutput("rendSurvTimeSelec_lasso")
+                                                          ),
+                                                          column(6,
+                                                                 uiOutput("rendSurvIDSelect_lasso")
+                                                          )
+                                                        ),
+                                                        fluidRow(
+                                                          column(5,
+                                                                 numericInput("LassoTrainProp","Training Sample Proportion:",value = 50, step = 1, max = 100,min = 1)
+                                                          ),
+                                                          column(4,
+                                                                 numericInput("LassoAlpha","Set Lasso Alpha:", value = 1, min = 0, step = 0.1)
+                                                          ),
+                                                          column(3,
+                                                                 numericInput("LassoSeedSelection","Set Seed:", value = 100, min = 1, step = 1)
+                                                          )
+                                                        ),
+                                                        p(),
+                                                        fluidRow(
+                                                          column(8,
+                                                                 radioButtons("viewLassoMinOrSE","Select Lambda to Generate Risk Score:", inline = T,choices = c("Lambda Min","Lambda SE","Custom")),
+                                                          ),
+                                                          column(4,
+                                                                 uiOutput("rendCustomLambda")
+                                                          )
+                                                        ),
+                                                        uiOutput("rednLassoCoefTable"),
+                                                        #,
+                                                        fluidRow(
+                                                          column(6,
+                                                                 downloadButton("dnldLassoModel","Download Lasso Model")
+                                                          ),
+                                                          column(6,
+                                                                 downloadButton("dnldLassoRunData","Download Lasso Run Data")
+                                                          )
+                                                        )
+                                               ),
+                                               tabPanel("Figure Parameters",
+                                                        p(),
+                                                        h4("Survival Plot Parameters"),
+                                                        radioButtons("LassoPlotCutP","Plot Cut-Point", choices = c("Median","Quartile","Optimal","Quantile","User Specified"),
+                                                                     inline = T),
+                                                        uiOutput("rendCutPinput"),
+                                                        fluidRow(
+                                                          column(4,
+                                                                 uiOutput("rendSurvXaxis_lasso")
+                                                          ),
+                                                          column(8,
+                                                                 textInput("SurvPlotTitle_lasso","Survival Plot Title:",value = "")
+                                                          )
+                                                        ),
+                                                        fluidRow(
+                                                          column(3,
+                                                                 selectInput("SurvLegendPos_lasso","Legend Position",choices = c("top","right","left","bottom","none"))
+                                                          ),
+                                                          column(3,
+                                                                 checkboxInput("ShowPval_lasso","Show P.Value",value = T)
+                                                          ),
+                                                          column(3,
+                                                                 checkboxInput("ShowConfInt_lasso","Show Confidence Interval",value = F)
+                                                          ),
+                                                          column(3,
+                                                                 checkboxInput("ShowMedSurvLine_lasso","Show Median Survival Line",value = F)
+                                                          )
+                                                        )
+                                               )
+                                             )
                             )
                           ),
                           
@@ -697,7 +799,7 @@ ui <-
                                                   p(),
                                                   htmlOutput("BINSurvDescrip", style = "font-size:14px;"),
                                                   hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("SplotBIN", width = "850px", height = "550px")), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("SplotBIN", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldSplotBIN_SVG","Download as SVG"),
                                                     downloadButton("dnldSplotBIN_PDF","Download as PDF")
@@ -727,7 +829,7 @@ ui <-
                                                   p(),
                                                   htmlOutput("QuartSurvDescrip", style = "font-size:14px;"),
                                                   hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("Splot", width = "850px", height = "550px")), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("Splot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldSplot_SVG","Download as SVG"),
                                                     downloadButton("dnldSplot_PDF","Download as PDF")
@@ -757,7 +859,7 @@ ui <-
                                                   p(),
                                                   htmlOutput("CutPSurvDescrip", style = "font-size:14px;"),
                                                   hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("ScutPointPlot", width = "850px", height = "550px")), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("ScutPointPlot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldScutPointPlot_SVG","Download as SVG"),
                                                     downloadButton("dnldScutPointPlot_PDF","Download as PDF")
@@ -787,7 +889,7 @@ ui <-
                                                   p(),
                                                   htmlOutput("QuantSurvDescrip", style = "font-size:14px;"),
                                                   hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("SquantPlot", width = "850px", height = "550px")), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("SquantPlot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                   numericInput("QuantPercent","Top/Bottom Cut-Point Quantile Cutoff (%)", value = 25, min = 0, max = 100),
                                                   fluidRow(
                                                     downloadButton("dnldSquantPlot_SVG","Download as SVG"),
@@ -818,7 +920,7 @@ ui <-
                                                   p(),
                                                   htmlOutput("Quant2SurvDescrip", style = "font-size:14px;"),
                                                   hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("SquantPlot2", width = "850px", height = "550px")), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("SquantPlot2", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                   numericInput("QuantPercent2","Above/Below User Quantile Cut-Point (%)", value = 25, min = 0, max = 100),
                                                   fluidRow(
                                                     downloadButton("dnldSquantPlot2_SVG","Download as SVG"),
@@ -888,11 +990,12 @@ ui <-
                                          
                                          tabPanel("Survival Plot",
                                                   p(),
-                                                  withSpinner(jqui_resizable(plotOutput("featSplot", width = "850px", height = "550px")), type = 6),
+                                                  withSpinner(jqui_resizable(plotOutput("featSplot", width = SurvPlot_Width, height = SurvPlot_Height)), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldfeatSplot_SVG","Download as SVG"),
                                                     downloadButton("dnldfeatSplot_PDF","Download as PDF")
                                                   )
+                                                  
                                          ),
                                          
                                          ##--Coxh Tables--##
@@ -938,7 +1041,7 @@ ui <-
                                                   withSpinner(jqui_resizable(plotOutput("UnivarLinearityPlot", width = "100%", height = "500px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldUniVarLinplot_SVG","Download as SVG"),
-                                                    downloadButton("dnldUniVarLinplot_PDF","Download as PDF")
+                                                    downloadButton("dnldUniVarLinplot_PDF`","Download as PDF")
                                                   )
                                          )
                                        ),
@@ -1096,7 +1199,7 @@ ui <-
                                                     
                                                     tabPanel("Survival Plot",
                                                              p(),
-                                                             withSpinner(jqui_resizable(plotOutput("featSplotBi", width = "850px", height = "550px")), type = 6),
+                                                             withSpinner(jqui_resizable(plotOutput("featSplotBi", width = SurvPlot_Width, height = SurvPlot_Height)), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldfeatSplotBi_SVG","Download as SVG"),
                                                                downloadButton("dnldfeatSplotBi_PDF","Download as PDF")
@@ -1198,6 +1301,48 @@ ui <-
                                          )
                                        ),
                                        value = 3),
+                              
+                              ####----Lasso Analysis----####
+                              
+                              #tabPanel("Lasso Cox Model",
+                              #         p(),
+                              #         fluidRow(
+                              #           column(2, 
+                              #                  br(),
+                              #                  actionButton("RunLassoModelGen","Generate Lasso Model")
+                              #                  ),
+                              #           column(3,
+                              #                  uiOutput("rendSurvTimeSelecView_lasso")
+                              #                  ),
+                              #           column(3,
+                              #                  uiOutput("rendSurvIDSelecView_lasso")
+                              #                  )
+                              #         ),
+                              #         fluidRow(
+                              #           column(6,
+                              #                  withSpinner(jqui_resizable(plotOutput("Lasso_Train_Splot", width = "100%", height = "500px")),type = 6),
+                              #                  downloadButton("dnldSplotLassoTrain_SVG","Download as SVG"),
+                              #                  hr(),
+                              #                  h4("Path of Coefficients"),
+                              #                  jqui_resizable(plotOutput("Lasso_CoeffPlot", width = "100%", height = "400px")),
+                              #                  hr(),
+                              #                  h4("Training Cox Hazard Regression Analysis Summary"),
+                              #                  uiOutput("rendLassoTrainHRtab"),
+                              #                  verbatimTextOutput("LassoTrainCoxSumm")
+                              #           ),
+                              #           column(6,
+                              #                  withSpinner(jqui_resizable(plotOutput("Lasso_Test_Splot", width = "100%", height = "500px")),type = 6),
+                              #                  downloadButton("dnldSplotLassoTest_SVG","Download as SVG"),
+                              #                  hr(),
+                              #                  h4("Lambda Cross-Validation"),
+                              #                  jqui_resizable(plotOutput("Lasso_LambdaPlot", width = "100%", height = "400px")),
+                              #                  hr(),
+                              #                  h4("Testing Cox Hazard Regression Analysis Summary"),
+                              #                  uiOutput("rendLassoTestHRtab"),
+                              #                  verbatimTextOutput("LassoTestCoxSumm")
+                              #           )
+                              #           ),
+                              #         value = 5),
                               
                               ####----Data Exploration----####
                               
@@ -1338,6 +1483,12 @@ ui <-
                         mainPanel(
                           tabPanel("Purpose and Methods",
                                    uiOutput("rendPurposeAndMethodsMD")
+                                   #tabsetPanel(
+                                   #  tabPanel("Purpose and Methods",
+                                   #           uiOutput("rendPurposeAndMethodsMD")),
+                                   #  tabPanel("Tutorial",
+                                   #           uiOutput("rendTutorialMD"))
+                                   #)
                           )
                         )
                       )
@@ -1360,7 +1511,7 @@ server <- function(input, output, session) {
     if (length(unique(meta[,metacol_sampletype])) > 1) {
       
       SampleTypeChoices <- unique(meta[,metacol_sampletype])
-      SampleTypeChoices <- c("All_Sample_Types",SampleTypeChoices)
+      SampleTypeChoices <- c(SampleTypeChoices,"All_Sample_Types")
       selectInput("SampleTypeSelection",paste("Select Sample Type (",metacol_sampletype,"):",sep = ""),
                   choices = SampleTypeChoices, selected = PreSelect_SamplyType)
       
@@ -1375,13 +1526,13 @@ server <- function(input, output, session) {
       
       if (input$SampleTypeSelection == "All_Sample_Types") {
         
-        FeatureChoices <- c("All_Features",metacol_sampletype,metacol_feature)
+        FeatureChoices <- c(metacol_sampletype,metacol_feature,"All_Features")
         selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
         
       }
       else if (input$SampleTypeSelection != "All_Sample_Types") {
         
-        FeatureChoices <- c("All_Features",metacol_feature)
+        FeatureChoices <- c(metacol_feature,"All_Features")
         selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
         
       }
@@ -1389,7 +1540,7 @@ server <- function(input, output, session) {
     }
     else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       
-      FeatureChoices <- c("All_Features",metacol_feature)
+      FeatureChoices <- c(metacol_feature,"All_Features")
       selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
       
     }
@@ -1900,6 +2051,24 @@ server <- function(input, output, session) {
     
   })
   
+  ## Survival X-axis Length
+  output$rendSurvXaxis_lasso <- renderUI({
+    
+    meta_ssgsea <- ssGSEAmeta()
+    if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
+      surv_time_col <- metacol_survtime[1]
+      surv_id_col <- metacol_survid[1]
+    }
+    if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
+      surv_time_col <- input$SurvivalType_time
+      surv_id_col <- input$SurvivalType_id
+    }
+    max_time <- ceiling(max(meta_ssgsea[,surv_time_col])/365.25)
+    numericInput("SurvXaxis_lasso","X-Axis Limit (years)", value = max_time)
+    
+    
+  })
+  
   ## Select survival type selection based on meta columns (ex. OS vs EFS)
   output$rendSurvivalType_time <- renderUI({
     
@@ -1933,13 +2102,13 @@ server <- function(input, output, session) {
       if (input$SampleTypeSelection != "All_Sample_Types") {
         
         selectInput("BoxplotFeature","Select Feature:",
-                    choices = metacol_feature, selected = PreSelect_SecondaryFeature)
+                    choices = metacol_feature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
         
         selectInput("BoxplotFeature","Select Feature:",
-                    choices = c(metacol_sampletype,metacol_feature), selected = PreSelect_SecondaryFeature)
+                    choices = c(metacol_sampletype,metacol_feature))
         
       }
       
@@ -1947,7 +2116,7 @@ server <- function(input, output, session) {
     else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       
       selectInput("BoxplotFeature","Select Feature:",
-                  choices = metacol_feature, selected = PreSelect_SecondaryFeature)
+                  choices = metacol_feature)
       
     }
     
@@ -2172,11 +2341,11 @@ server <- function(input, output, session) {
     
     if (length(decon_score_cols) > 0) {
       selectInput("GeneSetCat_Select","Select Category",
-                  choices = c("MSigDB","LINCS L1000","Cell Marker","ER Stress","Immune Signatures","Pre-Processed Scores"))
+                  choices = c("MSigDB","LINCS L1000","Cell Marker","ER Stress","Immune Signatures","TCGA","Pre-Processed Scores"))
     }
     else {
       selectInput("GeneSetCat_Select","Select Category",
-                  choices = c("MSigDB","LINCS L1000","Cell Marker","ER Stress","Immune Signatures"))
+                  choices = c("MSigDB","LINCS L1000","Cell Marker","ER Stress","TCGA","Immune Signatures"))
     }
     
   })
@@ -2205,7 +2374,7 @@ server <- function(input, output, session) {
     
     if (input$UserGSoption == "Text Box Input") {
       
-      textInput("userGeneSetTextName","Custom Gene Set Name", value = "Custom Gene Set")
+      textInput("userGeneSetTextName","Custom Gene Set Name")
       
     }
     
@@ -2254,13 +2423,13 @@ server <- function(input, output, session) {
       if (input$SampleTypeSelection != "All_Sample_Types") {
         
         selectInput("ScatterFeature","Select Feature:",
-                    choices = metacol_feature, selected = PreSelect_SecondaryFeature)
+                    choices = metacol_feature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
         
         selectInput("ScatterFeature","Select Feature:",
-                    choices = c(metacol_sampletype,metacol_feature), selected = PreSelect_SecondaryFeature)
+                    choices = c(metacol_sampletype,metacol_feature))
         
       }
       
@@ -2268,7 +2437,7 @@ server <- function(input, output, session) {
     else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       
       selectInput("ScatterFeature","Select Feature:",
-                  choices = metacol_feature, selected = PreSelect_SecondaryFeature)
+                  choices = metacol_feature)
       
     }
     
@@ -2323,6 +2492,215 @@ server <- function(input, output, session) {
     }
     
   })
+  
+  #####----Lasso RenderUI----####
+  #
+  #SampleType_Selec <- reactiveValues(SampleType = PreSelect_SamplyType)
+  #observeEvent(input$SampleTypeSelection, {
+  #  SampleType_Selec$SampleType <- input$SampleTypeSelection
+  #})
+  ### Select sample type to subset samples by - only render if more than one sample type
+  #output$rendSampleTypeSelection_lasso <- renderUI({
+  #  
+  #  if (length(unique(meta[,metacol_sampletype])) > 1) {
+  #    
+  #    SampleTypeChoices <- unique(meta[,metacol_sampletype])
+  #    SampleTypeChoices <- c(SampleTypeChoices,"All_Sample_Types")
+  #    selectInput("SampleTypeSelection_lasso",paste("Select Sample Type (",metacol_sampletype,"):",sep = ""),
+  #                choices = SampleTypeChoices, selected = SampleType_Selec$SampleType)
+  #    
+  #  }
+  #  
+  #})
+  #
+  #Feature_Selec <- reactiveValues(Feature = PreSelect_Feature)
+  #observeEvent(input$FeatureSelection, {
+  #  Feature_Selec$Feature <- input$FeatureSelection
+  #})
+  ### Select primary feature to look at - All not working yet
+  #output$rendFeatureSelection_lasso <- renderUI({
+  #  
+  #  if (length(unique(meta[,metacol_sampletype])) > 1) {
+  #    
+  #    if (input$SampleTypeSelection == "All_Sample_Types") {
+  #      
+  #      FeatureChoices <- c(metacol_sampletype,metacol_feature,"All_Features")
+  #      selectInput("FeatureSelection_lasso","Select Feature:", choices = FeatureChoices, selected = Feature_Selec$Feature)
+  #      
+  #    }
+  #    else if (input$SampleTypeSelection != "All_Sample_Types") {
+  #      
+  #      FeatureChoices <- c(metacol_feature,"All_Features")
+  #      selectInput("FeatureSelection_lasso","Select Feature:", choices = FeatureChoices, selected = Feature_Selec$Feature)
+  #      
+  #    }
+  #    
+  #  }
+  #  else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+  #    
+  #    FeatureChoices <- c(metacol_feature,"All_Features")
+  #    selectInput("FeatureSelection_lasso","Select Feature:", choices = FeatureChoices, selected = Feature_Selec$Feature)
+  #    
+  #  }
+  #  
+  #})
+  #
+  #SubFeature_Selec <- reactiveValues(SubFeature = PreSelect_SubFeature)
+  #observeEvent(input$SubFeatureSelection, {
+  #  SubFeature_Selec$SubFeature <- input$SubFeatureSelection
+  #})
+  ### Select primary features condition to look at - All not working yet
+  #output$rendSubFeatureSelection_lasso <- renderUI({
+  #  
+  #  req(input$FeatureSelection_lasso)
+  #  
+  #  if (length(unique(meta[,metacol_sampletype])) > 1) {
+  #    SampleType <- input$SampleTypeSelection_lasso
+  #  }
+  #  if (length(unique(meta[,metacol_sampletype])) <= 1) {
+  #    SampleType <- "All_Sample_Types"
+  #  }
+  #  #SampleType <- input$SampleTypeSelection
+  #  Feature <- input$FeatureSelection_lasso
+  #  
+  #  if (SampleType == "All_Sample_Types") {
+  #    meta <- meta
+  #  }
+  #  if (SampleType != "All_Sample_Types") {
+  #    meta <- meta[which(meta[,metacol_sampletype] == SampleType),]
+  #  }
+  #  
+  #  if (Feature != "All_Features") {
+  #    
+  #    SubFeatureChoices <- unique(meta[,Feature])
+  #    # Sort options, will put 1,TRUE,yes before 0,FASLE,no, so the 'positive' value is the initial selected - puts NA last
+  #    SubFeatureChoices <- sort(SubFeatureChoices, decreasing = T, na.last = T)
+  #    selectInput("SubFeatureSelection_lasso","Feature Condition:", choices = SubFeatureChoices, selected = SubFeature_Selec$SubFeature)
+  #    
+  #  }
+  #  
+  #})
+  #
+  #SurvTime_Selec <- reactiveValues(SurvTime = metacol_survtime[1])
+  #observeEvent(input$SurvivalType_time, {
+  #  SurvTime_Selec$SurvTime <- input$SurvivalType_time
+  #})
+  ### Select survival type selection based on meta columns (ex. OS vs EFS)
+  #output$rendSurvTimeSelec_lasso <- renderUI({
+  #  
+  #  ## Only show if more than one option
+  #  if (length(metacol_survtime > 1)) {
+  #    
+  #    selectInput("SurvTimeSelec_lasso","Select Survival Time Data:", choices = metacol_survtime, selected = SurvTime_Selec$SurvTime)
+  #    
+  #  }
+  #  
+  #})
+  #
+  #SurvID_Selec <- reactiveValues(SurvID = metacol_survid[1])
+  #observeEvent(input$SurvivalType_id, {
+  #  SurvID_Selec$SurvID <- input$SurvivalType_id
+  #})
+  ### Select survival type selection based on meta columns (ex. OS vs EFS)
+  #output$rendSurvIDSelect_lasso <- renderUI({
+  #  
+  #  ## Only show if more than one option
+  #  if (length(metacol_survid > 1)) {
+  #    
+  #    selectInput("SurvIDSelect_lasso","Select Survival ID Data:", choices = metacol_survid, selected = SurvID_Selec$SurvID)
+  #    
+  #  }
+  #  
+  #})
+  #
+  ### Select survival type selection based on meta columns (ex. OS vs EFS)
+  #output$rendSurvTimeSelecView_lasso <- renderUI({
+  #  
+  #  ## Only show if more than one option
+  #  if (length(metacol_survtime > 1)) {
+  #    
+  #    selectInput("SurvTimeSelecView_lasso","Select Survival Time To View:", choices = metacol_survtime, selected = SurvTime_Selec$SurvTime)
+  #    
+  #  }
+  #  
+  #})
+  ### Select survival type selection based on meta columns (ex. OS vs EFS)
+  #output$rendSurvIDSelecView_lasso <- renderUI({
+  #  
+  #  ## Only show if more than one option
+  #  if (length(metacol_survtime > 1)) {
+  #    
+  #    selectInput("SurvIDSelecView_lasso","Select Survival ID To View:", choices = metacol_survid, selected = SurvID_Selec$SurvID)
+  #    
+  #  }
+  #  
+  #})
+  #
+  #output$rendLassoFeatureSelection_lasso <- renderUI({
+  #  
+  #  
+  #  LassoFeatures <- c(exprGenes,decon_score_cols)
+  #  selectizeInput(
+  #    "LassoFeatureSelection_lasso", 
+  #    label = "Select or Paste Features to Generate Lasso Model:",
+  #    choices = LassoFeatures, 
+  #    multiple = T,
+  #    selected = "",
+  #    options = list(delimiter = " ", create = T)
+  #  )
+  #  
+  #})
+  #
+  #output$rendCutPinput <- renderUI({
+  #  
+  #  if (input$LassoPlotCutP == "Quantile") {
+  #    
+  #    numericInput("CutPinput","Top/Bottom Cut-Point Quantile Cutoff (%)", value = 25, min = 0, max = 100, width = "200px")
+  #    
+  #  }
+  #  else if (input$LassoPlotCutP == "User Specified") {
+  #    
+  #    numericInput("CutPinput","Above/Below User Quantile Cut-Point (%)", value = 25, min = 0, max = 100, width = "200px")
+  #    
+  #  }
+  #  
+  #})
+  #
+  #output$rendCustomLambda <- renderUI({
+  #  
+  #  if (input$viewLassoMinOrSE == "Custom") {
+  #    numericInput("CustomLambda","Custom Lambda:",min = 0, value = "")
+  #  }
+  #  else if(input$viewLassoMinOrSE == "Lambda Min") {
+  #    model <- LassoRun_train_model()
+  #    l_min <- model$lambda.min
+  #    p(paste("Lambda Min:",l_min))
+  #  }
+  #  else if(input$viewLassoMinOrSE == "Lambda SE") {
+  #    model <- LassoRun_train_model()
+  #    l_se <- model$lambda.1se
+  #    p(paste("Lambda SE:",l_se))
+  #  }
+  #})
+  #
+  #output$rednLassoCoefTable <- renderUI({
+  #  
+  #  if (input$viewLassoMinOrSE == "Lambda Min" || input$viewLassoMinOrSE == "Lambda SE") {
+  #    div(DT::dataTableOutput("LassoCoefTable"), style = "font-size:12px")
+  #  }
+  #  
+  #})
+  #
+  #output$rendLassoTrainHRtab <- renderUI({
+  #  
+  #  div(withSpinner(tableOutput("LassoTrainHRtab"), type = 7, size = 0.5), style = "font-size:12px")
+  #  
+  #})
+  #output$rendLassoTestHRtab <- renderUI({
+  #  
+  #  div(withSpinner(tableOutput("LassoTestHRtab"), type = 7, size = 0.5), style = "font-size:12px")
+  #  
+  #})
   
   
   ####----Data Tables----####
@@ -2821,6 +3199,7 @@ server <- function(input, output, session) {
       ssGSEA <- ssGSEA[,-2] #remove score column so on merge the column does not duplicate
     }
     meta_ssGSEA <- merge(meta,ssGSEA, by = "SampleName", all = T)
+    #ssGSEAmeta <- meta_ssGSEA
     meta_ssGSEA
     
   })
@@ -2841,6 +3220,7 @@ server <- function(input, output, session) {
     colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_time_col)] <- "time"
     colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_id_col)] <- "ID"
     
+    #MedianCutP_react <- meta_ssgsea_sdf
     meta_ssgsea_sdf
     
   })
@@ -2967,13 +3347,16 @@ server <- function(input, output, session) {
       }
     }
     
-    
+    breakTime <- 365.25
+    if (max(meta_ssgsea_sdf[,"time"]) < 365.25) {
+      breakTime <- NULL
+    }
     
     ## Generate plot
     ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
-                         break.time.by=365.25,
+                         break.time.by=breakTime,
                          xlab = "Years", 
                          ylab = paste(SurvDateType,"Survival Probability"),
                          submain = "Based on Kaplan-Meier estimates",
@@ -3173,13 +3556,14 @@ server <- function(input, output, session) {
     
     tab <- MedianCutPTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
   })
@@ -3344,13 +3728,16 @@ server <- function(input, output, session) {
         SurvPlotTitle <- input$SurvPlotTitleQuartile
       }
     }
-    
+    breakTime <- 365.25
+    if (max(meta_ssgsea_sdf[,"time"]) < 365.25) {
+      breakTime <- NULL
+    }
     
     ## Generate plot
     ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
-                         break.time.by=365.25,
+                         break.time.by=breakTime,
                          xlab = "Years", 
                          ylab = paste(SurvDateType,"Survival Probability"),
                          submain = "Based on Kaplan-Meier estimates",
@@ -3556,13 +3943,14 @@ server <- function(input, output, session) {
     
     tab <- QuatileCutPTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
     
@@ -3729,13 +4117,16 @@ server <- function(input, output, session) {
         SurvPlotTitle <- input$SurvPlotTitleOptimal
       }
     }
-    
+    breakTime <- 365.25
+    if (max(meta_ssgsea_sdf[,"time"]) < 365.25) {
+      breakTime <- NULL
+    }
     
     ## Generate plot
     ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
-                         break.time.by=365.25,
+                         break.time.by=breakTime,
                          xlab = "Years", 
                          ylab = paste(SurvDateType,"Survival Probability"),
                          submain = "Based on Kaplan-Meier estimates",
@@ -3946,13 +4337,14 @@ server <- function(input, output, session) {
     
     tab <- OptimalCutPTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
   })
@@ -4120,13 +4512,17 @@ server <- function(input, output, session) {
         SurvPlotTitle <- input$SurvPlotTitleQuantile
       }
     }
-    
+    breakTime <- 365.25
+    if (max(meta_ssgsea_sdf[,"time"]) < 365.25) {
+      breakTime <- NULL
+    }
     
     ## Generate plot
     ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
-                         break.time.by=365.25,
+                         break.time.by=    breakTime <- 365.25
+                         ,
                          xlab = "Years", 
                          ylab = paste(SurvDateType,"Survival Probability"),
                          submain = "Based on Kaplan-Meier estimates",
@@ -4325,13 +4721,14 @@ server <- function(input, output, session) {
     
     tab <- TopBottomCutPTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
   })
@@ -4496,12 +4893,15 @@ server <- function(input, output, session) {
         SurvPlotTitle <- input$SurvPlotTitleUser
       }
     }
-    
+    breakTime <- 365.25
+    if (max(meta_ssgsea_sdf[,"time"]) < 365.25) {
+      breakTime <- NULL
+    }
     ## Generate plot
     ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
-                         break.time.by=365.25,
+                         break.time.by=breakTime,
                          xlab = "Years", 
                          ylab = paste(SurvDateType,"Survival Probability"),
                          submain = "Based on Kaplan-Meier estimates",
@@ -4690,13 +5090,14 @@ server <- function(input, output, session) {
     
     tab <- UserCutPTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
   })
@@ -4774,7 +5175,6 @@ server <- function(input, output, session) {
       if (Feature == "TopBottomCutP") {
         meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf$TopBottomCutP != "BetweenCutoff"),]
       }
-      
       meta_ssgsea_sdf
       
     }
@@ -4886,12 +5286,15 @@ server <- function(input, output, session) {
       }
     }
     
-    
+    breakTime <- 365.25
+    if (max(meta_ssgsea_sdf[,"time"]) < 365.25) {
+      breakTime <- NULL
+    }
     ## Generate plot
     ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
-                         break.time.by=365.25,
+                         break.time.by=breakTime,
                          xlab = "Years", 
                          ylab = paste(SurvDateType,"Survival Probability"),
                          submain = "Based on Kaplan-Meier estimates",
@@ -5038,13 +5441,14 @@ server <- function(input, output, session) {
     
     tab <- UniVarFeatTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("Coxh Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
     cat(text)
     
   })
@@ -5073,17 +5477,60 @@ server <- function(input, output, session) {
     
   })
   
+  LinPlotTab_React <- reactive({
+    
+    ## Assign variables
+    Feature <- input$SingleSurvivalFeature
+    surv_time_col <- input$SurvivalType_time
+    surv_id_col <- input$SurvivalType_id
+    quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+    quantCutoff2 <- input$QuantPercent2/100 #Quantile cutoff given by user
+    geneset_name <- names(gs_react())
+    
+    meta_ssgsea <- ssGSEAmeta()
+    
+    if (input$UniVarNAcheck == TRUE) {
+      meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
+      meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature] != "Inf"),]
+      meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
+    }
+    
+    ## Subset columns needed for plot and rename for surv function
+    select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
+    meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+    
+    colnames(meta_ssgsea_sdf)[4] <- gsubCheck(colnames(meta_ssgsea_sdf)[4])
+    Feature <- gsubCheck(Feature)
+    colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_time_col)] <- "time"
+    colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_id_col)] <- "ID"
+    
+    ## Remove between cutoff samples
+    if (Feature == "TopBottomCutP") {
+      meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf$TopBottomCutP != "BetweenCutoff"),]
+    }
+    
+    ref_Feature <- input$SurvFeatVariableUni
+    Feature <- gsubCheck(Feature)
+    
+    ## Survival Function
+    tab <- coxph(as.formula(paste("Surv(time,ID) ~ ",Feature,sep = "")),
+                 data = meta_ssgsea_sdf)
+    tab
+    
+    
+  })
+  
   UnivarLinearityPlot_react <- reactive({
     
     if (length(input$SingleSurvivalFeature > 0)) {
       
+      tab <- LinPlotTab_React()
+      Feature <- input$SingleSurvivalFeature
       residType <- input$ResidualTypeUni
       AxisFont <- input$linAxisFont
       MainFont <- input$linMainFont
       TickFont <- input$linTickFont
       linpredict <- input$linPredict1
-      tab <- UniVarFeatTab_react()
-      Feature <- input$SingleSurvivalFeature
       
       p <- ggcoxdiagnostics(tab,
                             type = residType,
@@ -5132,6 +5579,7 @@ server <- function(input, output, session) {
       meta_ssgsea <- ssGSEAmeta()
       
       ## Determine type of survival data - OS/EFS/PFS?
+      
       SurvDateType <- sub("\\..*","",surv_time_col)
       
       ## Remove rows with NA in survival column
@@ -5302,13 +5750,14 @@ server <- function(input, output, session) {
     
     tab <- BiVarAddTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("Coxh Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],xph[4],sep = "\n")
     cat(text)
     
   })
@@ -5484,11 +5933,83 @@ server <- function(input, output, session) {
     
   })
   
+  BiVarAdd_LinPlotTab_React <- reactive({
+    
+    if (length(input$SurvivalFeatureBi1 > 0) & length(input$SurvivalFeatureBi2 > 0)) {
+      ## Assign variables
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature1 <- input$SurvivalFeatureBi1
+      Feature2 <- input$SurvivalFeatureBi2
+      Feat1Var <- input$SurvFeatVariableBi1
+      Feat2Var <- input$SurvFeatVariableBi2
+      surv_time_col <- input$SurvivalType_time
+      surv_id_col <- input$SurvivalType_id
+      quantCutoff <- input$QuantPercent/100
+      quantCutoff2 <- input$QuantPercent2/100
+      meta_ssgsea <- ssGSEAmeta()
+      
+      ## Determine type of survival data - OS/EFS/PFS?
+      
+      SurvDateType <- sub("\\..*","",surv_time_col)
+      
+      ## Remove rows with NA in survival column
+      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
+      
+      if (input$BiVarAddNAcheck1 == TRUE) {
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf"),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+      }
+      if (input$BiVarAddNAcheck2 == TRUE) {
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf"),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+      }
+      
+      ## Subset columns needed for plot and rename for surv function
+      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
+      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      colnames(meta_ssgsea_sdf)[4] <- gsubCheck(colnames(meta_ssgsea_sdf)[4])
+      if (!is.numeric(meta_ssgsea_sdf[,4])) {
+        meta_ssgsea_sdf[,4] <- gsubCheck(meta_ssgsea_sdf[,4])
+      }
+      Feature1 <- gsubCheck(Feature1)
+      Feat1Var <- gsubCheck(Feat1Var)
+      colnames(meta_ssgsea_sdf)[5] <- gsubCheck(colnames(meta_ssgsea_sdf)[5])
+      if (!is.numeric(meta_ssgsea_sdf[,5])) {
+        meta_ssgsea_sdf[,5] <- gsubCheck(meta_ssgsea_sdf[,5])
+      }
+      Feature2 <- gsubCheck(Feature2)
+      Feat2Var <- gsubCheck(Feat2Var)
+      
+      
+      colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_time_col)] <- "time"
+      colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_id_col)] <- "ID"
+      
+      meta_ssgsea_sdf
+      
+      Feature1 <- colnames(meta_ssgsea_sdf)[4]
+      Feature2 <- colnames(meta_ssgsea_sdf)[5]
+      
+      form <- paste("Surv(time,ID) ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")
+      form2 <- as.formula(form)
+      tab <- eval(substitute(coxph(form2,data = meta_ssgsea_sdf)))
+      
+      tab
+      
+    }
+    
+  })
+  
   BivarLinearityPlot_react <- reactive({
     
     if (length(input$SurvivalFeatureBi1 > 0) & length(input$SurvivalFeatureBi2 > 0)) {
       
-      tab <- BiVarAddTab_react()
+      tab <- BiVarAdd_LinPlotTab_React()
       residType <- input$ResidualTypeBi
       linpredict <- input$linPredict2
       Feature1 <- input$SurvivalFeatureBi1
@@ -5694,13 +6215,14 @@ server <- function(input, output, session) {
     
     tab <- BiVarIntTab_react()
     out <- capture.output(summary(tab))
+    xph <- capture.output(cox.zph(tab))
     
     con_line <- grep("^Concordance=",out,value = T)
     lik_line <- grep("^Likelihood ratio test=",out,value = T)
     wal_line <- grep("^Wald test",out,value = T)
     sco_line <- grep("^Score ",out,value = T)
     
-    text <- paste("Coxh Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],xph[4],xph[5], sep = "\n")
     cat(text)
     
   })
@@ -5780,12 +6302,20 @@ server <- function(input, output, session) {
           SurvPlotTitle <- input$SurvPlotTitleBiVar
         }
       }
+      breakTime <- 365.25
+      if (max(meta_ssgsea_sdf[,"time"]) < 365.25) {
+        breakTime <- NULL
+      }
+      
+      #cbp1 <- c("#00AFBB", "#E7B800", "#FC4E07","#52854C")
+      #	LassoLmin_E1609_Top3v2FlowCytProt_OS_TrainAC50_TestACBall_v2_RiskScore
       
       ## Generate plot
       ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                            title = SurvPlotTitle,
                            xscale = c("d_y"),
-                           break.time.by=365.25,
+                           #palette = cbp1,
+                           break.time.by=breakTime,
                            xlab = "Years", 
                            ylab = paste(SurvDateType,"Survival Probability"),
                            submain = "Based on Kaplan-Meier estimates",
@@ -5859,12 +6389,121 @@ server <- function(input, output, session) {
     
   })
   
+  BiVarInt_LinPlotTab_React <- reactive({
+    
+    if (length(input$SurvivalFeatureBi1Inter > 0) & length(input$SurvivalFeatureBi2Inter> 0)) {
+      ## Assign variables
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature1 <- input$SurvivalFeatureBi1Inter
+      Feature2 <- input$SurvivalFeatureBi2Inter
+      Feat1Var <- input$SurvFeatVariableBi1Inter
+      Feat2Var <- input$SurvFeatVariableBi2Inter
+      surv_time_col <- input$SurvivalType_time
+      surv_id_col <- input$SurvivalType_id
+      quantCutoff <- input$QuantPercent/100
+      quantCutoff2 <- input$QuantPercent2/100
+      meta_ssgsea <- ssGSEAmeta()
+      
+      ## Determine type of survival data - OS/EFS/PFS?
+      SurvDateType <- sub("\\..*","",surv_time_col)
+      
+      ## Remove rows with NA in survival column
+      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
+      
+      if (input$BiVarIntNAcheck1 == TRUE) {
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf"),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+      }
+      if (input$BiVarIntNAcheck2 == TRUE) {
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf"),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+      }
+      
+      ## Subset columns needed for plot and rename for surv function
+      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
+      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      colnames(meta_ssgsea_sdf)[4] <- gsubCheck(colnames(meta_ssgsea_sdf)[4])
+      if (!is.numeric(meta_ssgsea_sdf[,4])) {
+        meta_ssgsea_sdf[,4] <- gsubCheck(meta_ssgsea_sdf[,4])
+      }
+      Feature1 <- gsubCheck(Feature1)
+      Feat1Var <- gsubCheck(Feat1Var)
+      colnames(meta_ssgsea_sdf)[5] <- gsubCheck(colnames(meta_ssgsea_sdf)[5])
+      if (!is.numeric(meta_ssgsea_sdf[,5])) {
+        meta_ssgsea_sdf[,5] <- gsubCheck(meta_ssgsea_sdf[,5])
+      }
+      Feature2 <- gsubCheck(Feature2)
+      Feat2Var <- gsubCheck(Feat2Var)
+      
+      
+      colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_time_col)] <- "time"
+      colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_id_col)] <- "ID"
+      
+      Feature1 <- colnames(meta_ssgsea_sdf)[4]
+      Feature2 <- colnames(meta_ssgsea_sdf)[5]
+      
+      form <- paste("Surv(time,ID) ~ ",paste(Feature1,"*",Feature2,sep = ""),sep = "")
+      form2 <- as.formula(form)
+      tab <- eval(substitute(coxph(form2,data = meta_ssgsea_sdf)))
+      
+      tab
+      
+    }
+    
+  })
+  
+  BivarLinearityPlotInterS_react <- reactive({
+    
+    if (length(input$SurvivalFeatureBi1Inter > 0) & length(input$SurvivalFeatureBi2Inter > 0)) {
+      
+      tab <- BiVarInt_LinPlotTab_React()
+      residType <- input$ResidualTypeInterS
+      linpredict <- input$linPredict3S
+      Feature1 <- input$SurvivalFeatureBi1Inter
+      Feature2 <- input$SurvivalFeatureBi2Inter
+      AxisFont <- input$linAxisFont
+      MainFont <- input$linMainFont
+      TickFont <- input$linTickFont
+      
+      p <- ggcoxdiagnostics(tab,
+                            type = residType,
+                            sline = T,
+                            sline.se = T,
+                            ggtheme = theme_minimal(),
+                            ox.scale = linpredict)
+      p <- ggpar(p,
+                 font.x = AxisFont,
+                 font.y = AxisFont,
+                 font.main = MainFont,
+                 font.tickslab = TickFont,
+                 main = paste("Linearity Plot Featuring: ",Feature1," * ",Feature2, sep = ""),
+                 ylab = paste(str_to_title(residType)," Residuals", sep = "")
+      )
+      p
+      
+    }
+    
+  })
+  
+  output$BivarLinearityPlotInterS <- renderPlot({
+    
+    p <- BivarLinearityPlotInterS_react()
+    p
+    
+  })
+  
   
   BivarLinearityPlotInter_react <- reactive({
     
     if (length(input$SurvivalFeatureBi1Inter > 0) & length(input$SurvivalFeatureBi2Inter > 0)) {
       
-      tab <- BiVarIntTab_react()
+      tab <- BiVarInt_LinPlotTab_React()
       residType <- input$ResidualTypeInter
       linpredict <- input$linPredict3
       Feature1 <- input$SurvivalFeatureBi1Inter
@@ -6768,13 +7407,898 @@ server <- function(input, output, session) {
     
   })
   
+  ####----Lasso Work----####
   
+  lasso_runData <- eventReactive(input$RunLassoModelGen, {
+    
+    if (length(input$LassoFeatureSelection_lasso) > 1 ) {
+      
+      SeedSelected <- input$LassoSeedSelection
+      SampleType <- input$SampleTypeSelection_lasso
+      Feature <- input$FeatureSelection_lasso
+      SubFeature <- input$SubFeatureSelection_lasso
+      LassoFeatures <- input$LassoFeatureSelection_lasso
+      LassoSurvTimeCol <- input$SurvTimeSelec_lasso
+      LassoSurvIDCol <- input$SurvIDSelect_lasso
+      LassoTrainProportion <- input$LassoTrainProp
+      
+      set.seed(SeedSelected)
+      metaSub <- meta
+      ## Sub meta and expr based on sample selection
+      if (length(unique(metaSub[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection_lasso
+      }
+      if (length(unique(metaSub[,metacol_sampletype])) <= 1) {
+        SampleType <- "All_Sample_Types"
+      }
+      
+      if (SampleType == "All_Sample_Types") {
+        metaSub <- metaSub
+      }
+      if (SampleType != "All_Sample_Types") {
+        metaSub <- metaSub[which(metaSub[,metacol_sampletype] == SampleType),]
+      }
+      
+      if (Feature != "All_Features") {
+        metaSub <- metaSub[which(metaSub[,Feature] == SubFeature),]
+      }
+      if (Feature == "All_Features") {
+        metaSub <- metaSub
+      }
+      samplesSelec <- metaSub$SampleName
+      exprSub <- expr[,metaSub$SampleName]
+      exprSubt <- as.data.frame(t(exprSub))
+      exprSubt$SampleName <- rownames(exprSubt)
+      
+      LassoFeatures <- c("SampleName",LassoFeatures)
+      
+      metaSub_Feats <- metaSub[,which(colnames(metaSub) %in% LassoFeatures), drop = F]
+      exprSubt_Feats <- exprSubt[,which(colnames(exprSubt) %in% LassoFeatures), drop = F]
+      
+      Lasso_Score_df <- merge(metaSub_Feats,exprSubt_Feats, by = "SampleName")
+      Lasso_Score_df <- Lasso_Score_df[complete.cases(Lasso_Score_df),]
+      
+      survData <- metaSub[metaSub$SampleName %in% Lasso_Score_df$SampleName,c("SampleName",LassoSurvIDCol,LassoSurvTimeCol)]
+      rownames(survData) <- survData[,1]
+      survData <- survData[,-1]
+      colnames(survData) <- c("status","time")
+      survData <- survData[which(survData$time > 0),]
+      
+      Lasso_Score_df <- Lasso_Score_df[which(Lasso_Score_df$SampleName %in% rownames(survData)),]
+      
+      train_num <- round(length(Lasso_Score_df$SampleName) * (LassoTrainProportion/100))
+      train_samp <- sample(Lasso_Score_df$SampleName,train_num)
+      test_samp <- setdiff(Lasso_Score_df$SampleName,train_samp)
+      
+      rownames(Lasso_Score_df) <- Lasso_Score_df$SampleName
+      Lasso_Score_df <- Lasso_Score_df[,-1, drop = F]
+      
+      score_train <- as.matrix(Lasso_Score_df[train_samp,])
+      score_test <- as.matrix(Lasso_Score_df[test_samp,])
+      
+      survData_test <- as.matrix(survData[test_samp,])
+      survData_train <- as.matrix(survData[train_samp,])
+      
+      runData <- list(train_samp = train_samp,
+                      test_samp = test_samp,
+                      score_train = score_train,
+                      score_test = score_test,
+                      survData_test = survData_test,
+                      survData_train = survData_train)
+      runData
+    }
+    
+  })
+  
+  LassoRun_train_model <- eventReactive(input$RunLassoModelGen, {
+    #LassoRun_train_model <- reactive({
+    
+    runData <- lasso_runData()
+    score_train <- as.matrix(runData$score_train)
+    survData_train <- as.matrix(runData$survData_train)
+    AlphaIn <- input$LassoAlpha
+    
+    model <- cv.glmnet(score_train, survData_train, family = "cox", type.measure = "C", alpha=AlphaIn)
+    
+    model
+    
+  })
+  
+  LassoLambdaPlot_react <- reactive({
+    
+    model <- LassoRun_train_model()
+    plot(model)
+    
+  })
+  output$Lasso_LambdaPlot <- renderPlot({
+    
+    p <- LassoLambdaPlot_react()
+    p
+    
+  })
+  output$dnldLasso_LambdaPlot_SVG <- downloadHandler(
+    filename = function() {
+      Project <- gsub(" ","",ProjectName)
+      LassoName <- input$LassoModelName
+      SeedSet <- input$LassoSeedSelection
+      paste(Project,"_",LassoName,"_Seed",SeedSet,"_CVLambdaPlot.png", sep = "")
+    },
+    content = function(file) {
+      plot <- LassoLambdaPlot_react()
+      #ggsave(file, plot, width = 10, height = 8)
+      png(file = file)
+      plot
+      dev.off()
+    }
+  )
+  
+  LassoRun_train_model2 <- eventReactive(input$RunLassoModelGen, {
+    #LassoRun_train_model <- reactive({
+    
+    runData <- lasso_runData()
+    score_train <- as.matrix(runData$score_train)
+    survData_train <- as.matrix(runData$survData_train)
+    AlphaIn <- input$LassoAlpha
+    
+    model2 <- glmnet(score_train, survData_train, family = "cox", type.measure = "C", alpha=AlphaIn)
+    
+    model2
+    
+  })
+  
+  LassoCoeffPlot_react <- reactive({
+    
+    model2 <- LassoRun_train_model2()
+    plot(model2)
+    
+  })
+  output$Lasso_CoeffPlot <- renderPlot({
+    
+    p <- LassoCoeffPlot_react()
+    p
+    
+  })
+  output$dnldLasso_CoeffPlot_SVG <- downloadHandler(
+    filename = function() {
+      Project <- gsub(" ","",ProjectName)
+      LassoName <- input$LassoModelName
+      SeedSet <- input$LassoSeedSelection
+      paste(Project,"_",LassoName,"_Seed",SeedSet,"_CoeffPlot.png", sep = "")
+    },
+    content = function(file) {
+      plot <- LassoCoeffPlot_react()
+      #ggsave(file, plot, width = 10, height = 8)
+      png(file = file)
+      plot
+      dev.off()
+    }
+  )
+  
+  LassoRun_Lmin_coef_table <- reactive({
+    
+    model <- LassoRun_train_model()
+    l_min <- model$lambda.min
+    model_coef_min <- coef(model ,s=l_min)
+    model_coef_min_df <- data.frame(Feature = names(sort(model_coef_min[,1])), Coefficient = unname(sort(model_coef_min[,1])))
+    model_coef_min_df
+    
+  })
+  LassoRun_Lse_coef_table <- reactive({
+    
+    model <- LassoRun_train_model()
+    l_se <- model$lambda.1se
+    model_coef_se <- coef(model ,s=l_se)
+    model_coef_se_df <- data.frame(Feature = names(sort(model_coef_se[,1])), Coefficient = unname(sort(model_coef_se[,1])))
+    model_coef_se_df
+    
+  })
+  
+  output$LassoCoefTable <- DT::renderDataTable({
+    
+    if (input$viewLassoMinOrSE == "Lambda Min") {
+      df <- LassoRun_Lmin_coef_table()
+    }
+    else if (input$viewLassoMinOrSE == "Lambda SE") {
+      df <- LassoRun_Lse_coef_table()
+    }
+    DT::datatable(df, options = list(paging = F,searching = FALSE), rownames = F)
+    
+  })
+  LassoRun_Lmin_Pred_train <- reactive({
+    
+    ModelName <- input$LassoModelName
+    runData <- lasso_runData()
+    model <- LassoRun_train_model()
+    l_min <- model$lambda.min
+    score_test <- runData$score_train
+    Pred_Lmin_train <- as.data.frame(predict(model, s=l_min, newx=score_test, type = "response"))
+    Pred_Lmin_train_ScoreName <- paste("LassoLmin_Train_",ModelName,"_RiskScore", sep = "")
+    colnames(Pred_Lmin_train)[1] <- Pred_Lmin_train_ScoreName
+    Pred_Lmin_train$SampleName <- rownames(Pred_Lmin_train)
+    Pred_Lmin_train <- Pred_Lmin_train %>%
+      relocate(SampleName)
+    Pred_Lmin_train
+    
+  })
+  LassoRun_Lse_Pred_train <- reactive({
+    
+    ModelName <- input$LassoModelName
+    runData <- lasso_runData()
+    model <- LassoRun_train_model()
+    l_se <- model$lambda.1se
+    score_test <- runData$score_train
+    Pred_Lse_train <- as.data.frame(predict(model, s=l_se, newx=score_test, type = "response"))
+    Pred_Lse_train_ScoreName <- paste("LassoLse_Train_",ModelName,"_RiskScore", sep = "")
+    colnames(Pred_Lse_train)[1] <- Pred_Lse_train_ScoreName
+    Pred_Lse_train$SampleName <- rownames(Pred_Lse_train)
+    Pred_Lse_train<- Pred_Lse_train %>%
+      relocate(SampleName)
+    Pred_Lse_train
+    
+  })
+  LassoRun_LCustom_Pred_train <- reactive({
+    
+    if (input$viewLassoMinOrSE == "Custom") {
+      if (!is.na(input$CustomLambda)) {
+        ModelName <- input$LassoModelName
+        runData <- lasso_runData()
+        model <- LassoRun_train_model()
+        l_Custom <- input$CustomLambda
+        score_test <- runData$score_train
+        Pred_LCustom_train <- as.data.frame(predict(model, s=l_Custom, newx=score_test, type = "response"))
+        Pred_LCustom_train_ScoreName <- paste("LassoCustomLambda_Train_",ModelName,"_RiskScore", sep = "")
+        colnames(Pred_LCustom_train)[1] <- Pred_LCustom_train_ScoreName
+        Pred_LCustom_train$SampleName <- rownames(Pred_LCustom_train)
+        Pred_LCustom_train<- Pred_LCustom_train %>%
+          relocate(SampleName)
+        Pred_LCustom_train
+      }
+    }
+    
+  })
+  LassoRun_Lmin_Pred_test <- reactive({
+    
+    ModelName <- input$LassoModelName
+    runData <- lasso_runData()
+    model <- LassoRun_train_model()
+    l_min <- model$lambda.min
+    score_test <- runData$score_test
+    Pred_Lmin_test <- as.data.frame(predict(model, s=l_min, newx=score_test, type = "response"))
+    Pred_Lmin_test_ScoreName <- paste("LassoLmin_Test_",ModelName,"_RiskScore", sep = "")
+    colnames(Pred_Lmin_test)[1] <- Pred_Lmin_test_ScoreName
+    Pred_Lmin_test$SampleName <- rownames(Pred_Lmin_test)
+    Pred_Lmin_test <- Pred_Lmin_test %>%
+      relocate(SampleName)
+    Pred_Lmin_test
+    
+  })
+  LassoRun_Lse_Pred_test <- reactive({
+    
+    ModelName <- input$LassoModelName
+    runData <- lasso_runData()
+    model <- LassoRun_train_model()
+    l_se <- model$lambda.1se
+    score_test <- runData$score_test
+    Pred_Lse_test <- as.data.frame(predict(model, s=l_se, newx=score_test, type = "response"))
+    Pred_Lse_test_ScoreName <- paste("LassoLse_Test_",ModelName,"_RiskScore", sep = "")
+    colnames(Pred_Lse_test)[1] <- Pred_Lse_test_ScoreName
+    Pred_Lse_test$SampleName <- rownames(Pred_Lse_test)
+    Pred_Lse_test <- Pred_Lse_test %>%
+      relocate(SampleName)
+    Pred_Lse_test
+    
+  })
+  LassoRun_LCustom_Pred_test <- reactive({
+    
+    if (input$viewLassoMinOrSE == "Custom") {
+      if (!is.na(input$CustomLambda)) {
+        ModelName <- input$LassoModelName
+        runData <- lasso_runData()
+        model <- LassoRun_train_model()
+        l_Custom <- input$CustomLambda
+        score_test <- runData$score_test
+        Pred_LCustom_test <- as.data.frame(predict(model, s=l_Custom, newx=score_test, type = "response"))
+        Pred_LCustom_test_ScoreName <- paste("LassoCustomLambda_Test_",ModelName,"_RiskScore", sep = "")
+        colnames(Pred_LCustom_test)[1] <- Pred_LCustom_test_ScoreName
+        Pred_LCustom_test$SampleName <- rownames(Pred_LCustom_test)
+        Pred_LCustom_test <- Pred_LCustom_test %>%
+          relocate(SampleName)
+        Pred_LCustom_test
+      }
+    }
+    
+  })
+  
+  LassoDnldTable <- reactive({
+    
+    runData <- lasso_runData()
+    RiskScore_List <- list()
+    RiskScore_LminTrain <- LassoRun_Lmin_Pred_train()
+    RiskScore_List[["RiskScore_LminTrain"]] <- RiskScore_LminTrain
+    RiskScore_LseTrain <- LassoRun_Lse_Pred_train()
+    RiskScore_List[["RiskScore_LseTrain"]] <- RiskScore_LseTrain
+    RiskScore_LminTest <- LassoRun_Lmin_Pred_test()
+    RiskScore_List[["RiskScore_LminTest"]] <- RiskScore_LminTest
+    RiskScore_LseTest <- LassoRun_Lse_Pred_test()
+    RiskScore_List[["RiskScore_LseTest"]] <- RiskScore_LseTest
+    if (input$viewLassoMinOrSE == "Custom") {
+      RiskScore_LCustomTrain <- LassoRun_LCustom_Pred_train()
+      RiskScore_List[["RiskScore_LCustomTrain"]] <- RiskScore_LCustomTrain
+      RiskScore_LCustomTest <- LassoRun_LCustom_Pred_test()
+      RiskScore_List[["RiskScore_LCustomTest"]] <- RiskScore_LCustomTest
+    }
+    RiskScore_df <- Reduce(function(dtf1, dtf2) merge(dtf1, dtf2, by = "SampleName", all = TRUE),
+                           RiskScore_List)
+    
+    RiskScore_df$TrainOrTest <- ifelse(RiskScore_df$SampleName %in% runData$train_samp, "Training", "Testing")
+    RiskScore_df <- RiskScore_df %>%
+      relocate(SampleName,TrainOrTest)
+    RiskScore_df
+    
+  })
+  
+  output$dnldLassoRunData <- downloadHandler(
+    filename = function() {
+      Project <- gsub(" ","",ProjectName)
+      LassoName <- input$LassoModelName
+      SeedSet <- input$LassoSeedSelection
+      paste(Project,"_",LassoName,"RunRiskScores_Seed",SeedSet,".txt", sep = "")
+    },
+    content = function(file) {
+      RiskTable <- LassoDnldTable()
+      write_delim(RiskTable,file, delim = '\t')
+    }
+  )
+  
+  Lasso_Train_Surv_df <- reactive({
+    
+    ## Assign variables
+    CutPoption <- input$LassoPlotCutP
+    surv_time_col <- input$SurvTimeSelecView_lasso
+    surv_id_col <- input$SurvIDSelecView_lasso
+    userCutP <- input$CutPinput
+    if (input$viewLassoMinOrSE == "Lambda Min") {
+      Pred_train_df <- LassoRun_Lmin_Pred_train()
+    }
+    else if (input$viewLassoMinOrSE == "Lambda SE") {
+      Pred_train_df <- LassoRun_Lse_Pred_train()
+    }
+    else if (input$viewLassoMinOrSE == "Custom") {
+      req(input$CustomLambda)
+      Pred_train_df <- LassoRun_LCustom_Pred_train()
+    }
+    
+    meta_surv <- meta[,c("SampleName",surv_time_col,surv_id_col)]
+    
+    KP_df_train <- merge(Pred_train_df,meta_surv, by = "SampleName")
+    
+    ## Subset columns needed for plot
+    colnames(KP_df_train)[which(colnames(KP_df_train) == surv_time_col)] <- "time"
+    colnames(KP_df_train)[which(colnames(KP_df_train) == surv_id_col)] <- "ID"
+    
+    if (CutPoption == "Median") {
+      KP_df_train$MedianCutP <- highlow(KP_df_train[,2])
+    }
+    else if (CutPoption == "Quartile") {
+      KP_df_train$VAR_Q <- quartile_conversion(KP_df_train[,2])
+      KP_df_train$QuartileCutP <- paste("", KP_df_train$VAR_Q, sep="")
+    }
+    else if (CutPoption == "Optimal") {
+      if (length(KP_df_train[,2][KP_df_train[,2] > 0])/length(KP_df_train[,2]) > 0.01) {
+        if (length(KP_df_train[,4]) > 1) {
+          res.cut <- surv_cutpoint(KP_df_train,time = "time", event = "ID", variable = colnames(KP_df_train)[2], minprop = 0.01)
+          cutp <- res.cut$cutpoint[["cutpoint"]]
+          res.cat <- surv_categorize(res.cut)
+          KP_df_train$OptimalCutP <- res.cat[,3]
+        }
+      }
+    }
+    else if (CutPoption == "Quantile") {
+      userCutP <- userCutP/100
+      KP_df_train$TopBottomCutP <- quantile_conversion(KP_df_train[,2], userCutP)
+      KP_df_train <- KP_df_train[which(KP_df_train$TopBottomCutP != "BetweenCutoff"),]
+    }
+    else if (CutPoption == "User Specified") {
+      userCutP <- userCutP/100
+      KP_df_train$UserCutP <- quantile_conversion2(KP_df_train[,2], userCutP)
+    }
+    
+    KP_df_train
+    
+  })
+  Lasso_Test_Surv_df <- reactive({
+    
+    ## Assign variables
+    CutPoption <- input$LassoPlotCutP
+    surv_time_col <- input$SurvTimeSelecView_lasso
+    surv_id_col <- input$SurvIDSelecView_lasso
+    userCutP <- input$CutPinput
+    if (input$viewLassoMinOrSE == "Lambda Min") {
+      Pred_test_df <- LassoRun_Lmin_Pred_test()
+    }
+    else if (input$viewLassoMinOrSE == "Lambda SE") {
+      Pred_test_df <- LassoRun_Lse_Pred_test()
+    }
+    else if (input$viewLassoMinOrSE == "Custom") {
+      req(input$CustomLambda)
+      Pred_test_df <- LassoRun_LCustom_Pred_test()
+    }
+    
+    meta_surv <- meta[,c("SampleName",surv_time_col,surv_id_col)]
+    
+    KP_df_test <- merge(Pred_test_df,meta_surv, by = "SampleName")
+    
+    ## Subset columns needed for plot
+    colnames(KP_df_test)[which(colnames(KP_df_test) == surv_time_col)] <- "time"
+    colnames(KP_df_test)[which(colnames(KP_df_test) == surv_id_col)] <- "ID"
+    
+    if (CutPoption == "Median") {
+      KP_df_test$MedianCutP <- highlow(KP_df_test[,2])
+    }
+    else if (CutPoption == "Quartile") {
+      KP_df_test$VAR_Q <- quartile_conversion(KP_df_test[,2])
+      KP_df_test$QuartileCutP <- paste("", KP_df_test$VAR_Q, sep="")
+    }
+    else if (CutPoption == "Optimal") {
+      if (length(KP_df_test[,2][KP_df_test[,2] > 0])/length(KP_df_test[,2]) > 0.01) {
+        if (length(KP_df_test[,4]) > 1) {
+          res.cut <- surv_cutpoint(KP_df_test,time = "time", event = "ID", variable = colnames(KP_df_test)[2], minprop = 0.01)
+          cutp <- res.cut$cutpoint[["cutpoint"]]
+          res.cat <- surv_categorize(res.cut)
+          KP_df_test$OptimalCutP <- res.cat[,3]
+        }
+      }
+    }
+    else if (CutPoption == "Quantile") {
+      userCutP <- userCutP/100
+      KP_df_test$TopBottomCutP <- quantile_conversion(KP_df_test[,2], userCutP)
+      KP_df_test <- KP_df_test[which(KP_df_test$TopBottomCutP != "BetweenCutoff"),]
+    }
+    else if (CutPoption == "User Specified") {
+      userCutP <- userCutP/100
+      KP_df_test$UserCutP <- quantile_conversion2(KP_df_test[,2], userCutP)
+    }
+    
+    KP_df_test
+    
+  })
+  
+  Lasso_Train_Surv_Tab_react <- reactive({
+    
+    KP_df_train <- Lasso_Train_Surv_df()
+    CutPoption <- input$LassoPlotCutP
+    KP_df_train[,5] <- as.factor(KP_df_train[,5])
+    KP_df_train[,5] <- relevel(KP_df_train[,5],
+                               ref = grep("low",unique(KP_df_train[,5]),
+                                          value = T, ignore.case = T))
+    
+    ## Survival Function
+    ## Survival Function
+    tab_train <- coxph(as.formula(paste("Surv(time,ID) ~ ",colnames(KP_df_train)[5],sep = "")),
+                       data = KP_df_train)
+    tab_train
+    
+  })
+  Lasso_Test_Surv_Tab_react <- reactive({
+    
+    KP_df_test <- Lasso_Test_Surv_df()
+    CutPoption <- input$LassoPlotCutP
+    KP_df_test[,5] <- as.factor(KP_df_test[,5])
+    KP_df_test[,5] <- relevel(KP_df_test[,5],
+                              ref = grep("low",unique(KP_df_test[,5]),
+                                         value = T, ignore.case = T))
+    
+    ## Survival Function
+    tab_test <- coxph(as.formula(paste("Surv(time,ID) ~ ",colnames(KP_df_test)[5],sep = "")),
+                      data = KP_df_test)
+    tab_test
+    
+  })
+  
+  output$LassoTrainCoxSumm <- renderPrint({
+    
+    tab <- Lasso_Train_Surv_Tab_react()
+    out <- capture.output(summary(tab))
+    
+    con_line <- grep("^Concordance=",out,value = T)
+    lik_line <- grep("^Likelihood ratio test=",out,value = T)
+    wal_line <- grep("^Wald test",out,value = T)
+    sco_line <- grep("^Score ",out,value = T)
+    
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    cat(text)
+    
+  })
+  output$LassoTestCoxSumm <- renderPrint({
+    
+    tab <- Lasso_Test_Surv_Tab_react()
+    out <- capture.output(summary(tab))
+    
+    con_line <- grep("^Concordance=",out,value = T)
+    lik_line <- grep("^Likelihood ratio test=",out,value = T)
+    wal_line <- grep("^Wald test",out,value = T)
+    sco_line <- grep("^Score ",out,value = T)
+    
+    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+    cat(text)
+    
+  })
+  
+  
+  Lasso_Train_Surv_HRTab_react <- reactive({
+    
+    tab_train <- Lasso_Train_Surv_Tab_react()
+    tab_train <- tab_train %>% 
+      gtsummary::tbl_regression(exp = TRUE) %>%
+      as_gt()
+    
+    tab_train_df <- as.data.frame(tab_train)
+    
+    tab_train_df <- tab_train_df %>%
+      select(label,estimate,ci,p.value)
+    colnames(tab_train_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
+    
+    tab_train_df
+    
+  })
+  Lasso_Test_Surv_HRTab_react <- reactive({
+    
+    tab_test <- Lasso_Test_Surv_Tab_react()
+    tab_test <- tab_test %>% 
+      gtsummary::tbl_regression(exp = TRUE) %>%
+      as_gt()
+    
+    tab_test_df <- as.data.frame(tab_test)
+    
+    tab_test_df <- tab_test_df %>%
+      select(label,estimate,ci,p.value)
+    colnames(tab_test_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
+    
+    tab_test_df
+    
+  })
+  
+  output$LassoTrainHRtab <- renderTable({
+    
+    tab <- Lasso_Train_Surv_HRTab_react()
+    tab
+    
+  })
+  output$LassoTestHRtab <- renderTable({
+    
+    tab <- Lasso_Test_Surv_HRTab_react()
+    tab
+    
+  })
+  
+  Lasso_Train_Splot_react <- reactive({
+    
+    ## Assign variables
+    KP_df_train <- Lasso_Train_Surv_df()
+    #LassoModelName <- colnames(KP_df_train)[2]
+    LassoModelName <- input$LassoModelName
+    LambdaChoice <- input$viewLassoMinOrSE
+    CutPoption <- input$LassoPlotCutP
+    SampleType <- input$SampleTypeSelection_lasso
+    Feature <- input$FeatureSelection_lasso
+    show_pval <- input$ShowPval_lasso
+    ShowConfInt <- input$ShowConfInt_lasso
+    xaxlim <- input$SurvXaxis_lasso * 365.25
+    surv_time_col <- input$SurvTimeSelecView_lasso
+    showLegend <- input$SurvLegendPos_lasso
+    showMedSurv <- input$ShowMedSurvLine_lasso
+    LambdaSelect <- input$viewLassoMinOrSE
+    if (showMedSurv == T) {
+      showMedSurv <- "hv"
+    }
+    else if (showMedSurv == F) {
+      showMedSurv <- "none"
+    }
+    
+    Feature <- colnames(KP_df_train)[5]
+    
+    form <- paste("Surv(time,ID) ~ ",Feature,sep = "")
+    form2 <- as.formula(form)
+    fit_train <- eval(substitute(survfit(form2,data = KP_df_train, type="kaplan-meier")))
+    
+    ## Survival Function
+    #fit_train <- survfit(Surv(time,ID) ~ FeatureCut, data = KP_df_train, type="kaplan-meier")
+    
+    ## Determine type of survival data - OS/EFS/PFS?
+    SurvDateType <- sub("\\..*","",surv_time_col)
+    
+    
+    
+    ### determine Feature and Sample Type label
+    #if (length(unique(meta[,metacol_sampletype])) > 1) {
+    #  if (SampleType == "All_Sample_Types") {
+    #    if (Feature == "All_Features") {
+    #      SampleTypeLab <- "All Features in All Patients\n"
+    #    }
+    #    if (Feature != "All_Features") {
+    #      SampleTypeLab <- paste(Feature," in All Patients\n")
+    #    }
+    #  }
+    #  else {
+    #    if (Feature == "All_Features") {
+    #      SampleTypeLab <- paste("All Features (",SampleType,") Patients\n",sep = "")
+    #    }
+    #    if (Feature != "All_Features") {
+    #      SampleTypeLab <- paste(Feature," (",SampleType,") Patients\n",sep = "")
+    #    }
+    #  }
+    #}
+    #if (length(unique(meta[,metacol_sampletype])) <= 1) {
+    #  if (Feature == "All_Features") {
+    #    SampleTypeLab <- "All Features in All Patients\n"
+    #  }
+    #  if (Feature != "All_Features") {
+    #    SampleTypeLab <- paste(Feature," in All Patients\n")
+    #  }
+    #}
+    
+    CutPMethodLab <- paste(CutPoption, " Cut-Point", sep = "")
+    if (LambdaChoice == "Custom") {
+      LambdaChoice <- "Custom Lambda"
+    }
+    
+    ## Determine Plot title
+    if (is.null(input$SurvPlotTitleLasso)) {
+      SurvPlotTitle <- paste("Survival curves of Training Data (",LambdaChoice,")\n",
+                             LassoModelName," (",CutPMethodLab,")", sep = "")
+    }
+    else if (!is.null(input$SurvPlotTitleLasso)) {
+      if (input$SurvPlotTitleMedian == "") {
+        SurvPlotTitle <- paste("Survival curves of Training Data (",LambdaChoice,")\n",
+                               LassoModelName," (",CutPMethodLab,")", sep = "")
+      }
+      else if (input$SurvPlotTitleLasso != "") {
+        SurvPlotTitle <- input$SurvPlotTitleLasso
+      }
+    }
+    
+    breakTime <- 365.25
+    if (max(KP_df_train[,"time"]) < 365.25) {
+      breakTime <- NULL
+    }
+    
+    ## Generate plot
+    ggsurv <- ggsurvplot(fit_train, data = KP_df_train, risk.table = TRUE,
+                         title = SurvPlotTitle,
+                         xscale = c("d_y"),
+                         break.time.by=breakTime,
+                         xlab = "Years", 
+                         ylab = paste(SurvDateType,"Survival Probability"),
+                         submain = "Based on Kaplan-Meier estimates",
+                         caption = "created with survminer",
+                         pval=show_pval,
+                         conf.int = ShowConfInt,
+                         ggtheme = theme_bw(),
+                         font.title = c(16, "bold"),
+                         font.submain = c(12, "italic"),
+                         font.caption = c(12, "plain"),
+                         font.x = c(14, "plain"),
+                         font.y = c(14, "plain"),
+                         font.tickslab = c(12, "plain"),
+                         legend = showLegend,
+                         risk.table.height = 0.20,
+                         surv.median.line = showMedSurv
+    )
+    if (showMedSurv != "none") {
+      MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+      MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+      MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+      MedSurvItem_df <- MedSurvItem_df %>%
+        mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+      rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+      if (nrow(MedSurvItem_df) > 1) {
+        ggsurv$plot <- ggsurv$plot +
+          geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+      }
+    }
+    if (!is.null(input$SurvXaxis)) {
+      ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+      ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
+    }
+    
+    ggsurv$table <- ggsurv$table + theme_cleantable()
+    ggsurv
+    
+    
+  })
+  
+  Lasso_Test_Splot_react <- reactive({
+    
+    ## Assign variables
+    KP_df_test <- Lasso_Test_Surv_df()
+    #LassoModelName <- colnames(KP_df_test)[2]
+    LassoModelName <- input$LassoModelName
+    CutPoption <- input$LassoPlotCutP
+    LambdaChoice <- input$viewLassoMinOrSE
+    SampleType <- input$SampleTypeSelection_lasso
+    Feature <- input$FeatureSelection_lasso
+    show_pval <- input$ShowPval_lasso
+    ShowConfInt <- input$ShowConfInt_lasso
+    xaxlim <- input$SurvXaxis_lasso * 365.25
+    surv_time_col <- input$SurvTimeSelecView_lasso
+    showLegend <- input$SurvLegendPos_lasso
+    showMedSurv <- input$ShowMedSurvLine_lasso
+    LambdaSelect <- input$viewLassoMinOrSE
+    if (showMedSurv == T) {
+      showMedSurv <- "hv"
+    }
+    else if (showMedSurv == F) {
+      showMedSurv <- "none"
+    }
+    
+    Feature <- colnames(KP_df_test)[5]
+    
+    form <- paste("Surv(time,ID) ~ ",Feature,sep = "")
+    form2 <- as.formula(form)
+    fit_test <- eval(substitute(survfit(form2,data = KP_df_test, type="kaplan-meier")))
+    
+    ## Survival Function
+    #fit_train <- survfit(Surv(time,ID) ~ FeatureCut, data = KP_df_train, type="kaplan-meier")
+    
+    ## Determine type of survival data - OS/EFS/PFS?
+    SurvDateType <- sub("\\..*","",surv_time_col)
+    
+    ### determine Feature and Sample Type label
+    #if (length(unique(meta[,metacol_sampletype])) > 1) {
+    #  if (SampleType == "All_Sample_Types") {
+    #    if (Feature == "All_Features") {
+    #      SampleTypeLab <- "All Features in All Patients\n"
+    #    }
+    #    if (Feature != "All_Features") {
+    #      SampleTypeLab <- paste(Feature," in All Patients\n")
+    #    }
+    #  }
+    #  else {
+    #    if (Feature == "All_Features") {
+    #      SampleTypeLab <- paste("All Features (",SampleType,") Patients\n",sep = "")
+    #    }
+    #    if (Feature != "All_Features") {
+    #      SampleTypeLab <- paste(Feature," (",SampleType,") Patients\n",sep = "")
+    #    }
+    #  }
+    #}
+    #if (length(unique(meta[,metacol_sampletype])) <= 1) {
+    #  if (Feature == "All_Features") {
+    #    SampleTypeLab <- "All Features in All Patients\n"
+    #  }
+    #  if (Feature != "All_Features") {
+    #    SampleTypeLab <- paste(Feature," in All Patients\n")
+    #  }
+    #}
+    
+    CutPMethodLab <- paste(CutPoption, " Cut-Point", sep = "")
+    
+    
+    ## Determine Plot title
+    if (is.null(input$SurvPlotTitleLasso)) {
+      SurvPlotTitle <- paste("Survival curves of Testing Data (",LambdaChoice,")\n",
+                             LassoModelName," (",CutPMethodLab,")", sep = "")
+    }
+    else if (!is.null(input$SurvPlotTitleLasso)) {
+      if (input$SurvPlotTitleMedian == "") {
+        SurvPlotTitle <- paste("Survival curves of Testing Data (",LambdaChoice,")\n",
+                               LassoModelName," (",CutPMethodLab,")", sep = "")
+      }
+      else if (input$SurvPlotTitleLasso != "") {
+        SurvPlotTitle <- input$SurvPlotTitleLasso
+      }
+    }
+    
+    breakTime <- 365.25
+    if (max(KP_df_test[,"time"]) < 365.25) {
+      breakTime <- NULL
+    }
+    
+    ## Generate plot
+    ggsurv <- ggsurvplot(fit_test, data = KP_df_test, risk.table = TRUE,
+                         title = SurvPlotTitle,
+                         xscale = c("d_y"),
+                         break.time.by=breakTime,
+                         xlab = "Years", 
+                         ylab = paste(SurvDateType,"Survival Probability"),
+                         submain = "Based on Kaplan-Meier estimates",
+                         caption = "created with survminer",
+                         pval=show_pval,
+                         conf.int = ShowConfInt,
+                         ggtheme = theme_bw(),
+                         font.title = c(16, "bold"),
+                         font.submain = c(12, "italic"),
+                         font.caption = c(12, "plain"),
+                         font.x = c(14, "plain"),
+                         font.y = c(14, "plain"),
+                         font.tickslab = c(12, "plain"),
+                         legend = showLegend,
+                         risk.table.height = 0.20,
+                         surv.median.line = showMedSurv
+    )
+    if (showMedSurv != "none") {
+      MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+      MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+      MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+      MedSurvItem_df <- MedSurvItem_df %>%
+        mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+      rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+      if (nrow(MedSurvItem_df) > 1) {
+        ggsurv$plot <- ggsurv$plot +
+          geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+      }
+    }
+    if (!is.null(input$SurvXaxis)) {
+      ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+      ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
+    }
+    
+    ggsurv$table <- ggsurv$table + theme_cleantable()
+    ggsurv
+    
+    
+  })
+  
+  output$Lasso_Train_Splot <- renderPlot({
+    plot <- Lasso_Train_Splot_react()
+    plot
+  })
+  output$Lasso_Test_Splot <- renderPlot({
+    plot <- Lasso_Test_Splot_react()
+    plot
+  })
+  
+  output$dnldSplotLassoTrain_SVG <- downloadHandler(
+    filename = function() {
+      Project <- gsub(" ","",ProjectName)
+      LassoName <- input$LassoModelName
+      SeedSet <- input$LassoSeedSelection
+      paste(Project,"_",LassoName,"_Seed",SeedSet,"_TrainingKMplot.svg", sep = "")
+    },
+    content = function(file) {
+      plot <- Lasso_Train_Splot_react()
+      ggsave(file, plot$plot, width = 10, height = 8)
+    }
+  )
+  output$dnldSplotLassoTest_SVG <- downloadHandler(
+    filename = function() {
+      Project <- gsub(" ","",ProjectName)
+      LassoName <- input$LassoModelName
+      SeedSet <- input$LassoSeedSelection
+      paste(Project,"_",LassoName,"_Seed",SeedSet,"_TestingKMplot.svg", sep = "")
+    },
+    content = function(file) {
+      plot <- Lasso_Test_Splot_react()
+      ggsave(file, plot$plot, width = 10, height = 8)
+    }
+  )
+  
+  
+  output$dnldLassoModel <- downloadHandler(
+    filename = function() {
+      Project <- gsub(" ","",ProjectName)
+      LassoName <- input$LassoModelName
+      SeedSet <- input$LassoSeedSelection
+      paste(Project,"_",LassoName,"_Seed",SeedSet,".RData", sep = "")
+    },
+    content = function(file) {
+      model <- LassoRun_train_model()
+      save(model, file = file)
+    }
+  )
   
   ####----Text Output----####
   
   output$timewarnmessage1 <- renderUI({
     
     if (input$linPredict1 == "time") {
+      p("Residual type must be schoenfeld or scaledsch.")
+    }
+    
+  })
+  output$timewarnmessage1S <- renderUI({
+    
+    if (input$linPredict1S == "time") {
       p("Residual type must be schoenfeld or scaledsch.")
     }
     
@@ -6787,10 +8311,24 @@ server <- function(input, output, session) {
     }
     
   })
+  output$timewarnmessage2S <- renderUI({
+    
+    if (input$linPredict2S == "time") {
+      p("Residual type must be schoenfeld or scaledsch.")
+    }
+    
+  })
   
   output$timewarnmessage3 <- renderUI({
     
     if (input$linPredict3 == "time") {
+      p("Residual type must be schoenfeld or scaledsch.")
+    }
+    
+  })
+  output$timewarnmessage3S <- renderUI({
+    
+    if (input$linPredict3S == "time") {
       p("Residual type must be schoenfeld or scaledsch.")
     }
     
@@ -7261,376 +8799,6 @@ server <- function(input, output, session) {
     }
   )
   
-  ####----DNLD PATH Density----####
-  
-  ## binary
-  output$dnldssgseaBINDensity_SVG <- downloadHandler(
-    filename = function() {
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      Feature <- input$FeatureSelection
-      scoreMethod <- input$ScoreMethod
-      if (Feature != "All_Features") {
-        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-      }
-      if (Feature == "All_Features") {
-        SubFeature <- "_"
-      }
-      if (input$GeneSetTabs == 2) {
-        scoreMethodLab <- "RawGeneExpression"
-        #if (input$RawOrSS == "Raw Gene Expression") {
-        #  scoreMethodLab <- "RawGeneExpression"
-        #}
-        #else if (input$RawOrSS == "Rank Normalized") {
-        #  scoreMethodLab <- scoreMethod
-        #}
-      }
-      else if (input$GeneSetTabs != 2) {
-        if (geneset_name %in% decon_score_cols) {
-          scoreMethodLab <- "PreProcessed"
-        }
-        else {
-          scoreMethodLab <- scoreMethod
-        }
-      }
-      # If more than one sample type
-      if (length(unique(meta[,metacol_sampletype])) > 1) {
-        SampleType <- input$SampleTypeSelection
-        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPDensity.svg",sep = "")
-      }
-      # If only one sample type
-      else if (length(unique(meta[metacol_sampletype])) <= 1) {
-        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPDensity.svg",sep = "")
-      }
-    },
-    content = function(file) {
-      p <- ssgseaBINDensity_react()
-      ggsave(file,p,width = 10, height = 8)
-      
-    }
-  )
-  output$dnldssgseaBINDensity_PDF <- downloadHandler(
-    filename = function() {
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      Feature <- input$FeatureSelection
-      scoreMethod <- input$ScoreMethod
-      if (Feature != "All_Features") {
-        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-      }
-      if (Feature == "All_Features") {
-        SubFeature <- "_"
-      }
-      if (input$GeneSetTabs == 2) {
-        scoreMethodLab <- "RawGeneExpression"
-        #if (input$RawOrSS == "Raw Gene Expression") {
-        #  scoreMethodLab <- "RawGeneExpression"
-        #}
-        #else if (input$RawOrSS == "Rank Normalized") {
-        #  scoreMethodLab <- scoreMethod
-        #}
-      }
-      else if (input$GeneSetTabs != 2) {
-        if (geneset_name %in% decon_score_cols) {
-          scoreMethodLab <- "PreProcessed"
-        }
-        else {
-          scoreMethodLab <- scoreMethod
-        }
-      }
-      # If more than one sample type
-      if (length(unique(meta[,metacol_sampletype])) > 1) {
-        SampleType <- input$SampleTypeSelection
-        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPDensity.pdf",sep = "")
-      }
-      # If only one sample type
-      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPDensity.pdf",sep = "")
-      }
-    },
-    content = function(file) {
-      p <- ssgseaBINDensity_react()
-      ggsave(file,p,width = 10, height = 8)
-      
-    }
-  )
-  
-  ## cut p
-  output$dnldssgseaCutPDensity_SVG <- downloadHandler(
-    filename = function() {
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      Feature <- input$FeatureSelection
-      scoreMethod <- input$ScoreMethod
-      if (Feature != "All_Features") {
-        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-      }
-      if (Feature == "All_Features") {
-        SubFeature <- "_"
-      }
-      if (input$GeneSetTabs == 2) {
-        scoreMethodLab <- "RawGeneExpression"
-        #if (input$RawOrSS == "Raw Gene Expression") {
-        #  scoreMethodLab <- "RawGeneExpression"
-        #}
-        #else if (input$RawOrSS == "Rank Normalized") {
-        #  scoreMethodLab <- scoreMethod
-        #}
-      }
-      else if (input$GeneSetTabs != 2) {
-        if (geneset_name %in% decon_score_cols) {
-          scoreMethodLab <- "PreProcessed"
-        }
-        else {
-          scoreMethodLab <- scoreMethod
-        }
-      }
-      # If more than one sample type
-      if (length(unique(meta[,metacol_sampletype])) > 1) {
-        SampleType <- input$SampleTypeSelection
-        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointDensity.svg",sep = "")
-      }
-      # If only one sample type
-      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointDensity.svg",sep = "")
-      }
-    },
-    content = function(file) {
-      p <- ssgseaCutPDensity_react()
-      ggsave(file,p,width = 10, height = 8)
-      
-    }
-  )
-  output$dnldssgseaCutPDensity_PDF <- downloadHandler(
-    filename = function() {
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      Feature <- input$FeatureSelection
-      scoreMethod <- input$ScoreMethod
-      if (Feature != "All_Features") {
-        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-      }
-      if (Feature == "All_Features") {
-        SubFeature <- "_"
-      }
-      if (input$GeneSetTabs == 2) {
-        scoreMethodLab <- "RawGeneExpression"
-        #if (input$RawOrSS == "Raw Gene Expression") {
-        #  scoreMethodLab <- "RawGeneExpression"
-        #}
-        #else if (input$RawOrSS == "Rank Normalized") {
-        #  scoreMethodLab <- scoreMethod
-        #}
-      }
-      else if (input$GeneSetTabs != 2) {
-        if (geneset_name %in% decon_score_cols) {
-          scoreMethodLab <- "PreProcessed"
-        }
-        else {
-          scoreMethodLab <- scoreMethod
-        }
-      }
-      # If more than one sample type
-      if (length(unique(meta[,metacol_sampletype])) > 1) {
-        SampleType <- input$SampleTypeSelection
-        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointDensity.pdf",sep = "")
-      }
-      # If only one sample type
-      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointDensity.pdf",sep = "")
-      }
-    },
-    content = function(file) {
-      p <- ssgseaCutPDensity_react()
-      ggsave(file,p,width = 10, height = 8)
-      
-    }
-  )
-  
-  ## Quantile
-  output$dnldssgseaQuantDensity_SVG <- downloadHandler(
-    filename = function() {
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      Feature <- input$FeatureSelection
-      scoreMethod <- input$ScoreMethod
-      if (Feature != "All_Features") {
-        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-      }
-      if (Feature == "All_Features") {
-        SubFeature <- "_"
-      }
-      if (input$GeneSetTabs == 2) {
-        scoreMethodLab <- "RawGeneExpression"
-        #if (input$RawOrSS == "Raw Gene Expression") {
-        #  scoreMethodLab <- "RawGeneExpression"
-        #}
-        #else if (input$RawOrSS == "Rank Normalized") {
-        #  scoreMethodLab <- scoreMethod
-        #}
-      }
-      else if (input$GeneSetTabs != 2) {
-        if (geneset_name %in% decon_score_cols) {
-          scoreMethodLab <- "PreProcessed"
-        }
-        else {
-          scoreMethodLab <- scoreMethod
-        }
-      }
-      # If more than one sample type
-      if (length(unique(meta[,metacol_sampletype])) > 1) {
-        SampleType <- input$SampleTypeSelection
-        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileDensity.svg",sep = "")
-      }
-      # If only one sample type
-      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileDensity.svg",sep = "")
-      }
-    },
-    content = function(file) {
-      p <- ssgseaQuantDensity_react()
-      ggsave(file,p,width = 10, height = 8)
-      
-    }
-  )
-  output$dnldssgseaQuantDensity_PDF <- downloadHandler(
-    filename = function() {
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      Feature <- input$FeatureSelection
-      scoreMethod <- input$ScoreMethod
-      if (Feature != "All_Features") {
-        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-      }
-      if (Feature == "All_Features") {
-        SubFeature <- "_"
-      }
-      if (input$GeneSetTabs == 2) {
-        scoreMethodLab <- "RawGeneExpression"
-        #if (input$RawOrSS == "Raw Gene Expression") {
-        #  scoreMethodLab <- "RawGeneExpression"
-        #}
-        #else if (input$RawOrSS == "Rank Normalized") {
-        #  scoreMethodLab <- scoreMethod
-        #}
-      }
-      else if (input$GeneSetTabs != 2) {
-        if (geneset_name %in% decon_score_cols) {
-          scoreMethodLab <- "PreProcessed"
-        }
-        else {
-          scoreMethodLab <- scoreMethod
-        }
-      }
-      # If more than one sample type
-      if (length(unique(meta[,metacol_sampletype])) > 1) {
-        SampleType <- input$SampleTypeSelection
-        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileDensity.pdf",sep = "")
-      }
-      # If only one sample type
-      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileDensity.pdf",sep = "")
-      }
-    },
-    content = function(file) {
-      p <- ssgseaQuantDensity_react()
-      ggsave(file,p,width = 10, height = 8)
-      
-    }
-  )
-  
-  ## cutoff
-  output$dnldssgseaQuant2Density_SVG <- downloadHandler(
-    filename = function() {
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      Feature <- input$FeatureSelection
-      scoreMethod <- input$ScoreMethod
-      if (Feature != "All_Features") {
-        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-      }
-      if (Feature == "All_Features") {
-        SubFeature <- "_"
-      }
-      if (input$GeneSetTabs == 2) {
-        scoreMethodLab <- "RawGeneExpression"
-        #if (input$RawOrSS == "Raw Gene Expression") {
-        #  scoreMethodLab <- "RawGeneExpression"
-        #}
-        #else if (input$RawOrSS == "Rank Normalized") {
-        #  scoreMethodLab <- scoreMethod
-        #}
-      }
-      else if (input$GeneSetTabs != 2) {
-        if (geneset_name %in% decon_score_cols) {
-          scoreMethodLab <- "PreProcessed"
-        }
-        else {
-          scoreMethodLab <- scoreMethod
-        }
-      }
-      # If more than one sample type
-      if (length(unique(meta[,metacol_sampletype])) > 1) {
-        SampleType <- input$SampleTypeSelection
-        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffDensity.svg",sep = "")
-      }
-      # If only one sample type
-      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffDensity.svg",sep = "")
-      }
-    },
-    content = function(file) {
-      p <- ssgseaQuant2Density_react()
-      ggsave(file,p,width = 10, height = 8)
-      
-    }
-  )
-  output$dnldssgseaQuant2Density_PDF <- downloadHandler(
-    filename = function() {
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      Feature <- input$FeatureSelection
-      scoreMethod <- input$ScoreMethod
-      if (Feature != "All_Features") {
-        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-      }
-      if (Feature == "All_Features") {
-        SubFeature <- "_"
-      }
-      if (input$GeneSetTabs == 2) {
-        scoreMethodLab <- "RawGeneExpression"
-        #if (input$RawOrSS == "Raw Gene Expression") {
-        #  scoreMethodLab <- "RawGeneExpression"
-        #}
-        #else if (input$RawOrSS == "Rank Normalized") {
-        #  scoreMethodLab <- scoreMethod
-        #}
-      }
-      else if (input$GeneSetTabs != 2) {
-        if (geneset_name %in% decon_score_cols) {
-          scoreMethodLab <- "PreProcessed"
-        }
-        else {
-          scoreMethodLab <- scoreMethod
-        }
-      }
-      # If more than one sample type
-      if (length(unique(meta[,metacol_sampletype])) > 1) {
-        SampleType <- input$SampleTypeSelection
-        paste(gsub(" ","",input$UserProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffDensity.pdf",sep = "")
-      }
-      # If only one sample type
-      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-        paste(gsub(" ","",input$UserProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffDensity.pdf",sep = "")
-      }
-    },
-    content = function(file) {
-      p <- ssgseaQuant2Density_react()
-      ggsave(file,p,width = 10, height = 8)
-      
-    }
-  )
-  
   ####----DNLD Univar----####
   
   ##--Survival Plot--##
@@ -7840,12 +9008,6 @@ server <- function(input, output, session) {
       }
       if (input$GeneSetTabs == 2) {
         scoreMethodLab <- "RawGeneExpression"
-        #if (input$RawOrSS == "Raw Gene Expression") {
-        #  scoreMethodLab <- "RawGeneExpression"
-        #}
-        #else if (input$RawOrSS == "Rank Normalized") {
-        #  scoreMethodLab <- scoreMethod
-        #}
       }
       else if (input$GeneSetTabs != 2) {
         if (geneset_name %in% decon_score_cols) {
@@ -7917,6 +9079,8 @@ server <- function(input, output, session) {
       
     }
   )
+  
+  
   
   ####----DNLD Add Bivariate----####
   
@@ -8113,6 +9277,7 @@ server <- function(input, output, session) {
       
     }
   )
+  
   
   ####----DNLD Int Bivariate----####
   
@@ -8406,6 +9571,8 @@ server <- function(input, output, session) {
       
     }
   )
+  
+  
   
   ####----DNLD Multivariate----####
   
@@ -9218,6 +10385,7 @@ server <- function(input, output, session) {
   
   
 }
+
 
 
 

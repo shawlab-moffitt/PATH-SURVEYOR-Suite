@@ -5,7 +5,6 @@
 
 GeneSet_File <- "GeneSet_Data/GeneSets.zip"
 
-set.seed(100)
 
 
 ############################ Copyright 2022 Moffitt Cancer Center ############################
@@ -19,7 +18,7 @@ set.seed(100)
 
 ####----Install and load packages----####
 
-packages <- c("shiny","shinythemes","shinyjqui","shinycssloaders","dplyr","DT","readr","ggplot2")
+packages <- c("shiny","shinythemes","shinyjqui","shinycssloaders","dplyr","DT","readr","ggplot2","shinyjs")
 
 installed_packages <- packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
@@ -44,74 +43,111 @@ GeneSet <- as.data.frame(read_delim(GeneSet_File, delim = '\t', col_names = T))
 #increase file upload size
 options(shiny.maxRequestSize=50*1024^2)
 
+load_data <- function() {
+  Sys.sleep(2)
+  hide("loading_page")
+  show("main_content")
+}
+
+
+####----UI----####
 
 ui <- 
-  navbarPage("{ Hazard Ratio Ranked GSEA }",
-             
-             ####----Enrichment Table----####
-             
-             tabPanel("Enrichment Table",
-                      fluidPage(
-                        title = "Enrichment Table",
-                        sidebarPanel(
-                          width = 3,
-                          fluidRow(
-                            column(9,
-                                   fileInput("UserGeneList","Upload Ranked Gene List")
-                            ),
-                            column(3,
-                                   checkboxInput("UserGeneListheaderCheck","Header",value = T)
+  
+  tagList(
+    
+    useShinyjs(),
+    div(
+      id = "loading_page",
+      h1("Loading...")
+    ),
+    hidden(
+      div(
+        id = "main_content",
+        
+        navbarPage("{ Hazard Ratio Ranked GSEA }",
+                   
+                   ####----Enrichment Table----####
+                   
+                   tabPanel("Enrichment Table",
+                            fluidPage(
+                              title = "Enrichment Table",
+                              sidebarPanel(
+                                width = 3,
+                                p(),
+                                #p("File input pre-loaded with PAN ICI melanoma pre-treatment OS CoxH genes ranked inverse. This is the file output from DRPPM-PATH-SURVEIOR Pipeline and the inverse of the hazard ration is used."),
+                                fluidRow(
+                                  column(9,
+                                         fileInput("UserGeneList","Upload Ranked Gene List")
+                                  ),
+                                  column(3,
+                                         checkboxInput("UserGeneListheaderCheck","Header",value = T)
+                                  )
+                                ),
+                                fluidRow(
+                                  column(9,
+                                         numericInput("gseaPval","GSEA Adj Pvalue Cutoff",value = 1)
+                                  ),
+                                  column(3,
+                                         numericInput("UserSeedSet","Set Seed:",value = 101)
+                                  )
+                                ),
+                                uiOutput("rendSpecimenType"),
+                                uiOutput("rendGeneSetChosen"),
+                                uiOutput("rendUserUploadCheck"),
+                                checkboxInput("UserUploadCheck","Upload Gene Set"),
+                                fluidRow(
+                                  column(9,
+                                         uiOutput("rendUserGSupload")
+                                  ),
+                                  column(3,
+                                         uiOutput("rendUserGSheaderCheck")
+                                  )
+                                ),
+                                checkboxInput("PreviewGeneSet","Preview Selected Gene Set"),
+                                uiOutput("rendGeneSetPreview"),
+                              ),
+                              mainPanel(
+                                p("Please note this may take excess time depending on the number of gene sets being analyzed."),
+                                uiOutput("rendEnrichTable"),
+                                uiOutput("renddnldEnrichTable"),
+                              )
                             )
-                          ),
-                          numericInput("gseaPval","GSEA Adjusted Pvalue Cutoff",value = 1),
-                          uiOutput("rendSpecimenType"),
-                          uiOutput("rendGeneSetChosen"),
-                          uiOutput("rendUserUploadCheck"),
-                          checkboxInput("UserUploadCheck","Upload Gene Set"),
-                          fluidRow(
-                            column(9,
-                                   uiOutput("rendUserGSupload")
-                            ),
-                            column(3,
-                                   uiOutput("rendUserGSheaderCheck")
+                   ),
+                   tabPanel("Enrichment Plot",
+                            fluidPage(
+                              title = "Enrichment Plot",
+                              sidebarPanel(
+                                h4("Select Gene Set:"),
+                                div(DT::dataTableOutput("GeneSetTable"), style = "font-size:10px")
+                              ),
+                              mainPanel(
+                                h3("GSEA Enrichment Plot"),
+                                verbatimTextOutput("NESandPval"),
+                                withSpinner(plotOutput("enrichplot", width = "500px", height = "450px"), type = 6),
+                                fluidRow(
+                                  downloadButton("dnldPlotSVG_gsea","Download as SVG"),
+                                  downloadButton("dnldPlotPDF_gsea","Download as PDF")
+                                ),
+                                h3("Leading Edge Genes"),
+                                downloadButton("LEGdownload", "Download Leading Edge Gene Table"),
+                                div(DT::dataTableOutput("LeadingEdgeGenes"), style = "font-size:12px; height:500px; width:400px")
+                              )
                             )
-                          ),
-                          checkboxInput("PreviewGeneSet","Preview Selected Gene Set"),
-                          uiOutput("rendGeneSetPreview"),
-                        ),
-                        mainPanel(
-                          p("Please note this may take excess time depending on the number of gene sets being analyzed."),
-                          uiOutput("rendEnrichTable"),
-                          uiOutput("renddnldEnrichTable"),
-                        )
-                      )
-             ),
-             tabPanel("Enrichment Plot",
-                      fluidPage(
-                        title = "Enrichment Plot",
-                        sidebarPanel(
-                          h4("Select Gene Set:"),
-                          div(DT::dataTableOutput("GeneSetTable"), style = "font-size:10px; height:700px; overflow-X: scroll")
-                        ),
-                        mainPanel(
-                          h3("GSEA Enrichment Plot"),
-                          verbatimTextOutput("NESandPval"),
-                          withSpinner(plotOutput("enrichplot", width = "500px", height = "450px"), type = 6),
-                          fluidRow(
-                            downloadButton("dnldPlotSVG_gsea","Download as SVG"),
-                            downloadButton("dnldPlotPDF_gsea","Download as PDF")
-                          ),
-                          h3("Leading Edge Genes"),
-                          downloadButton("LEGdownload", "Download Leading Edge Gene Table"),
-                          div(DT::dataTableOutput("LeadingEdgeGenes"), style = "font-size:12px; height:500px; width:400px")
-                        )
-                      ))
+                   )
+        )
+      )
+    )
   )
 
 
+####----Server----####
 
 server <- function(input, output, session) {
   
+  load_data()
+  
+  ####----Render UI----####
   
   output$rendSpecimenType <- renderUI({
     
@@ -148,14 +184,14 @@ server <- function(input, output, session) {
   
   output$rendEnrichTable <- renderUI({
     
-    req(input$UserGeneList)
+    #req(input$UserGeneList)
     withSpinner(DT::dataTableOutput("EnrichTable", width = "100%"), type = 6)
     
   })
   
   output$renddnldEnrichTable <- renderUI({
     
-    req(input$UserGeneList)
+    #req(input$UserGeneList)
     downloadButton("dnldEnrichTable","Download Enriched Signatures Table")
     
   })
@@ -187,6 +223,8 @@ server <- function(input, output, session) {
     }
     
   })
+  
+  ####----Reactives----####
   
   ## User Upload gene set reactive
   user_gs <- reactive({
@@ -264,73 +302,6 @@ server <- function(input, output, session) {
         
       }
       
-      #if (gs_chosen == "MSigDB") {
-      #  
-      #  GeneSet_sub <- GeneSet[which(GeneSet[,3] == gs_chosen),]
-      #  gmt <- GeneSet_sub[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "MSigDB_mm") {
-      #  
-      #  gmt <- msigdb_mm[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "LINCS L1000 Up-Regulated") {
-      #  
-      #  gmt <- lincsu[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "LINCS L1000 Down-Regulated") {
-      #  
-      #  gmt <- lincsd[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "Cell Marker") {
-      #  
-      #  gmt <- cellm[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "Cell Marker_mm") {
-      #  
-      #  gmt <- cellm_mm[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "All Gene Sets") {
-      #  
-      #  gmt <- GeneSet[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "All Gene Sets_mm") {
-      #  
-      #  gmt <- GeneSet_mm[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "MSigDB - Hallmark") {
-      #  
-      #  gmt <- hallmark[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "MSigDB - Hallmark_mm") {
-      #  
-      #  gmt <- hallmark_mm[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "ER Stress") {
-      #  
-      #  gmt <- erstress[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "Immune Signatures") {
-      #  
-      #  gmt <- immunesig[,c(1,2)]
-      #  
-      #}
-      #else if (gs_chosen == "TCGA") {
-      #  
-      #  gmt <- tcga_global[,c(1,2)]
-      #  
-      #}
-      
     }
     
   })
@@ -362,14 +333,20 @@ server <- function(input, output, session) {
   #generate ranked list of genes
   user_gl_df <- reactive({
     
-    header_check <- input$UserGeneListheaderCheck
-    gs.u <- input$UserGeneList
-    ext <- tools::file_ext(gs.u$datapath)
-    req(gs.u)
-    validate(need(ext == c("tsv","txt"), "Please upload .tsv or .txt file"))
-    
-    df <- as.data.frame(read_delim(gs.u$datapath, delim = '\t', col_names = header_check, comment = "#"))
-    df
+    #print(input$UserGeneList)
+    #if (is.null(input$UserGeneList)) {
+    #  df <- PreSet_CoxH_Ranked_Genes
+    #  df
+    #} else {
+      header_check <- input$UserGeneListheaderCheck
+      gs.u <- input$UserGeneList
+      ext <- tools::file_ext(gs.u$datapath)
+      req(gs.u)
+      validate(need(ext == c("tsv","txt"), "Please upload .tsv or .txt file"))
+      
+      df <- as.data.frame(read_delim(gs.u$datapath, delim = '\t', col_names = header_check, comment = "#"))
+      df
+    #}
     
   })
   
@@ -421,13 +398,80 @@ server <- function(input, output, session) {
   
   EnrichTabReact <- reactive({
     
+    set.seed(input$UserSeedSet)
     gmt <- gmt_react()
     ranked_genes <- user_gl()
     pval <- input$gseaPval
-    gsea.res <- GSEA(ranked_genes, TERM2GENE = gmt, pvalueCutoff = pval)
+    gsea.res <- GSEA(ranked_genes,
+                     TERM2GENE = gmt,
+                     eps = NA, pvalueCutoff = pval,
+                     minGSSize = 5, maxGSSize = 10000,
+                     nPermSimple = 5000,
+                     seed = T)
     gsea.res
     
   })
+  
+  
+  LeadingEdgeReact <- reactive({
+    
+    res <- EnrichTabReact()
+    res_df <- res@result
+    geneset_name <- as.character(res_df[input$GeneSetTable_rows_selected,1])
+    NES = res_df$NES[which(res_df[,'ID']==geneset_name)]
+    geneList <- user_gl()
+    ## Subset core enriched genes
+    genes1 <- as.matrix(res_df[which(res_df$ID==geneset_name),"core_enrichment"])
+    genes2 <- strsplit(genes1,"/")
+    if (length(genes2) > 0) {
+      GeneSymbol <- as.data.frame(genes2)
+      colnames(GeneSymbol)[1] <- "Gene_Symbol"
+      GeneSymbol$Leading_Edge_Rank <- as.numeric(rownames(GeneSymbol))
+      GeneSymbol <- GeneSymbol[,c("Leading_Edge_Rank","Gene_Symbol")]
+      
+      ranking_df <- stack(geneList)
+      uploaded_df <- user_gl_df()
+      if (input$UserGeneListheaderCheck == TRUE) {
+        if (ncol(uploaded_df) == 2) {
+          rank_col_name <- colnames(uploaded_df)[2]
+        }
+        if (ncol(uploaded_df) == 1) {
+          rank_col_name <- "Overall_Rank"
+        }
+        if (ncol(uploaded_df) > 2) {
+          if (colnames(uploaded_df)[2] == "Hazard_Ratio" | colnames(uploaded_df)[2] == "estimate") {
+            rank_col_name <- "Hazard_Ratio"
+          }
+          else {
+            rank_col_name <- "Overall_Rank"
+          }
+        }
+      }
+      if (input$UserGeneListheaderCheck == FALSE) {
+        if (ncol(uploaded_df) == 2) {
+          rank_col_name <- "User_Uploaded_Ranking"
+        }
+        if (ncol(uploaded_df) != 2) {
+          rank_col_name <- "Overall_Rank"
+        }
+      }
+      
+      colnames(ranking_df) <- c(rank_col_name,"Gene_Symbol")
+      
+      Leading_Merge <- merge(GeneSymbol,ranking_df,by = "Gene_Symbol",all.x = T)
+      if (NES < 0) {
+        Leading_Merge <- Leading_Merge[order(Leading_Merge[,1]),]
+      }
+      else if (NES > 0) {
+        Leading_Merge <- Leading_Merge[order(Leading_Merge[,1], decreasing = F),]
+      }
+      Leading_Merge <- Leading_Merge[,c("Leading_Edge_Rank","Gene_Symbol",rank_col_name)]
+      Leading_Merge
+    }
+    
+  })
+  
+  ####----Data Tables----####
   
   output$EnrichTable <- DT::renderDataTable({
     
@@ -444,7 +488,7 @@ server <- function(input, output, session) {
                   extensions = c("KeyTable", "FixedHeader","FixedColumns"),
                   options = list(keys = T,
                                  searchHighlight = T,
-                                 pageLength = 25,
+                                 pageLength = 20,
                                  lengthMenu = c("10", "25", "50", "100"),
                                  scrollX = T,
                                  autoWidth = TRUE,
@@ -453,17 +497,6 @@ server <- function(input, output, session) {
       formatRound(columns = c(2:10), digits = 4)
     
   })
-  
-  output$dnldEnrichTable <- downloadHandler(
-    filename = function() {
-      paste("EnrichedSignaturesTable.txt",sep = "")
-    },
-    content = function(file) {
-      res <- EnrichTabReact()
-      res_df <- res@result
-      write_delim(res_df,file,delim = '\t')
-    }
-  )
   
   output$GeneSetTable <- DT::renderDataTable({
     
@@ -481,6 +514,19 @@ server <- function(input, output, session) {
       formatRound(columns = c(2,3), digits = 4)
     
   })
+  
+  output$LeadingEdgeGenes <- DT::renderDataTable({
+    
+    LEGs <- LeadingEdgeReact()
+    DT::datatable(LEGs,
+                  options = list(paging = F,
+                                 autoWidth = TRUE,
+                                 columnDefs = list(list(className = 'dt-center', targets = 0:2))),
+                  rownames = F)
+    
+  })
+  
+  ####----Enrichment Plot----####
   
   output$enrichplot <- renderPlot({
     
@@ -515,6 +561,19 @@ server <- function(input, output, session) {
     }
     
   })
+  
+  ####----Downloads----####
+  
+  output$dnldEnrichTable <- downloadHandler(
+    filename = function() {
+      paste("EnrichedSignaturesTable.txt",sep = "")
+    },
+    content = function(file) {
+      res <- EnrichTabReact()
+      res_df <- res@result
+      write_delim(res_df,file,delim = '\t')
+    }
+  )
   
   output$dnldPlotSVG_gsea <- downloadHandler(
     filename = function() {
@@ -561,76 +620,6 @@ server <- function(input, output, session) {
     }
   )
   
-  LeadingEdgeReact <- reactive({
-    
-    res <- EnrichTabReact()
-    res_df <- res@result
-    geneset_name <- as.character(res_df[input$GeneSetTable_rows_selected,1])
-    NES = res_df$NES[which(res_df[,'ID']==geneset_name)]
-    geneList <- user_gl()
-    ## Subset core enriched genes
-    genes1 <- as.matrix(res_df[which(res_df$ID==geneset_name),"core_enrichment"])
-    genes2 <- strsplit(genes1,"/")
-    GeneSymbol <- as.data.frame(genes2)
-    if (ncol(GeneSymbol) > 0) {
-      colnames(GeneSymbol)[1] <- "Gene_Symbol"
-      GeneSymbol$Leading_Edge_Rank <- as.numeric(rownames(GeneSymbol))
-      GeneSymbol <- GeneSymbol[,c("Leading_Edge_Rank","Gene_Symbol")]
-      
-      ranking_df <- stack(geneList)
-      uploaded_df <- user_gl_df()
-      if (input$UserGeneListheaderCheck == TRUE) {
-        if (ncol(uploaded_df) == 2) {
-          rank_col_name <- colnames(uploaded_df)[2]
-        }
-        if (ncol(uploaded_df) == 1) {
-          rank_col_name <- "Overall_Rank"
-        }
-        if (ncol(uploaded_df) > 2) {
-          if (colnames(uploaded_df)[2] == "Hazard_Ratio" | colnames(uploaded_df)[2] == "estimate") {
-            rank_col_name <- "Hazard_Ratio"
-          }
-          else {
-            rank_col_name <- "Overall_Rank"
-          }
-        }
-      }
-      if (input$UserGeneListheaderCheck == FALSE) {
-        if (ncol(uploaded_df) == 2) {
-          rank_col_name <- "User_Uploaded_Ranking"
-        }
-        if (ncol(uploaded_df) != 2) {
-          rank_col_name <- "Overall_Rank"
-        }
-      }
-      
-      colnames(ranking_df) <- c(rank_col_name,"Gene_Symbol")
-      
-      Leading_Merge <- merge(GeneSymbol,ranking_df,by = "Gene_Symbol",all.x = T)
-      if (NES < 0) {
-        Leading_Merge <- Leading_Merge[order(Leading_Merge[,1]),]
-      }
-      else if (NES > 0) {
-        Leading_Merge <- Leading_Merge[order(Leading_Merge[,1], decreasing = F),]
-      }
-      Leading_Merge <- Leading_Merge[,c("Leading_Edge_Rank","Gene_Symbol",rank_col_name)]
-      Leading_Merge
-    }
-    
-    
-  })
-  
-  output$LeadingEdgeGenes <- DT::renderDataTable({
-    
-    LEGs <- LeadingEdgeReact()
-    DT::datatable(LEGs,
-                  options = list(paging = F,
-                                 autoWidth = TRUE,
-                                 columnDefs = list(list(className = 'dt-center', targets = 0:2))),
-                  rownames = F)
-    
-  })
-  
   output$LEGdownload <- downloadHandler(
     
     filename = function() {
@@ -651,7 +640,6 @@ server <- function(input, output, session) {
   )
   
 }
-
 
 
 
