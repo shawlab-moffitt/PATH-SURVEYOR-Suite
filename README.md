@@ -15,6 +15,7 @@ Users can download and employ all of the tools locally to perform analyses and g
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/blob/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp/App_Demo_Pictures/mian_schematic.PNG?raw=true)
 
+* Users can now explore various use cases of the DRPPM-PATH-SURVEIOR Suite of tools which are currently pending further review for publication, but can be seen here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR_Manuscript_Supplementary
 
 # Installation
 
@@ -28,6 +29,8 @@ Users can download and employ all of the tools locally to perform analyses and g
   * https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/blob/main/1-Getting_Started/1-R_Package_Installation/R_Package_Installation.R
 
 # Required Files
+
+* **NEW FEATURE** added to clean, properly format, and generate a Clinical Feature Parameter File for you here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/1-Getting_Started/2-FilePrep
 
 * Gene Expression File
   * Tab delimited matrix with gene symbols in the first column and sample names as the first-row header
@@ -116,6 +119,8 @@ More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Su
       * CoxPH output file from DRPPM-PATH-SURVEIOR Pipeline gene analysis
 
 More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App
+
+
 
 # Disclamer
 
