@@ -1,7 +1,8 @@
+####----PATH - SURVEYORS - Suite R Package Installation----####
+# author: Alyssa Obermayer (alyssa.obermayer@moffitt.org)
 
-
-####----DRPPM - PATH - SURVEIOR - Suite R Package Installation----####
-
+# Documentation
+#' R script for installation of all R packages needed to run the PATH-SURVEYORS suite of tools
 
 ##--This Will install immunedeconv package--##
 ##---R Version 4.1 or greater is required---##
@@ -25,7 +26,7 @@ if (R.major >= 4 & R.minor >= 1) {
 packages <- c("shiny","shinythemes","shinyjqui","gtsummary","tidyr","RColorBrewer",
               "dplyr","DT","ggplot2","ggpubr","tibble","survival","pheatmap","stringr",
               "plotly","readr","shinycssloaders","survminer","gridExtra","viridis",
-              "ggdendro","factoextra","reshape2","stringr","BiocManager")
+              "ggdendro","factoextra","reshape2","stringr","shinyjs")
 installed_packages <- packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
   install.packages(packages[!installed_packages])
