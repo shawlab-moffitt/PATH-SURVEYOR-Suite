@@ -1,36 +1,38 @@
-# DRPPM-PATH-SURVEIOR-Suite
+# PATH-SURVEYORS-Suite
 
 # Introduction
 
-The integration of patient genome expression data, phenotype data, and clinical data can serve as an integral resource for patient prognosis. The DRPPM PATH SURVEIOR Suite: **Path**way level **Surv**ival **E**xam**i**nat**or** serves to do just that, by examining the interaction of gene or gene set pathway expression with cilinical data to discover prominent features that play a role in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards underlying features affective survival. Through a systematic Cox proportional regression pipeline the expression of individual genes or gene set pathways is linked with a hazard ratio and p.values to determine signifigance and patient risk, which can be followed by interactive visualization in the suite of R Shiny applications.
+PATH-SURVEYORS: PATHway level SURVival analYsis of immune cOmponents and drug taRgetS
 
-Users can download and employ all of the tools locally to perform analyses and gain an in-depth perspective of their own data. To start, we provide example skin and kidney cancer data from the PAN ICI (Immune Checkpoint Inhibition) iAtlas database. Additionally, we provied a comprehensive set of pathways which havew been derieved from a variety of databases, such as MSigDB, LINCS L1000, Cell Marker, as well as derived gene sets focusing on ER stress and immune signatures. The example data and provided gene sets will be referenced and utilized throughout the guided overview of the DRPPM-PATH-SURVEIOR Suite of tools. 
+The integration of patient genome expression data, phenotype data, and clinical data can serve as an integral resource for patient prognosis and treatment guidance. The DRPPM PATH SURVEIOR Suite: **Path**way level **Surv**ival Anal**y**sis of Immune C**o**mponents and Drug ta**r**get**s** serves to do just that, by examining the interaction of gene or gene set pathway expression with clinical data to discover prominent features that play a role in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards underlying features affective survival. Through a systematic Cox proportional regression pipeline the expression of individual genes or gene set pathways is linked with a hazard ratio and p.values to determine signifigance and patient risk, which can be followed by interactive visualization in the suite of R Shiny applications.
 
-## The DRPPM-PATH-SURVEIOR Family
+Users can download and employ all of the tools locally to perform analyses and gain an in-depth perspective of their own data. To start, we provide example skin and kidney cancer data from the PAN ICI (Immune Checkpoint Inhibition) iAtlas database. Additionally, we provied a comprehensive set of pathways which havew been derieved from a variety of databases, such as MSigDB, LINCS L1000, Cell Marker, as well as derived gene sets focusing on ER stress and immune signatures. The example data and provided gene sets will be referenced and utilized throughout the guided overview of the PATH-SURVEYORS Suite of tools. 
 
-* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp
-* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/3-DRPPM-PATH-SURVEIOR-Pipeline
-* R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/4-DRPPM-Jaccard_Connectivity_App
-* R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App
+## The PATH-SURVEYORS Family
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/blob/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp/App_Demo_Pictures/mian_schematic.PNG?raw=true)
+* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/tree/main/2-PATH-SURVEYORS-InteractiveApp
+* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/tree/main/3-PATH-SURVEYORS-Pipeline
+* R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/tree/main/4-DRPPM-Jaccard_Connectivity_App
+* R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/tree/main/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App
 
-* Users can now explore various use cases of the DRPPM-PATH-SURVEIOR Suite of tools which are currently pending further review for publication, but can be seen here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR_Manuscript_Supplementary
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/blob/main/2-PATH-SURVEYORS-InteractiveApp/App_Demo_Pictures/mian_schematic.PNG?raw=true)
+
+* Users can now explore various use cases of the PATH-SURVEYORS Suite of tools which are currently pending further review for publication, but can be seen here: https://github.com/shawlab-moffitt/PATH-SURVEYORS_Manuscript_Supplementary
 
 # Installation
 
 * Install DRPPM-PATH-SURVEIOR Suite GitHub repository
-  * git clone https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite.git
-  * Download and unzip repository https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/archive/refs/heads/main.zip
+  * git clone https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite.git
+  * Download and unzip repository https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/archive/refs/heads/main.zip
 * Set working directory to DRPPM-PATH-SURVEIOR-Suite folder
 * Install required R packages
   * Suite of tools was built on R version 4.1
   * R script for package installation is provided in the “1-Getting_Started” folder
-  * https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/blob/main/1-Getting_Started/1-R_Package_Installation/R_Package_Installation.R
+  * https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/blob/main/1-Getting_Started/1-R_Package_Installation/R_Package_Installation.R
 
 # Required Files
 
-* **NEW FEATURE** added to clean, properly format, and generate a Clinical Feature Parameter File for you here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/1-Getting_Started/2-FilePrep
+* **NEW FEATURE** added to clean, properly format, and generate a Clinical Feature Parameter File for you here: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/tree/main/1-Getting_Started/2-FilePrep
 
 * Gene Expression File
   * Tab delimited matrix with gene symbols in the first column and sample names as the first-row header
@@ -60,12 +62,12 @@ Users can download and employ all of the tools locally to perform analyses and g
   * Updated clinical meta information and clinical meta feature parameter file which can be used as input to the interactive Shiny app
 
 
-More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/1-Getting_Started/2-Immune_Deconvolution
+More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/tree/main/1-Getting_Started/2-Immune_Deconvolution
 
-# DRPPM-PATH-SURVEIOR: Interactive Mode
+# PATH-SURVEYORS: Interactive Mode
 
 * Script
-  * DRPPM-PATH-SURVEIOR-Suite/2-DRPPM-PATH-SURVEIOR-InteractiveApp/app.R
+  * PATH-SURVEYORS-Suite/2-PATH-SURVEYORS-InteractiveApp/app.R
 * Input
   * Project Name: A descriptive name for your project/data
   * File inputs: Supply the path and file name or your expression matrix, clinical meta information, and clinical meta feature parameter files
@@ -74,51 +76,49 @@ More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Su
   * Gene Set and Markdown files
     * These are proved files in the GitHub repository. Please ensure the path to these files are correct
 
-More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp
+More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/tree/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp
 
-# DRPPM-PATH-SURVEIOR: Pipeline Mode
+# PATH-SURVEYORS: Pipeline Mode
 
 * Script
-  * Scripts to run in R Studio and in a command line interface found here: DRPPM-PATH-SURVEIOR-Suite/3-DRPPM-PATH-SURVEIOR-Pipeline/
+  * Scripts to run in R Studio and in a command line interface found here: PATH-SURVEYORS-Suite/3-PATH-SURVEYORS-Pipeline/
 * Input
-  * Parameter File: Tab-delimited two-column file containing input file paths and run parameters described in the GitHub https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline#parameter-file
+  * Parameter File: Tab-delimited two-column file containing input file paths and run parameters described in the GitHub https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline#parameter-file
     * Pathway Level: When ranking gene set pathways according to Cox proportional hazards, a gene set file and name is required. Users can include a number of top pathways ranked on significance, and a Jaccard connectivity matrix will be included in the output
     * Gene Level: When ranking individual genes, no gene set file is required, though, if one is included, users can select to perform GSEA with a hazard ratio ranked list of genes upon Cox regression completion.
 * Output
   * ssGSEA score table (gene set file required)
   * Median Cut-Point table
   * Cox Proportional Hazard Regression output for all pathways or genes
-  * Jaccard Connectivity Matrix (gene set file required)
-  * Hazard Ratio Ranked GSEA (gene set file required)
 
-More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/3-DRPPM-PATH-SURVEIOR-Pipeline
+More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/tree/main/3-PATH-SURVEYORS-Pipeline
 
-# DRPPM-PATH-SURVEIOR: Jaccard Connectivity
+# PATH-SURVEYORS: Jaccard Connectivity
 
 * Script
-  * DRPPM-PATH-SURVEIOR-Suite/4-DRPPM-Jaccard_Connectivity_App/app.R
+  * PATH-SURVEYORS-Suite/4-DRPPM-Jaccard_Connectivity_App/app.R
 * Input
   * Gene Set File: 
     * GeneSet_Data/Comprehensive_GeneSet.Rdata
   * User-Derived (Input upon app start-up)
-    * CoxPH output file from DRPPM-PATH-SURVEIOR Pipeline pathway analysis
-    * CoxPH output file from DRPPM-PATH-SURVEIOR Pipeline gene analysis 
+    * CoxPH output file from PATH-SURVEYORS Pipeline pathway analysis
+    * CoxPH output file from PATH-SURVEYORS Pipeline gene analysis 
 * For gene cluster annotation (Optional) 
     * GMT file of gene set pathways is also accepted
 
-More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/4-DRPPM-Jaccard_Connectivity_App
+More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/tree/main/4-DRPPM-Jaccard_Connectivity_App
 
-# DRPPM-PATH-SURVEIOR: Hazard Ratio Ranked GSEA
+# PATH-SURVEYORS: Hazard Ratio Ranked GSEA
 
 * Script
-    * DRPPM-PATH-SURVEIOR-Suite/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App/app.R
+    * PATH-SURVEYORS-Suite/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App/app.R
 * Input
     * Gene Set File:
       * GeneSet_Data/GeneSets.zip
     * User-Derived (Input upon app start-up)
-      * CoxPH output file from DRPPM-PATH-SURVEIOR Pipeline gene analysis
+      * CoxPH output file from PATH-SURVEYORS Pipeline gene analysis
 
-More Information Here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App
+More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Suite/tree/main/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App
 
 
 
