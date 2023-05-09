@@ -2,8 +2,6 @@
 
 # Introduction
 
-PATH-SURVEYORS: PATHway level SURVival analYsis of immune cOmponents and drug taRgetS
-
 The integration of patient genome expression data, phenotype data, and clinical data can serve as an integral resource for patient prognosis and treatment guidance. The DRPPM PATH SURVEIOR Suite: **Path**way level **Surv**ival Anal**y**sis of Immune C**o**mponents and Drug ta**r**get**s** serves to do just that, by examining the interaction of gene or gene set pathway expression with clinical data to discover prominent features that play a role in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards underlying features affective survival. Through a systematic Cox proportional regression pipeline the expression of individual genes or gene set pathways is linked with a hazard ratio and p.values to determine signifigance and patient risk, which can be followed by interactive visualization in the suite of R Shiny applications.
 
 Users can download and employ all of the tools locally to perform analyses and gain an in-depth perspective of their own data. To start, we provide example skin and kidney cancer data from the PAN ICI (Immune Checkpoint Inhibition) iAtlas database. Additionally, we provied a comprehensive set of pathways which havew been derieved from a variety of databases, such as MSigDB, LINCS L1000, Cell Marker, as well as derived gene sets focusing on ER stress and immune signatures. The example data and provided gene sets will be referenced and utilized throughout the guided overview of the PATH-SURVEYORS Suite of tools. 
