@@ -36,7 +36,7 @@ Users can run the app in R Studio, run the script in R, or run the [docker](http
 
 # User Interface
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-FilePrep/Example_UI_Screenshots/PATH-SURVEYOR_FilePrepApp1.PNG?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-FilePrep/Example_UI_Screenshots/PATH_SURVEYOR_FilePrepApp1.PNG?raw=true)
 
 1. User may input their expression and meta data here and denmote how their file is delimited, as to be read in properly.
 2. The app will try to detect survival time and event columns and will fill in any it thinks it finds. The user can delete any that are not true or search for ones that the app did not detect. 
@@ -45,7 +45,7 @@ Users can run the app in R Studio, run the script in R, or run the [docker](http
 4. Below that, the user can visualize the original expression data input compared to the new expression file they can download.
 5. Lastly, the user can download the cleaned and properly formatted expression, meta, and meta parameter files for use in further analysis.
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-FilePrep/Example_UI_Screenshots/PATH-SURVEYOR_FilePrepApp2.PNG?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-FilePrep/Example_UI_Screenshots/PATH_SURVEYOR_FilePrepApp2.PNG?raw=true)
 
 * Along with cleaning and formatting the expression and meta data, the app with also generate a meta parameter file that the user can use as input to the [PATH-SURVEYOR Shiny App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App)
 * This file give each column in the meta data a small definition that allows the survival app to find the survival time and event columns with little effort. 
