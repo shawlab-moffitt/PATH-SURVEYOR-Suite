@@ -4,10 +4,10 @@ Within this repository we have provided Dockerfiles and setup scripts for users 
 
 ## Build
 
-When the Dockerfile and app folder are in the users desired directory, the image can be built with the `step1_build_the_docker.sh` script, this will run the build function in the current directory.
+When the Dockerfile and app folder are in the users desired directory, the image can be built with the `step1_build_the_docker.sh` script, this will run the build function in the current directory. For this example the app will be called "ShinyApp", users can change the name to go with the specific application.
 
 ```
-docker build -t [app name] .
+docker build -t ShinyApp .
 ```
 
 ## Run
@@ -15,7 +15,7 @@ docker build -t [app name] .
 When the image build is completed, the app can then be run with the `step2_run_the_docker_image.sh` script
 
 ```
-docker run -it --rm -p 3838:3838 [app name]
+docker run -it --rm -p 3838:3838 ShinyApp
 ```
 
 ### Use
@@ -27,7 +27,7 @@ The app will then be accessible through a local instance. In your browser you ca
 The image that was generated can then be saved for easy access in the future. Users can save the image by running the `step4_saving_the_docker_image.sh` script.
 
 ```
-docker save -o [app save name].tar [app name]
+docker save -o DockerImage_ShinyApp.tar ShinyApp
 ```
 
 ### Load app from save
@@ -35,8 +35,8 @@ docker save -o [app save name].tar [app name]
 In the future the app can then be loaded with the `step5_load_and_run_the_tar_image.sh` script.
 
 ```
-docker load -i [app save name].tar
-docker run -it --rm -p 3838:3838 [app name]:latest
+docker load -i DockerImage_ShinyApp.tar
+docker run -it --rm -p 3838:3838 ShinyApp:latest
 ```
 
 #### Use
