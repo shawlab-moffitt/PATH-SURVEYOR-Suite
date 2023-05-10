@@ -2,16 +2,16 @@
 
 # Introduction
 
-The integration of patient genome expression data, phenotypye data, and clinical data can serve as an integral resource for patient prognosis. PATH SURVEYORS: **Path**way level **Surv**ival Anal**y**sis of Immune C**o**mponents and Drug ta**r**get**s** serves to do just that, by examining the interaction of pathway analysis with patient expression and cilinical data to discover prominent features that take part in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards pathway analysis of patient survival. Gene Set pathways utilized in this workflow include the Molecular Signatures Database (MSigDB), LINCS L1000 Small-Molecule Perturbations, and Clue.io ER Stress signtatures, as well as user provided gene sets. 
+The integration of patient genome expression data, phenotypye data, and clinical data can serve as an integral resource for patient prognosis. PATH SURVEYOR: **Path**way level **Surv**ival Anal**y**sis of Immune C**o**mponents and Drug ta**r**gets serves to do just that, by examining the interaction of pathway analysis with patient expression and cilinical data to discover prominent features that take part in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards pathway analysis of patient survival. Gene Set pathways utilized in this workflow include the Molecular Signatures Database (MSigDB), LINCS L1000 Small-Molecule Perturbations, and Clue.io ER Stress signtatures, as well as user provided gene sets. 
 
-Here we focus on the Pathway Connectivity portion of this workflow with the DRPPM-Jaccard-Pathway-Connectivity R Shiny App. This app takes a list of gene sets as input and performs a Jaccard distance calculation to determine the proximity on the gene sets to one another. Working in tandem with the [PATH-SURVEYORS pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline), the user may subset a top portion of the gene sets that were output from the comprehensive Cox Proportional Hazard table and use that as input to the Jaccard Connectivity app. This allows the user to gain another perspective on the top gene sets identified and how they cluster together by utilizing visualiztions of heatmaps, dendrograms, and phylogeny-type branched outputs.
+Here we focus on the Pathway Connectivity portion of this workflow with the DRPPM-Jaccard-Pathway-Connectivity R Shiny App. This app takes a list of gene sets as input and performs a Jaccard distance calculation to determine the proximity on the gene sets to one another. Working in tandem with the [PATH-SURVEYOR pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline), the user may subset a top portion of the gene sets that were output from the comprehensive Cox Proportional Hazard table and use that as input to the Jaccard Connectivity app. This allows the user to gain another perspective on the top gene sets identified and how they cluster together by utilizing visualiztions of heatmaps, dendrograms, and phylogeny-type branched outputs.
 
-An example Jaccard Connectivity R Shiny App is hosted here: http://shawlab.science/shiny/PATH-SURVEYORS_Jaccard_Connectivity_App/ where you are welcome to use the example inputs provided in the GitHub or your own to explore.
+An example Jaccard Connectivity R Shiny App is hosted here: http://shawlab.science/shiny/PATH-SURVEYOR_Jaccard_Connectivity_App/ where you are welcome to use the example inputs provided in the GitHub or your own to explore.
 
-## The PATH-SURVEYORS Family
+## The PATH-SURVEYOR Family
 
-* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYORS
-* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline
+* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR
+* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline
 * R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/Jaccard-Pathway-Connectivity
 * R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/PreRanked-GSEA
 
@@ -58,23 +58,23 @@ git clone https://github.com/shawlab-moffitt/Pathway-Connectivity.git
 * **Comprehensive Gene Set File:**
   * This is a provided file [Comprehensive_GeneSet.RData](https://github.com/shawlab-moffitt/Pathway-Connectivity/blob/main/GeneSet_Data/Comprehensive_GeneSet.RData)
   * This is for use in the back end and provides the genes for the gene sets that are input.
-  * The gene set names should match the ones provdide when running the PATH-SURVEYORS-Pipeline
+  * The gene set names should match the ones provdide when running the PATH-SURVEYOR-Pipeline
     * If you ran the pipeline with a user provided gene set the genes for those gene sets will unlikely be found to compare distance between gene sets.
 
 * **User Provided List of Gene Sets (.txt/.tsv):**
   * The only requirements for the file is that it it tab delimited and teh first column is the list of gene sets. 
     * The file will work if there is only one column or multiple, the app will only use the first column
-  * This input should be a subset of the table that was output from the [PATH-SURVEYORS-Pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline)
+  * This input should be a subset of the table that was output from the [PATH-SURVEYOR-Pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline)
   * It is recommended to take the top 50-1000 number of significant and high-risk gene sets (rows) from the comprehensive table that is output from the pipeline
     * The table should be pre filtered to have gene sets with a hazard ratio > 1 and a P.value < 0.05.
     * Please note that large input files will take longer for the app to process
-  * Example Input files are provided [here](https://github.com/shawlab-moffitt/Pathway-Connectivity/tree/main/Example_File_Inputs), these are files that were ouput from the example run of the [PATH-SURVEYORS-Pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline) with the 50 MSigDB Hallmark Gene sets, with and without the use of the "Responder" covariate.
+  * Example Input files are provided [here](https://github.com/shawlab-moffitt/Pathway-Connectivity/tree/main/Example_File_Inputs), these are files that were ouput from the example run of the [PATH-SURVEYOR-Pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline) with the 50 MSigDB Hallmark Gene sets, with and without the use of the "Responder" covariate.
   
  * **Gene Annotation File (Optional):**
   * A tab delimited file with gene symbols as the first column followed by annotation columns 
-  * It is recommended to use the output from the raw gene expression run of the [PATH-SURVEYORS pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline)
+  * It is recommended to use the output from the raw gene expression run of the [PATH-SURVEYOR pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline)
     * Though any file where the first column is gene symbols will do
-    * An example file from a raw gene expression run of the PATH-SURVEYORS pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline) with the PAN ICI iAtlas Skin Cancer data to use for input can be found here: [Pan_ICI_iAtlas_Skin_OS_Genes_coxh_ranked_ForAnnotationInput.txt](https://github.com/shawlab-moffitt/Pathway-Connectivity/blob/main/Example_File_Inputs/Pan_ICI_iAtlas_Skin_OS_Genes_coxh_ranked_ForAnnotationInput.txt)
+    * An example file from a raw gene expression run of the PATH-SURVEYOR pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline) with the PAN ICI iAtlas Skin Cancer data to use for input can be found here: [Pan_ICI_iAtlas_Skin_OS_Genes_coxh_ranked_ForAnnotationInput.txt](https://github.com/shawlab-moffitt/Pathway-Connectivity/blob/main/Example_File_Inputs/Pan_ICI_iAtlas_Skin_OS_Genes_coxh_ranked_ForAnnotationInput.txt)
   * There is a table that can be used for annotation of genes by the user in the "Gene Clusters and Annotation" tab
   * This starts as a three column tables of gene set names and clusters repeating for each gene within the gene set
     * The annotation file uploaded will merge the two tables by gene symbol
@@ -139,7 +139,7 @@ git clone https://github.com/shawlab-moffitt/Pathway-Connectivity.git
 
 * A data frame is displayed on the last tab starting with the gene set, cluster, and gene for each row. This allows users to see what genes are in the gene sets and cluster
 1. A table provided by the user can be uploaded to annotate the genes. The uploaded table must list the gene symbol in the firsst column, the corresponding column can be any annotation the user chooses.
-   * It is recommended to use the input from the PATH-SURVEYORS Pipeline raw gene expresison ranking output.
+   * It is recommended to use the input from the PATH-SURVEYOR Pipeline raw gene expresison ranking output.
 
 # Quesions and Comments
 
