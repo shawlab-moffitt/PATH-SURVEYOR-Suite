@@ -1,0 +1,1 @@
+docker save -o docker_image_path_surveyors_fileprep.tar path_surveyors_fileprep

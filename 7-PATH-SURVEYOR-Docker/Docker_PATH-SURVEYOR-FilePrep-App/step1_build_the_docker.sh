@@ -1,0 +1,1 @@
+docker build -t path_surveyors_fileprep .
