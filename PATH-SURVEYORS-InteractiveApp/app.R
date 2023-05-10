@@ -1,13 +1,29 @@
+####----PATH - SURVEYORS Interactive R Shiny App----####
+# author: Alyssa Obermayer (alyssa.obermayer@moffitt.org)
 
+# Documentation
+#' R Shiny App for survival analysis to ensure user files are in proper format
+#'
+#' @param ProjectName - A string of the users desired project name.
+#' @param ExpressionMatrix_file - A file path in string format to a users expression matrix dataframe.
+#' @param MetaData_file - A file path in string format to a users meta/clinical dataframe.
+#' @param MetaParam_File - A file path in string format to a users meta/clinical parameter dataframe.
+#' -- Advanced Set-up -- The strings below must come from data in the users meta/clinical data input.
+#' @param PreSelect_SamplyType - A string denoting the sample type variable to select on startup. If "All" or NULL all sample types will be selected.
+#' @param PreSelect_Feature - A string denoting a feature to view on startup.
+#' @param PreSelect_SubFeature - A string denoting the sub-feature of the "PreSelect_Feature" to view on startup.
+#' @param PreSelect_SecondaryFeature - A string denoting a feature to view in the uni/multivariate survival tabs on startup.
+#' -- Do Not Change -- These should only be changed if the user changes the paths to the gene set and markdown files.
+#' @param GeneSet_File - A file path in string format to the GeneSet_List.RData gene set file.
+#' @param GeneSetTable_File - A file path in string format to the GeneSet_CatTable.zip gene set file.
+#' @param About_MD_File - A file path in string format to the PurposeAndMethods.Rmd file.
+#' @returns A properly formatted expression, clinical, and clinical parameter files for use in the PATH-SURVEYORS suite of tools.
 
 ####----Input----####
 
 ProjectName <- "Pan ICI Checkpoint iAtlas - Skin Cancer"
-
 ExpressionMatrix_file <- "Example_Data/Expression_Data_PAN_ICI_iAtlas_SkinCancer.zip"
-
 MetaData_file <- "Example_Data/Clinical_Data_PAN_ICI_iAtlas_SkinCancer.txt"
-
 MetaParam_File <- "Example_Data/Clinical_Parameters_PAN_ICI_iAtlas_SkinCancer.txt"
 
 
