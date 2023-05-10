@@ -15,10 +15,10 @@ RUN R -e 'BiocManager::install("clusterProfiler", ask = F)'
 RUN echo "local(options(shiny.port = 3838, shiny.host = '0.0.0.0'))" > /usr/lib/R/etc/Rprofile.site
 RUN addgroup --system app \
     && adduser --system --ingroup app app
-#WORKDIR "/Users/4472414/DockerShiny/Jaccard_Pathway_Connectivity"
-COPY ./app/ /Users/4472414/DockerShiny/Jaccard_Pathway_Connectivity
-RUN chown app:app -R /Users/4472414/DockerShiny/Jaccard_Pathway_Connectivity
+#WORKDIR "/Users/4472414/DockerShiny/Pathway_Connectivity"
+COPY ./app/ /Users/4472414/DockerShiny/Pathway_Connectivity
+RUN chown app:app -R /Users/4472414/DockerShiny/Pathway_Connectivity
 RUN chown app:app -R /usr/local/lib/R/site-library
 USER app
 EXPOSE 3838
-CMD ["R", "-e", "shiny::runApp('/Users/4472414/DockerShiny/Jaccard_Pathway_Connectivity', launch.browser = FALSE)"]
+CMD ["R", "-e", "shiny::runApp('/Users/4472414/DockerShiny/Pathway_Connectivity', launch.browser = FALSE)"]
