@@ -1,5 +1,18 @@
+####----PATH - SURVEYORS File Preparation----####
+# author: Alyssa Obermayer (alyssa.obermayer@moffitt.org)
 
-
+# Documentation
+#' R script to ensure user files are in proper format
+#'
+#' @param Expression_File - A file path in string format to a users expression matrix dataframe.
+#' @param Expression_Delim - A string denoting the delimiter in regular expression of the expression matrix.
+#' @param Meta_File - A file path in string format to a users meta/clinical dataframe.
+#' @param Meta_Delim - A string denoting the delimiter in regular expression of the meta/clinical dataframe.
+#' @param Survival_Time_Columns - A singular string or vector of strings of the column names in the meta/clinical data that represent survival time.
+#' @param Survival_Time_Units - A string of either "Days", "Months", or "Years" denoting the unit of time the survival column is in.
+#' @param Survival_ID_Columns - A singular string or vector of strings of the column names in the meta/clinical data that represent survival event ID.
+#' @param Outfile_Path - A string denoting the file path where the user would like the output files to be when completed
+#' @returns A properly formatted expression, clinical, and clinical parameter files for use in the PATH-SURVEYORS suite of tools.
 
 
 ####---- User Input ----####
