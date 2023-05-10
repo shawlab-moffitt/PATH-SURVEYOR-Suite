@@ -1,8 +1,8 @@
-####----PATH - SURVEYORS - Suite R Package Installation----####
+####----PATH - SURVEYOR - Suite R Package Installation----####
 # author: Alyssa Obermayer (alyssa.obermayer@moffitt.org)
 
 # Documentation
-#' R script for installation of all R packages needed to run the PATH-SURVEYORS suite of tools
+#' R script for installation of all R packages needed to run the PATH-SURVEYOR suite of tools
 
 ##--This Will install immunedeconv package--##
 ##---R Version 4.1 or greater is required---##
