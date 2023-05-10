@@ -1,6 +1,6 @@
-# PATH-SURVEYORS Docker Setup
+# PATH-SURVEYOR Docker Setup
 
-Within this repository we have provided Dockerfiles and setup scripts for users to deploy the R shiny apps locally. Each of the folders represents a different R Shiny application from the PATH-SURVEYORS suite of tools that includes the Dockerfile, app files, and shell scripts users can follow to build, run, and save the Docker images of each application.
+Within this repository we have provided Dockerfiles and setup scripts for users to deploy the R shiny apps locally. Each of the folders represents a different R Shiny application from the PATH-SURVEYOR suite of tools that includes the Dockerfile, app files, and shell scripts users can follow to build, run, and save the Docker images of each application.
 
 ## Build
 
