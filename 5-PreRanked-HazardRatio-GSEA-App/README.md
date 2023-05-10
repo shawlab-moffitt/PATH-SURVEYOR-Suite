@@ -2,16 +2,16 @@
 
 # Introduction
 
-The integration of patient genome expression data, phenotypye data, and clinical data can serve as an integral resource for patient prognosis. PATH SURVEYORS: **Path**way level **Surv**ival Anal**y**sis of Immune C**o**mponents and Drug ta**r**get**s** serves to do just that, by examining the interaction of pathway analysis with patient expression and cilinical data to discover prominent features that take part in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards pathway analysis of patient survival. Gene Set pathways utilized in this workflow include the Molecular Signatures Database (MSigDB), LINCS L1000 Small-Molecule Perturbations, and Clue.io ER Stress signtatures, as well as user provided gene sets. 
+The integration of patient genome expression data, phenotypye data, and clinical data can serve as an integral resource for patient prognosis. PATH SURVEYOR: **Path**way level **Surv**ival Anal**y**sis of Immune C**o**mponents and Drug ta**r**gets serves to do just that, by examining the interaction of pathway analysis with patient expression and cilinical data to discover prominent features that take part in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards pathway analysis of patient survival. Gene Set pathways utilized in this workflow include the Molecular Signatures Database (MSigDB), LINCS L1000 Small-Molecule Perturbations, and Clue.io ER Stress signtatures, as well as user provided gene sets. 
 
-Here we focus on Gene Set Enrichment Analysis (GSEA) with a pre-ranked list of genes through the use of the DRPPM-Hazard-Ratio-Ranked-GSEA R Shiny App. This app utilizes the list of hazard ratio ranked genes that would be output from the [PATH-SURVEYORS pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline) when the user chooses to analyze raw gene expression, in general this app can accept any file of pre-ranked genes if desired. This allows the user to control what the method for ranking and alaysis to determine which gene sets may be significantly enriched from the expression data. The user can perform GSEA with many available gene sets within the app, such as MSigDB, LINCS L1000, Cell Marker, ER Stress, Immune Signatures, as well as upload their own gene set file to use. Furthermore, the user can visualize each gene set as an enrichment plot and the leading edge genes within that gene set.
+Here we focus on Gene Set Enrichment Analysis (GSEA) with a pre-ranked list of genes through the use of the DRPPM-Hazard-Ratio-Ranked-GSEA R Shiny App. This app utilizes the list of hazard ratio ranked genes that would be output from the [PATH-SURVEYOR pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline) when the user chooses to analyze raw gene expression, in general this app can accept any file of pre-ranked genes if desired. This allows the user to control what the method for ranking and alaysis to determine which gene sets may be significantly enriched from the expression data. The user can perform GSEA with many available gene sets within the app, such as MSigDB, LINCS L1000, Cell Marker, ER Stress, Immune Signatures, as well as upload their own gene set file to use. Furthermore, the user can visualize each gene set as an enrichment plot and the leading edge genes within that gene set.
 
-An example Pre-Ranked GSEA R Shiny App is hosted here: http://shawlab.science/shiny/PATH_SURVEYORS_PreRanked_GSEA_App/ where you are welcome to use the example inputs provided in the GitHub or your own to explore.
+An example Pre-Ranked GSEA R Shiny App is hosted here: http://shawlab.science/shiny/PATH_SURVEYOR_PreRanked_GSEA_App/ where you are welcome to use the example inputs provided in the GitHub or your own to explore.
 
-## The PATH-SURVEYORS Family
+## The PATH-SURVEYOR Family
 
-* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYORS
-* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline
+* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR
+* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline
 * R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/DRPPM-Jaccard-Pathway-Connectivity
 * R Shiny Hazard-Ratio Ranked GSEA App: https://github.com/shawlab-moffitt/DRPPM-PreRanked-GSEA
 
@@ -57,13 +57,13 @@ git clone https://github.com/shawlab-moffitt/DRPPM-PreRanked-GSEA.git
   * This is a provided file that contains various different gene sets to run the pre-ranked GSEA on
     * MSigDB, LINCS L1000, and Cell Marker
     * The app may also take user uploaded gene set files
-      * Gene Set file must be in .gmt/.txt/.tsv format described [here](https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline#required-files)
+      * Gene Set file must be in .gmt/.txt/.tsv format described [here](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline#required-files)
 
 * **User Provided Pre Ranked Gene List:**
   * In the app, the user must upload a list of gene symbols, which can be formatted in different ways
   * Tab-delimited txt or tsv file
     * Preferred Format:
-      * A two column file of gene symbols with their corresponding hazard ratio is preferred. This can be obtained from the output of the [PATH-SURVEYORS-Pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYORS-Pipeline)
+      * A two column file of gene symbols with their corresponding hazard ratio is preferred. This can be obtained from the output of the [PATH-SURVEYOR-Pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline)
       * To extract this information, subset the gene symbol and hazard ratio column (the first two columns) to their own file
     * Other Formats
       * A single column of genes
