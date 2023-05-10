@@ -1,4 +1,4 @@
-####----PATH - SURVEYORS Interactive R Shiny App----####
+####----PATH - SURVEYOR Interactive R Shiny App----####
 # author: Alyssa Obermayer (alyssa.obermayer@moffitt.org)
 
 # Documentation
