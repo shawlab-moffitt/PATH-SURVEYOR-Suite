@@ -13,7 +13,7 @@ To help ease the set-up process of the PATH-SURVEYOR suite of tools, we have dev
 
 # User Setup
 
-Users download or cloe the Github repo to prep their data locally.
+Users can run the app in R Studio, run the script in R, or run the [docker](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/7-PATH-SURVEYOR-Docker/Docker_PATH-SURVEYOR-FilePrep-App) image which will open a local R Shiny application
 
 ## R Requirments
 
