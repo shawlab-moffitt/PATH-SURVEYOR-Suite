@@ -1,6 +1,6 @@
 # PATH-SURVEYOR FilePrep R Shiny App
 
-To help ease the set-up process of the PATH-SURVEYOR suite of tools, we have developed two methods for the user to prepare their files to be compatible with the applications and various scripts. Users can cole the Github repo and run the application or script locally (both perform the same task), or the user can visit the following link to a server hosting the app: http://shawlab.science/shiny/Dev/PATH_SURVEYOR_FilePrep/.
+To help ease the set-up process of the PATH-SURVEYOR suite of tools, we have developed two methods for the user to prepare their files to be compatible with the applications and various scripts. Users can cole the Github repo and run the application or script locally (both perform the same task), or the user can visit the following link to a server hosting the app: http://shawlab.science/shiny/Dev/PATH_SURVEYOR_FilePrep/
 
 # Features
 
@@ -9,7 +9,7 @@ To help ease the set-up process of the PATH-SURVEYOR suite of tools, we have dev
 - [x] Remove duplicate gene symbols from expression by summarizing to the gene with highest average expression
 - [x] Filtering for genes with an average expression of zero
 - [x] Convert survival time columns to days, if needed
-- [x] Generate meta parameter file for use in the [PATH-SURVEYOR Shiny App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-InteractiveApp)
+- [x] Generate meta parameter file for use in the [PATH-SURVEYOR Shiny App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App)
 
 # User Setup
 
@@ -25,22 +25,6 @@ Users download or cloe the Github repo to prep their data locally.
 |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- |
 | shiny_1.7.1 | stringr_1.5.0 | tools_4.2.2 | readr_2.1.2 | dplyr_1.0.9 | DT_0.23 |
-
-## Via Download
-
-1. Download the [Zip File](https://github.com/shawlab-moffitt/PATH-SURVEYOR-FilePrep_ShinyApp/archive/refs/heads/main.zip) from this GitHub repository: https://github.com/shawlab-moffitt/PATH-SURVEYOR-FilePrep_ShinyApp
-   * Can be done in R Studio Terminal or a terminal of your choice
-2. Unzip the downloaded file into the folder of your choice.
-4. Open either the app.R file or the script, PATH-SURVEYOR_FilePrep_Script.R, to get started
-
-## Via Git Clone
-
-1. Clone the [GitHub Repository](https://github.com/shawlab-moffitt/PATH-SURVEYOR-FilePrep_ShinyApp.git) into the destination of your choice.
-   * Can be done in R Studio Terminal or a terminal of your choice
-```bash
-git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-FilePrep_ShinyApp.git
-```
-3. Open either the app.R file or the script, PATH-SURVEYOR_FilePrep_Script.R, to get started
 
 # Required Files
 
@@ -63,7 +47,7 @@ git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-FilePrep_ShinyApp.git
 
 ![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-FilePrep_ShinyApp/blob/main/Example_UI_Screenshots/PATH-SURVEYOR_FilePrepApp2.PNG?raw=true)
 
-* Along with cleaning and formatting the expression and meta data, the app with also generate a meta parameter file that the user can use as input to the [PATH-SURVEYOR Shiny App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-InteractiveApp)
+* Along with cleaning and formatting the expression and meta data, the app with also generate a meta parameter file that the user can use as input to the [PATH-SURVEYOR Shiny App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App)
 * This file give each column in the meta data a small definition that allows the survival app to find the survival time and event columns with little effort. 
 * As highlighted in the red, the file prep app with try to detect the survival time and event columns and generate a parameter file that defines these in the second column.
 
