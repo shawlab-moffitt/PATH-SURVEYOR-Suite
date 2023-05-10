@@ -1,8 +1,8 @@
-####----PATH - SURVEYORS Immune Deconvolution----####
+####----PATH - SURVEYOR Immune Deconvolution----####
 # author: Alyssa Obermayer (alyssa.obermayer@moffitt.org)
 
 # Documentation
-#' R script to calculate immune deconvolution scores for use in PATH-SURVEYORS applications
+#' R script to calculate immune deconvolution scores for use in PATH-SURVEYOR applications
 #'
 #' @param ProjectName - A string of the users desired project name.
 #' @param Expression_Matrix_File - A file path in string format to a users expression matrix dataframe.
