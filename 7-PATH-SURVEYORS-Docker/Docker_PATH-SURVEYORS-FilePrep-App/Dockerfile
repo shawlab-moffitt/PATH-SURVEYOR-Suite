@@ -14,9 +14,9 @@ RUN R -e 'install.packages(c("pbkrtest", "lme4", "car", "FactoMineR", "ggpubr", 
 RUN echo "local(options(shiny.port = 3838, shiny.host = '0.0.0.0'))" > /usr/lib/R/etc/Rprofile.site
 RUN addgroup --system app \
     && adduser --system --ingroup app app
-COPY ./app/ /Users/alyss/OneDrive/Documents/R/Docker_PATH_SURVEYORS_FilePrep
-RUN chown app:app -R /Users/alyss/OneDrive/Documents/R/Docker_PATH_SURVEYORS_FilePrep
+COPY ./app/ /Users/alyss/OneDrive/Documents/R/Docker_PATH_SURVEYOR_FilePrep
+RUN chown app:app -R /Users/alyss/OneDrive/Documents/R/Docker_PATH_SURVEYOR_FilePrep
 RUN chown app:app -R /usr/local/lib/R/site-library
 USER app
 EXPOSE 3838
-CMD ["R", "-e", "shiny::runApp('/Users/alyss/OneDrive/Documents/R/Docker_PATH_SURVEYORS_FilePrep', launch.browser = FALSE)"]
+CMD ["R", "-e", "shiny::runApp('/Users/alyss/OneDrive/Documents/R/Docker_PATH_SURVEYOR_FilePrep', launch.browser = FALSE)"]
