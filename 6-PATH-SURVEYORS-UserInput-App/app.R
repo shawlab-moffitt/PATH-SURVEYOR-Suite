@@ -1,6 +1,6 @@
 ###########################
 ##                       ##
-##  DRPPM PATH SURVEIOR  ##
+##  DRPPM PATH SURVEYOR  ##
 ##      User Input       ##
 ##                       ##
 ###########################
