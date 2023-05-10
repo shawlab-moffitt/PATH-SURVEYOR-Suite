@@ -1,3 +1,4 @@
+
 ####----PATH - SURVEYOR Interactive R Shiny App----####
 # author: Alyssa Obermayer (alyssa.obermayer@moffitt.org)
 
@@ -83,13 +84,14 @@ invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
 
+
 ####----Read In Files----####
 
 ##--Meta--##
-meta <- as.data.frame(read_delim(MetaData_file,delim = '\t', col_names = T))
+meta <- as.data.frame(readr::read_delim(MetaData_file,delim = '\t', col_names = T))
 
 ##--Meta Param--##
-MetaParam <- as.data.frame(read_delim(MetaParam_File,delim = '\t',col_names = F))
+MetaParam <- as.data.frame(readr::read_delim(MetaParam_File,delim = '\t',col_names = F))
 MetaParam[,2] <- gsub(" ","",MetaParam[,2])
 ## Subset meta columns by category
 metacol_samplenames <- MetaParam[which(MetaParam[,2] == "SampleName"),1]
@@ -114,7 +116,7 @@ meta[,1] <- gsub("[[:punct:]]","_",meta[,1])
 
 
 ##--Expression--##
-expr <- as.data.frame(read_delim(ExpressionMatrix_file,delim = '\t', col_names = T))
+expr <- as.data.frame(readr::read_delim(ExpressionMatrix_file,delim = '\t', col_names = T))
 expr <- expr %>% 
   mutate(across(where(is.character), str_trim))
 colnames(expr)[1] <- "Symbol"
@@ -153,7 +155,7 @@ GeneGS_table <- data.frame(Genes = exprGenes)
 if (exists("GeneSetTable_File") == TRUE) {
   if (file.exists(GeneSetTable_File) == TRUE) {
     
-    GeneSetTable_og <- as.data.frame(read_delim(GeneSetTable_File, delim = '\t', col_names = T))
+    GeneSetTable_og <- as.data.frame(readr::read_delim(GeneSetTable_File, delim = '\t', col_names = T))
     gsTab = TRUE
     
   }
@@ -547,11 +549,6 @@ colnames(meta) <- gsub("_PreProcessedScore","",colnames(meta))
 
 ####----UI----####
 
-##--Advanced Setup--##
-SurvPlot_Height <- "550px"
-SurvPlot_Width <- "850px"
-
-
 ui <-
   navbarPage(paste("{ ",ProjectName," Survival Analysis }",sep = ""),
              
@@ -657,7 +654,7 @@ ui <-
                                                                  checkboxInput("ShowMedSurvLine","Show Median Survival Line",value = F)
                                                           )
                                                         ),
-                                                        hr(),
+                                                        shiny::hr(),
                                                         h4("Boxplot Parameters"),
                                                         fluidRow(
                                                           column(6,
@@ -670,7 +667,7 @@ ui <-
                                                                              choices = c("Horizontal (0 degrees)" = "0","Angled (45 degrees)" = "45","Vertical (90 degrees)" = "90","Stagger"))
                                                           )
                                                         ),
-                                                        hr(),
+                                                        shiny::hr(),
                                                         h4("Heatmap Parameters"),
                                                         selectInput("ClusterMethod", "Select Cluster Method",
                                                                     choices = c("complete", "ward.D", "ward.D2", "single", "average", "mcquitty", "median", "centroid")),
@@ -691,10 +688,10 @@ ui <-
                                                                                 "Viridis" = "Viridis","Plasma" = "Plasma",
                                                                                 "Reds" = "OrRd","Blues" = "PuBu","Greens" = "Greens")
                                                         ),
-                                                        hr(),
+                                                        shiny::hr(),
                                                         h4("Forest Plot Parameters"),
                                                         numericInput("ForestFontSize","Font Size",value = 1),
-                                                        hr(),
+                                                        shiny::hr(),
                                                         h4("Linearity Plot Parameters"),
                                                         fluidRow(
                                                           column(4,
@@ -814,19 +811,19 @@ ui <-
                                          tabPanel("Median Cut-Point Survival",
                                                   p(),
                                                   htmlOutput("BINSurvDescrip", style = "font-size:14px;"),
-                                                  hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("SplotBIN", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
+                                                  shiny::hr(),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("SplotBIN", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldSplotBIN_SVG","Download as SVG"),
                                                     downloadButton("dnldSplotBIN_PDF","Download as PDF")
                                                   ),
-                                                  hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("ssgseaBINDensity", width = "650px", height = "400px")), type = 6),
+                                                  shiny::hr(),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaBINDensity", width = "650px", height = "400px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldssgseaBINDensity_SVG","Download as SVG"),
                                                     downloadButton("dnldssgseaBINDensity_PDF","Download as PDF")
                                                   ),
-                                                  hr(),
+                                                  shiny::hr(),
                                                   h4("Cox Hazard Regression Analysis Summary"),
                                                   fluidRow(
                                                     column(6,
@@ -844,19 +841,19 @@ ui <-
                                          tabPanel("Quartile Survival",
                                                   p(),
                                                   htmlOutput("QuartSurvDescrip", style = "font-size:14px;"),
-                                                  hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("Splot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
+                                                  shiny::hr(),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Splot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldSplot_SVG","Download as SVG"),
                                                     downloadButton("dnldSplot_PDF","Download as PDF")
                                                   ),
-                                                  hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("ssgseaQuartDensity", width = "650px", height = "400px")), type = 6),
+                                                  shiny::hr(),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaQuartDensity", width = "650px", height = "400px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldssgseaQuartDensity_SVG","Download as SVG"),
                                                     downloadButton("dnldssgseaQuartDensity_PDF","Download as PDF")
                                                   ),
-                                                  hr(),
+                                                  shiny::hr(),
                                                   h4("Cox Hazard Regression Analysis Summary"),
                                                   fluidRow(
                                                     column(6,
@@ -874,19 +871,19 @@ ui <-
                                          tabPanel("Optimal Cut-Point Survival",
                                                   p(),
                                                   htmlOutput("CutPSurvDescrip", style = "font-size:14px;"),
-                                                  hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("ScutPointPlot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
+                                                  shiny::hr(),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ScutPointPlot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldScutPointPlot_SVG","Download as SVG"),
                                                     downloadButton("dnldScutPointPlot_PDF","Download as PDF")
                                                   ),
-                                                  hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("ssgseaCutPDensity", width = "650px", height = "400px")), type = 6),
+                                                  shiny::hr(),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaCutPDensity", width = "650px", height = "400px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldssgseaCutPDensity_SVG","Download as SVG"),
                                                     downloadButton("dnldssgseaCutPDensity_PDF","Download as PDF")
                                                   ),
-                                                  hr(),
+                                                  shiny::hr(),
                                                   h4("Cox Hazard Regression Analysis Summary"),
                                                   fluidRow(
                                                     column(6,
@@ -904,20 +901,20 @@ ui <-
                                          tabPanel("Top/Bottom Cut-Point Survival",
                                                   p(),
                                                   htmlOutput("QuantSurvDescrip", style = "font-size:14px;"),
-                                                  hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("SquantPlot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
+                                                  shiny::hr(),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("SquantPlot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                   numericInput("QuantPercent","Top/Bottom Cut-Point Quantile Cutoff (%)", value = 25, min = 0, max = 100),
                                                   fluidRow(
                                                     downloadButton("dnldSquantPlot_SVG","Download as SVG"),
                                                     downloadButton("dnldSquantPlot_PDF","Download as PDF")
                                                   ),
-                                                  hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("ssgseaQuantDensity", width = "650px", height = "400px")), type = 6),
+                                                  shiny::hr(),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaQuantDensity", width = "650px", height = "400px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldssgseaQuantDensity_SVG","Download as SVG"),
                                                     downloadButton("dnldssgseaQuantDensity_PDF","Download as PDF")
                                                   ),
-                                                  hr(),
+                                                  shiny::hr(),
                                                   h4("Cox Hazard Regression Analysis Summary"),
                                                   fluidRow(
                                                     column(6,
@@ -935,20 +932,20 @@ ui <-
                                          tabPanel("User Cut-Point Survival",
                                                   p(),
                                                   htmlOutput("Quant2SurvDescrip", style = "font-size:14px;"),
-                                                  hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("SquantPlot2", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
+                                                  shiny::hr(),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("SquantPlot2", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                   numericInput("QuantPercent2","Above/Below User Quantile Cut-Point (%)", value = 25, min = 0, max = 100),
                                                   fluidRow(
                                                     downloadButton("dnldSquantPlot2_SVG","Download as SVG"),
                                                     downloadButton("dnldSquantPlot2_PDF","Download as PDF")
                                                   ),
-                                                  hr(),
-                                                  withSpinner(jqui_resizable(plotOutput("ssgseaQuant2Density", width = "650px", height = "400px")), type = 6),
+                                                  shiny::hr(),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaQuant2Density", width = "650px", height = "400px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldssgseaQuant2Density_SVG","Download as SVG"),
                                                     downloadButton("dnldssgseaQuant2Density_PDF","Download as PDF")
                                                   ),
-                                                  hr(),
+                                                  shiny::hr(),
                                                   h4("Cox Hazard Regression Analysis Summary"),
                                                   fluidRow(
                                                     column(6,
@@ -1006,7 +1003,7 @@ ui <-
                                          
                                          tabPanel("Survival Plot",
                                                   p(),
-                                                  withSpinner(jqui_resizable(plotOutput("featSplot", width = SurvPlot_Width, height = SurvPlot_Height)), type = 6),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("featSplot", width = SurvPlot_Width, height = SurvPlot_Height)), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldfeatSplot_SVG","Download as SVG"),
                                                     downloadButton("dnldfeatSplot_PDF","Download as PDF")
@@ -1020,7 +1017,7 @@ ui <-
                                                   p(),
                                                   fluidRow(
                                                     column(6,
-                                                           div(withSpinner(tableOutput("SSingleFeatureHRtab"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
+                                                           div(shinycssloaders::withSpinner(tableOutput("SSingleFeatureHRtab"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
                                                     ),
                                                     column(6,
                                                            verbatimTextOutput("UnivarSummary")
@@ -1032,7 +1029,7 @@ ui <-
                                          
                                          tabPanel("Forest Plot",
                                                   p(),
-                                                  withSpinner(jqui_resizable(plotOutput("SinglevarForestPlot", width = "100%", height = "800px")), type = 6),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("SinglevarForestPlot", width = "100%", height = "800px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldUniVarForestplot_SVG","Download as SVG"),
                                                     downloadButton("dnldUniVarForestplot_PDF","Download as PDF")
@@ -1054,7 +1051,7 @@ ui <-
                                                     )
                                                   ),
                                                   uiOutput("timewarnmessage1"),
-                                                  withSpinner(jqui_resizable(plotOutput("UnivarLinearityPlot", width = "100%", height = "500px")), type = 6),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("UnivarLinearityPlot", width = "100%", height = "500px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldUniVarLinplot_SVG","Download as SVG"),
                                                     downloadButton("dnldUniVarLinplot_PDF`","Download as PDF")
@@ -1117,7 +1114,7 @@ ui <-
                                                              p(),
                                                              fluidRow(
                                                                column(6,
-                                                                      div(withSpinner(tableOutput("BiFeatureHRtab"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
+                                                                      div(shinycssloaders::withSpinner(tableOutput("BiFeatureHRtab"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
                                                                ),
                                                                column(6,
                                                                       verbatimTextOutput("bivarSummary"),
@@ -1137,7 +1134,7 @@ ui <-
                                                     
                                                     tabPanel("Forest Plot",
                                                              p(),
-                                                             withSpinner(jqui_resizable(plotOutput("BivarForestPlot", width = "100%", height = "800px")), type = 6),
+                                                             shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("BivarForestPlot", width = "100%", height = "800px")), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldBiVarAddForest_SVG","Download as SVG"),
                                                                downloadButton("dnldBiVarAddForest_PDF","Download as PDF")
@@ -1159,7 +1156,7 @@ ui <-
                                                                )
                                                              ),
                                                              uiOutput("timewarnmessage2"),
-                                                             withSpinner(jqui_resizable(plotOutput("BivarLinearityPlot", width = "100%", height = "500px")), type = 6),
+                                                             shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("BivarLinearityPlot", width = "100%", height = "500px")), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldBiVarAddLinplot_SVG","Download as SVG"),
                                                                downloadButton("dnldBiVarAddLinplot_PDF","Download as PDF")
@@ -1215,7 +1212,7 @@ ui <-
                                                     
                                                     tabPanel("Survival Plot",
                                                              p(),
-                                                             withSpinner(jqui_resizable(plotOutput("featSplotBi", width = SurvPlot_Width, height = SurvPlot_Height)), type = 6),
+                                                             shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("featSplotBi", width = SurvPlot_Width, height = SurvPlot_Height)), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldfeatSplotBi_SVG","Download as SVG"),
                                                                downloadButton("dnldfeatSplotBi_PDF","Download as PDF")
@@ -1228,7 +1225,7 @@ ui <-
                                                              p(),
                                                              fluidRow(
                                                                column(6,
-                                                                      div(withSpinner(tableOutput("BiFeatureHRtabInter"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
+                                                                      div(shinycssloaders::withSpinner(tableOutput("BiFeatureHRtabInter"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
                                                                ),
                                                                column(6,
                                                                       verbatimTextOutput("bivarSummaryInter"),
@@ -1241,7 +1238,7 @@ ui <-
                                                     
                                                     tabPanel("Forest Plot",
                                                              p(),
-                                                             withSpinner(jqui_resizable(plotOutput("BivarForestPlotInter", width = "100%", height = "800px")), type = 6),
+                                                             shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("BivarForestPlotInter", width = "100%", height = "800px")), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldBiVarIntForest_SVG","Download as SVG"),
                                                                downloadButton("dnldBiVarIntForest_PDF","Download as PDF")
@@ -1263,7 +1260,7 @@ ui <-
                                                                )
                                                              ),
                                                              uiOutput("timewarnmessage3"),
-                                                             withSpinner(jqui_resizable(plotOutput("BivarLinearityPlotInter", width = "100%", height = "500px")), type = 6),
+                                                             shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("BivarLinearityPlotInter", width = "100%", height = "500px")), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldBiVarIntLinplot_SVG","Download as SVG"),
                                                                downloadButton("dnldBiVarIntLinplot_PDF","Download as PDF")
@@ -1293,12 +1290,12 @@ ui <-
                                                                column(6,
                                                                       h4("Coxh Hazard Ratio (Categorical)"),
                                                                       verbatimTextOutput("multivarSummaryCat"),
-                                                                      div(withSpinner(tableOutput("SFeatureHRtabCat"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
+                                                                      div(shinycssloaders::withSpinner(tableOutput("SFeatureHRtabCat"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
                                                                ),
                                                                column(6,
                                                                       h4("Coxh Hazard Ratio (Continuous)"),
                                                                       verbatimTextOutput("multivarSummaryCont"),
-                                                                      div(withSpinner(tableOutput("SFeatureHRtabCont"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
+                                                                      div(shinycssloaders::withSpinner(tableOutput("SFeatureHRtabCont"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
                                                                )
                                                              )
                                                     ),
@@ -1307,7 +1304,7 @@ ui <-
                                                     
                                                     tabPanel("Forest Plot",
                                                              p(),
-                                                             withSpinner(jqui_resizable(plotOutput("MultivarForestPlot", width = "100%", height = "800px")), type = 6),
+                                                             shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("MultivarForestPlot", width = "100%", height = "800px")), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldMultiVarForest_SVG","Download as SVG"),
                                                                downloadButton("dnldMultiVarForest_PDF","Download as PDF")
@@ -1336,23 +1333,23 @@ ui <-
                               #         ),
                               #         fluidRow(
                               #           column(6,
-                              #                  withSpinner(jqui_resizable(plotOutput("Lasso_Train_Splot", width = "100%", height = "500px")),type = 6),
+                              #                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Lasso_Train_Splot", width = "100%", height = "500px")),type = 6),
                               #                  downloadButton("dnldSplotLassoTrain_SVG","Download as SVG"),
-                              #                  hr(),
+                              #                  shiny::hr(),
                               #                  h4("Path of Coefficients"),
-                              #                  jqui_resizable(plotOutput("Lasso_CoeffPlot", width = "100%", height = "400px")),
-                              #                  hr(),
+                              #                  shinyjqui::jqui_resizable(plotOutput("Lasso_CoeffPlot", width = "100%", height = "400px")),
+                              #                  shiny::hr(),
                               #                  h4("Training Cox Hazard Regression Analysis Summary"),
                               #                  uiOutput("rendLassoTrainHRtab"),
                               #                  verbatimTextOutput("LassoTrainCoxSumm")
                               #           ),
                               #           column(6,
-                              #                  withSpinner(jqui_resizable(plotOutput("Lasso_Test_Splot", width = "100%", height = "500px")),type = 6),
+                              #                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Lasso_Test_Splot", width = "100%", height = "500px")),type = 6),
                               #                  downloadButton("dnldSplotLassoTest_SVG","Download as SVG"),
-                              #                  hr(),
+                              #                  shiny::hr(),
                               #                  h4("Lambda Cross-Validation"),
-                              #                  jqui_resizable(plotOutput("Lasso_LambdaPlot", width = "100%", height = "400px")),
-                              #                  hr(),
+                              #                  shinyjqui::jqui_resizable(plotOutput("Lasso_LambdaPlot", width = "100%", height = "400px")),
+                              #                  shiny::hr(),
                               #                  h4("Testing Cox Hazard Regression Analysis Summary"),
                               #                  uiOutput("rendLassoTestHRtab"),
                               #                  verbatimTextOutput("LassoTestCoxSumm")
@@ -1384,7 +1381,7 @@ ui <-
                                                     numericInput("densityPercent","User Defined Percentile (Red)",value = 15, width = "200px"),
                                                     checkboxInput("QuartileLinesCheck","Show Quartile Lines (Blue)",value = T)
                                                   ),
-                                                  withSpinner(jqui_resizable(plotOutput("ssgseaDensity", width = "100%", height = "500px")), type = 6),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaDensity", width = "100%", height = "500px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldssgseaDensity_SVG","Download as SVG"),
                                                     downloadButton("dnldssgseaDensity_PDF","Download as PDF")
@@ -1408,7 +1405,7 @@ ui <-
                                                            checkboxGroupInput("ScatterLog","", choices = c("Log x-axis","Log y-axis"))
                                                     ),
                                                   ),
-                                                  withSpinner(jqui_resizable(plotlyOutput("FeatCompScatterPlot", width = "100%", height = "500px")), type = 6),
+                                                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotlyOutput("FeatCompScatterPlot", width = "100%", height = "500px")), type = 6),
                                                   fluidRow(
                                                     downloadButton("dnldFeatCompScatter_SVG","Download as SVG"),
                                                     downloadButton("dnldFeatCompScatter_PDF","Download as PDF")
@@ -1422,7 +1419,7 @@ ui <-
                                                     tabPanel("Risk Straification Boxplot",
                                                              p("Users may adjust risk-stratification cutoff parameters under the 'Risk Strat Parameters' tab on the sidebar panel."),
                                                              checkboxInput("SBoxLog", "Log Transform Score", value = T),
-                                                             withSpinner(jqui_resizable(plotOutput("Sboxplot", width = "100%", height = "500px")), type = 6),
+                                                             shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Sboxplot", width = "100%", height = "500px")), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldSboxplot_SVG","Download as SVG"),
                                                                downloadButton("dnldSboxplot_PDF","Download as PDF")
@@ -1434,7 +1431,7 @@ ui <-
                                                     tabPanel("Risk Straification Heatmap",
                                                              p("Users may adjust risk-stratification cutoff parameters under the 'Risk Strat Parameters' tab on the sidebar panel."),
                                                              uiOutput("heatmap_error_message"),
-                                                             withSpinner(jqui_resizable(plotOutput("Sheatmap", width = "100%", height = "2000px")), type = 6),
+                                                             shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Sheatmap", width = "100%", height = "2000px")), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldSheatmap_SVG","Download as SVG"),
                                                                downloadButton("dnldSheatmap_PDF","Download as PDF"),
@@ -1458,7 +1455,7 @@ ui <-
                                                                       checkboxInput("FBoxLog", "Log Transform Score", value = T)
                                                                )
                                                              ),
-                                                             withSpinner(jqui_resizable(plotOutput("Featureboxplot", width = "100%", height = "500px")), type = 6),
+                                                             shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Featureboxplot", width = "100%", height = "500px")), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldFboxplot_SVG","Download as SVG"),
                                                                downloadButton("dnldFboxplot_PDF","Download as PDF")
@@ -1478,7 +1475,7 @@ ui <-
                                                                       checkboxInput("HeatRemoveNA","Remove NA/Unknowns",value = T)
                                                                )
                                                              ),
-                                                             withSpinner(jqui_resizable(plotOutput("FeatureHeatmap", width = "100%", height = "2000px")), type = 6),
+                                                             shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("FeatureHeatmap", width = "100%", height = "2000px")), type = 6),
                                                              fluidRow(
                                                                downloadButton("dnldFheatmap_SVG","Download as SVG"),
                                                                downloadButton("dnldFheatmap_PDF","Download as PDF"),
@@ -1510,6 +1507,8 @@ ui <-
                       )
              )
   )
+
+
 
 ####----Server----####
 
@@ -2304,27 +2303,27 @@ server <- function(input, output, session) {
   
   output$rendQuartHRtab <- renderUI({
     
-    div(withSpinner(tableOutput("SQuartileHRtab"), type = 7, size = 0.5), style = "font-size:12px")
+    div(shinycssloaders::withSpinner(tableOutput("SQuartileHRtab"), type = 7, size = 0.5), style = "font-size:12px")
     
   })
   output$rendBINHRtab <- renderUI({
     
-    div(withSpinner(tableOutput("SBinaryHRtab"), type = 7, size = 0.5), style = "font-size:12px")
+    div(shinycssloaders::withSpinner(tableOutput("SBinaryHRtab"), type = 7, size = 0.5), style = "font-size:12px")
     
   })
   output$rendQuantHRtab <- renderUI({
     
-    div(withSpinner(tableOutput("SQuantileHRtab"), type = 7, size = 0.5), style = "font-size:12px")
+    div(shinycssloaders::withSpinner(tableOutput("SQuantileHRtab"), type = 7, size = 0.5), style = "font-size:12px")
     
   })
   output$rendQuantHRtab2 <- renderUI({
     
-    div(withSpinner(tableOutput("SQuantileHR2tab"), type = 7, size = 0.5), style = "font-size:12px")
+    div(shinycssloaders::withSpinner(tableOutput("SQuantileHR2tab"), type = 7, size = 0.5), style = "font-size:12px")
     
   })
   output$rendCutPointHRtab <- renderUI({
     
-    div(withSpinner(tableOutput("CutPointHRtab"), type = 7, size = 0.5), style = "font-size:12px")
+    div(shinycssloaders::withSpinner(tableOutput("CutPointHRtab"), type = 7, size = 0.5), style = "font-size:12px")
     
   })
   
@@ -2709,12 +2708,12 @@ server <- function(input, output, session) {
   #
   #output$rendLassoTrainHRtab <- renderUI({
   #  
-  #  div(withSpinner(tableOutput("LassoTrainHRtab"), type = 7, size = 0.5), style = "font-size:12px")
+  #  div(shinycssloaders::withSpinner(tableOutput("LassoTrainHRtab"), type = 7, size = 0.5), style = "font-size:12px")
   #  
   #})
   #output$rendLassoTestHRtab <- renderUI({
   #  
-  #  div(withSpinner(tableOutput("LassoTestHRtab"), type = 7, size = 0.5), style = "font-size:12px")
+  #  div(shinycssloaders::withSpinner(tableOutput("LassoTestHRtab"), type = 7, size = 0.5), style = "font-size:12px")
   #  
   #})
   
@@ -2922,7 +2921,7 @@ server <- function(input, output, session) {
     
     # If user provides GMT file
     if (ext == "gmt") {
-      gmt <- read.gmt(gs.u$datapath)
+      gmt <- clusterProfiler::read.gmt(gs.u$datapath)
       uGS_table <- as.data.frame(unique(gmt[,1]))
       colnames(uGS_table)[1] <- "GeneSet"
     }
@@ -2936,7 +2935,7 @@ server <- function(input, output, session) {
     
     # If user provides tab-delim two-col file
     else {
-      gmt <- as.data.frame(read_delim(gs.u$datapath, delim = '\t'))
+      gmt <- as.data.frame(readr::read_delim(gs.u$datapath, delim = '\t'))
       uGS_table <- as.data.frame(unique(gmt[,1]))
       colnames(uGS_table)[1] <- "GeneSet"
     }
@@ -2976,7 +2975,7 @@ server <- function(input, output, session) {
     
     # If user provides GMT file
     if (ext == "gmt") {
-      gmt <- read.gmt(gs.u$datapath)
+      gmt <- clusterProfiler::read.gmt(gs.u$datapath)
       colnames(gmt) <- c("term","gene")
       gs_u <- list()
       for (i in unique(gmt[,1])){
@@ -2992,7 +2991,7 @@ server <- function(input, output, session) {
     
     # If user provides tab-delim two-col file
     else {
-      gmt <- as.data.frame(read_delim(gs.u$datapath, delim = '\t'))
+      gmt <- as.data.frame(readr::read_delim(gs.u$datapath, delim = '\t'))
       colnames(gmt) <- c("term","gene")
       gs_u <- list()
       for (i in unique(gmt[,1])){
@@ -3195,7 +3194,7 @@ server <- function(input, output, session) {
     
     if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
       if (length(meta_ssgsea_sdf[,4]) > 1) {
-        res.cut <- surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
+        res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
         cutp <- res.cut$cutpoint[["cutpoint"]]
         res.cat <- surv_categorize(res.cut)
         ssGSEA$OptimalCutP <- res.cat[,3]
@@ -3268,7 +3267,7 @@ server <- function(input, output, session) {
     tab_df <- as.data.frame(tab)
     
     tab_df <- tab_df %>%
-      select(label,estimate,ci,p.value)
+      dplyr::select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
     
     tab_df
@@ -3369,7 +3368,7 @@ server <- function(input, output, session) {
     }
     
     ## Generate plot
-    ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
+    ggsurv <- survminer::ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
                          break.time.by=breakTime,
@@ -3650,7 +3649,7 @@ server <- function(input, output, session) {
     tab_df <- as.data.frame(tab)
     
     tab_df <- tab_df %>%
-      select(label,estimate,ci,p.value)
+      dplyr::select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
     
     tab_df
@@ -3750,7 +3749,7 @@ server <- function(input, output, session) {
     }
     
     ## Generate plot
-    ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
+    ggsurv <- survminer::ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
                          break.time.by=breakTime,
@@ -4038,7 +4037,7 @@ server <- function(input, output, session) {
     tab_df <- as.data.frame(tab)
     
     tab_df <- tab_df %>%
-      select(label,estimate,ci,p.value)
+      dplyr::select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
     
     tab_df
@@ -4139,7 +4138,7 @@ server <- function(input, output, session) {
     }
     
     ## Generate plot
-    ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
+    ggsurv <- survminer::ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
                          break.time.by=breakTime,
@@ -4199,12 +4198,12 @@ server <- function(input, output, session) {
     meta_ssgsea_sdf <- ssgsea_meta[,c("SampleName",surv_time_col,surv_id_col,geneset_name)]
     
     if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
-      res.cut <- surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
+      res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
       cutp <- res.cut$cutpoint[["cutpoint"]]
       #res.cat <- surv_categorize(res.cut)
       #ssGSEA$OptimalCutP <- res.cat[,3]
       
-      res.cut <- surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name)
+      res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name)
       cutp <- round(res.cut$cutpoint[["cutpoint"]],3)
       
       
@@ -4434,7 +4433,7 @@ server <- function(input, output, session) {
     tab_df <- as.data.frame(tab)
     
     tab_df <- tab_df %>%
-      select(label,estimate,ci,p.value)
+      dplyr::select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
     
     tab_df
@@ -4534,7 +4533,7 @@ server <- function(input, output, session) {
     }
     
     ## Generate plot
-    ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
+    ggsurv <- survminer::ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
                          break.time.by=    breakTime <- 365.25
@@ -4815,7 +4814,7 @@ server <- function(input, output, session) {
     tab_df <- as.data.frame(tab)
     
     tab_df <- tab_df %>%
-      select(label,estimate,ci,p.value)
+      dplyr::select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
     
     tab_df
@@ -4914,7 +4913,7 @@ server <- function(input, output, session) {
       breakTime <- NULL
     }
     ## Generate plot
-    ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
+    ggsurv <- survminer::ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
                          break.time.by=breakTime,
@@ -5236,7 +5235,7 @@ server <- function(input, output, session) {
     
     tab_df[is.na(tab_df)] <- ""
     tab_df <- tab_df %>%
-      select(label,n_obs,estimate,std.error,ci,p.value)
+      dplyr::select(label,n_obs,estimate,std.error,ci,p.value)
     tab_df[1,1] <- Feature
     colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
     
@@ -5307,7 +5306,7 @@ server <- function(input, output, session) {
       breakTime <- NULL
     }
     ## Generate plot
-    ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
+    ggsurv <- survminer::ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
                          break.time.by=breakTime,
@@ -5477,7 +5476,7 @@ server <- function(input, output, session) {
       meta_ssgsea_sdf <- UniVarFeat_react()
       Feature <- input$SingleSurvivalFeature
       forextFont <- input$ForestFontSize
-      forest <- ggforest(tab,
+      forest <- survminer::ggforest(tab,
                          data = meta_ssgsea_sdf,
                          main = paste("Hazard Ratio Modeling: ",paste(Feature,collapse = ", "),sep = ""),
                          fontsize = forextFont)
@@ -5548,7 +5547,7 @@ server <- function(input, output, session) {
       TickFont <- input$linTickFont
       linpredict <- input$linPredict1
       
-      p <- ggcoxdiagnostics(tab,
+      p <- survminer::ggcoxdiagnostics(tab,
                             type = residType,
                             sline = T,
                             sline.se = T,
@@ -5748,7 +5747,7 @@ server <- function(input, output, session) {
     
     tab_df[is.na(tab_df)] <- ""
     tab_df <- tab_df %>%
-      select(label,n_obs,estimate,std.error,ci,p.value)
+      dplyr::select(label,n_obs,estimate,std.error,ci,p.value)
     colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
     
     tab_df
@@ -5932,7 +5931,7 @@ server <- function(input, output, session) {
       forextFont <- input$ForestFontSize
       
       
-      forest <- ggforest(tab,
+      forest <- survminer::ggforest(tab,
                          data = meta_ssgsea_sdf,
                          main = paste("Hazard Ratio Modeling: ",paste(Feature1,"+",Feature2,sep = ""),sep = ""),
                          fontsize = forextFont)
@@ -6034,7 +6033,7 @@ server <- function(input, output, session) {
       MainFont <- input$linMainFont
       TickFont <- input$linTickFont
       
-      p <- ggcoxdiagnostics(tab,
+      p <- survminer::ggcoxdiagnostics(tab,
                             type = residType,
                             sline = T,
                             sline.se = T,
@@ -6213,7 +6212,7 @@ server <- function(input, output, session) {
     
     tab_df[is.na(tab_df)] <- ""
     tab_df <- tab_df %>%
-      select(label,n_obs,estimate,std.error,ci,p.value)
+      dplyr::select(label,n_obs,estimate,std.error,ci,p.value)
     colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
     
     tab_df
@@ -6327,7 +6326,7 @@ server <- function(input, output, session) {
       #	LassoLmin_E1609_Top3v2FlowCytProt_OS_TrainAC50_TestACBall_v2_RiskScore
       
       ## Generate plot
-      ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
+      ggsurv <- survminer::ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                            title = SurvPlotTitle,
                            xscale = c("d_y"),
                            #palette = cbp1,
@@ -6388,7 +6387,7 @@ server <- function(input, output, session) {
       Feature2 <- input$SurvivalFeatureBi2Inter
       forextFont <- input$ForestFontSize
       
-      forest <- ggforest(tab,
+      forest <- survminer::ggforest(tab,
                          data = meta_ssgsea_sdf,
                          main = paste("Hazard Ratio Modeling: ",paste(Feature1,"*",Feature2,sep = ""),sep = ""),
                          fontsize = forextFont)
@@ -6487,7 +6486,7 @@ server <- function(input, output, session) {
       MainFont <- input$linMainFont
       TickFont <- input$linTickFont
       
-      p <- ggcoxdiagnostics(tab,
+      p <- survminer::ggcoxdiagnostics(tab,
                             type = residType,
                             sline = T,
                             sline.se = T,
@@ -6528,7 +6527,7 @@ server <- function(input, output, session) {
       MainFont <- input$linMainFont
       TickFont <- input$linTickFont
       
-      p <- ggcoxdiagnostics(tab,
+      p <- survminer::ggcoxdiagnostics(tab,
                             type = residType,
                             sline = T,
                             sline.se = T,
@@ -6672,7 +6671,7 @@ server <- function(input, output, session) {
       
       tab_df[is.na(tab_df)] <- ""
       tab_df <- tab_df %>%
-        select(label,n_obs,estimate,std.error,ci,p.value)
+        dplyr::select(label,n_obs,estimate,std.error,ci,p.value)
       colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
       
       tab_df
@@ -6702,7 +6701,7 @@ server <- function(input, output, session) {
       
       tab_df[is.na(tab_df)] <- ""
       tab_df <- tab_df %>%
-        select(label,n_obs,estimate,std.error,ci,p.value)
+        dplyr::select(label,n_obs,estimate,std.error,ci,p.value)
       colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
       
       tab_df
@@ -6757,7 +6756,7 @@ server <- function(input, output, session) {
       Feature <- input$SurvivalFeature
       forextFont <- input$ForestFontSize
       
-      forest <- ggforest(tab,
+      forest <- survminer::ggforest(tab,
                          data = meta_ssgsea_sdf,
                          main = paste("Hazard Ratio Modeling: ",paste(Feature,collapse = ", "),sep = ""),
                          fontsize = forextFont)
@@ -6884,7 +6883,7 @@ server <- function(input, output, session) {
       labs(x = "Group", y = scoreMethod,
            title = paste(GeneSet," ",scoreMethod,": ",Feature,SampleTypeLab,"Patients",sep = "")) +
       theme_bw() +
-      stat_compare_means(method = input$boxoptselec) +
+      ggpubr::stat_compare_means(method = input$boxoptselec) +
       theme(text = element_text(size = font))
     plot
     
@@ -6970,7 +6969,7 @@ server <- function(input, output, session) {
       hmcols <- inferno(500)
     }
     else if (color_choice == "Viridis") {
-      hmcols <- viridis(500)
+      hmcols <- viridis::viridis(500)
     }
     else if (color_choice == "Plasma") {
       hmcols <- plasma(500)
@@ -6984,7 +6983,7 @@ server <- function(input, output, session) {
     else if (color_choice == "GreenBlackRed") {
       hmcols<- colorRampPalette(c("green","black","red"))(length(bk)-1)
     }
-    heat <- pheatmap(dataset2,
+    heat <- pheatmap::pheatmap(dataset2,
                      cluster_col = F,
                      cluster_row = T,
                      fontsize_row = rowfont,
@@ -7070,7 +7069,7 @@ server <- function(input, output, session) {
                            Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
              fill = FeatureSelec) +
         theme_bw() +
-        stat_compare_means(method = StatMethod) +
+        ggpubr::stat_compare_means(method = StatMethod) +
         theme(text = element_text(size = font)) +
         scale_x_discrete(guide = guide_axis(n.dodge = 2))
     }
@@ -7085,7 +7084,7 @@ server <- function(input, output, session) {
                              Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
                fill = FeatureSelec) +
           theme_bw() +
-          stat_compare_means(method = StatMethod) +
+          ggpubr::stat_compare_means(method = StatMethod) +
           theme(text = element_text(size = font))
       }
       else if (as.numeric(boxplotang) == 45) {
@@ -7097,7 +7096,7 @@ server <- function(input, output, session) {
                              Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
                fill = FeatureSelec) +
           theme_bw() +
-          stat_compare_means(method = StatMethod) +
+          ggpubr::stat_compare_means(method = StatMethod) +
           theme(text = element_text(size = font),
                 axis.text.x = element_text(angle = as.numeric(boxplotang), hjust = 1))
       }
@@ -7110,7 +7109,7 @@ server <- function(input, output, session) {
                              Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
                fill = FeatureSelec) +
           theme_bw() +
-          stat_compare_means(method = StatMethod) +
+          ggpubr::stat_compare_means(method = StatMethod) +
           theme(text = element_text(size = font),
                 axis.text.x = element_text(angle = as.numeric(boxplotang)))
       }
@@ -7191,7 +7190,7 @@ server <- function(input, output, session) {
       hmcols <- inferno(500)
     }
     else if (color_choice == "Viridis") {
-      hmcols <- viridis(500)
+      hmcols <- viridis::viridis(500)
     }
     else if (color_choice == "Plasma") {
       hmcols <- plasma(500)
@@ -7205,7 +7204,7 @@ server <- function(input, output, session) {
     else if (color_choice == "GreenBlackRed") {
       hmcols<- colorRampPalette(c("green","black","red"))(length(bk)-1)
     }
-    heat <- pheatmap(dataset2,
+    heat <- pheatmap::pheatmap(dataset2,
                      cluster_col = F,
                      cluster_row = T,
                      fontsize_row = rowfont,
@@ -7398,7 +7397,7 @@ server <- function(input, output, session) {
       p <- p + theme(legend.position = "none") +
         geom_point(color = scores[1,4])
     }
-    #p <- ggplotly(p,tooltip = "text")
+    #p <- plotly::ggplotly(p,tooltip = "text")
     p
     
   })
@@ -7406,7 +7405,7 @@ server <- function(input, output, session) {
   output$FeatCompScatterPlot <- renderPlotly({
     
     p <- FeatCompScatterPlot_react()
-    ply <- ggplotly(p,tooltip = "text")
+    ply <- plotly::ggplotly(p,tooltip = "text")
     ply
     
   })
@@ -7802,7 +7801,7 @@ server <- function(input, output, session) {
     else if (CutPoption == "Optimal") {
       if (length(KP_df_train[,2][KP_df_train[,2] > 0])/length(KP_df_train[,2]) > 0.01) {
         if (length(KP_df_train[,4]) > 1) {
-          res.cut <- surv_cutpoint(KP_df_train,time = "time", event = "ID", variable = colnames(KP_df_train)[2], minprop = 0.01)
+          res.cut <- survminer::surv_cutpoint(KP_df_train,time = "time", event = "ID", variable = colnames(KP_df_train)[2], minprop = 0.01)
           cutp <- res.cut$cutpoint[["cutpoint"]]
           res.cat <- surv_categorize(res.cut)
           KP_df_train$OptimalCutP <- res.cat[,3]
@@ -7858,7 +7857,7 @@ server <- function(input, output, session) {
     else if (CutPoption == "Optimal") {
       if (length(KP_df_test[,2][KP_df_test[,2] > 0])/length(KP_df_test[,2]) > 0.01) {
         if (length(KP_df_test[,4]) > 1) {
-          res.cut <- surv_cutpoint(KP_df_test,time = "time", event = "ID", variable = colnames(KP_df_test)[2], minprop = 0.01)
+          res.cut <- survminer::surv_cutpoint(KP_df_test,time = "time", event = "ID", variable = colnames(KP_df_test)[2], minprop = 0.01)
           cutp <- res.cut$cutpoint[["cutpoint"]]
           res.cat <- surv_categorize(res.cut)
           KP_df_test$OptimalCutP <- res.cat[,3]
@@ -7951,7 +7950,7 @@ server <- function(input, output, session) {
     tab_train_df <- as.data.frame(tab_train)
     
     tab_train_df <- tab_train_df %>%
-      select(label,estimate,ci,p.value)
+      dplyr::select(label,estimate,ci,p.value)
     colnames(tab_train_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
     
     tab_train_df
@@ -7967,7 +7966,7 @@ server <- function(input, output, session) {
     tab_test_df <- as.data.frame(tab_test)
     
     tab_test_df <- tab_test_df %>%
-      select(label,estimate,ci,p.value)
+      dplyr::select(label,estimate,ci,p.value)
     colnames(tab_test_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
     
     tab_test_df
@@ -8079,7 +8078,7 @@ server <- function(input, output, session) {
     }
     
     ## Generate plot
-    ggsurv <- ggsurvplot(fit_train, data = KP_df_train, risk.table = TRUE,
+    ggsurv <- survminer::ggsurvplot(fit_train, data = KP_df_train, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
                          break.time.by=breakTime,
@@ -8211,7 +8210,7 @@ server <- function(input, output, session) {
     }
     
     ## Generate plot
-    ggsurv <- ggsurvplot(fit_test, data = KP_df_test, risk.table = TRUE,
+    ggsurv <- survminer::ggsurvplot(fit_test, data = KP_df_test, risk.table = TRUE,
                          title = SurvPlotTitle,
                          xscale = c("d_y"),
                          break.time.by=breakTime,
@@ -10407,10 +10406,6 @@ server <- function(input, output, session) {
 
 
 
-# Run the application
+
+# Run the application 
 shinyApp(ui = ui, server = server)
-
-
-
-
-
