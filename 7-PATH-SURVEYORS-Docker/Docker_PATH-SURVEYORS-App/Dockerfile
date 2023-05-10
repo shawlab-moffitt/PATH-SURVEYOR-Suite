@@ -26,13 +26,13 @@ RUN R -e 'install.packages(c("gridtext", "ggtext", "survminer"))'
 RUN echo "local(options(shiny.port = 3838, shiny.host = '0.0.0.0'))" > /usr/lib/R/etc/Rprofile.site
 RUN addgroup --system app \
     && adduser --system --ingroup app app
-COPY ./app/ /Users/4472414/DockerShiny/PATH-SURVEYORS-UserInput
-RUN chown app:app -R /Users/4472414/DockerShiny/PATH-SURVEYORS-UserInput
+COPY ./app/ /Users/4472414/DockerShiny/PATH-SURVEYOR-UserInput
+RUN chown app:app -R /Users/4472414/DockerShiny/PATH-SURVEYOR-UserInput
 RUN chown app:app -R /usr/local/lib/R/site-library
 RUN R -e 'BiocManager::install("GSVA", ask = F)'
 USER app
 EXPOSE 3838
-CMD ["R", "-e", "shiny::runApp('/Users/4472414/DockerShiny/PATH-SURVEYORS-UserInput', launch.browser = FALSE)"]
+CMD ["R", "-e", "shiny::runApp('/Users/4472414/DockerShiny/PATH-SURVEYOR-UserInput', launch.browser = FALSE)"]
 #CMD ["R", "-e", "BiocManager::install('GSVA', ask = F)"]
 #CMD ["R", "-e", "install.packages('https://cran.r-project.org/src/contrib/survminer_0.4.9.tar.gz', repos=NULL)"]
 #CMD ["R", "-e", "install.packages('https://cran.r-project.org/src/contrib/ggtext_0.1.2.tar.gz', repos=NULL)"]
