@@ -4,7 +4,7 @@
 # Documentation
 #' R script to calculate immune deconvolution scores for use in PATH-SURVEYORS applications
 #'
-#' @param ProjectName - 
+#' @param ProjectName - A string of the users desired project name.
 #' @param Expression_Matrix_File - A file path in string format to a users expression matrix dataframe.
 #' @param Meta_Data_File - A file path in string format to a users meta/clinical dataframe.
 #' @param Meta_Data_Param_File - (Optional) A file path in string format to a users meta/clinical data parameters dataframe.
