@@ -38,3 +38,7 @@ In the future the app can then be loaded with the `step5_load_and_run_the_tar_im
 docker load -i [app save name].tar
 docker run -it --rm -p 3838:3838 [app name]:latest
 ```
+
+#### Use
+
+The application can then be accessed locally through typing the address http://127.0.0.1:3838 in your browser.
