@@ -1,4 +1,4 @@
-####----PATH - SURVEYORS File Preparation----####
+####----PATH - SURVEYOR File Preparation----####
 # author: Alyssa Obermayer (alyssa.obermayer@moffitt.org)
 
 # Documentation
