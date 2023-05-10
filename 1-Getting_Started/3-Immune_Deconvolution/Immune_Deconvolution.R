@@ -1,16 +1,33 @@
+####----PATH - SURVEYORS Immune Deconvolution----####
+# author: Alyssa Obermayer (alyssa.obermayer@moffitt.org)
 
+# Documentation
+#' R script to calculate immune deconvolution scores for use in PATH-SURVEYORS applications
+#'
+#' @param ProjectName - 
+#' @param Expression_Matrix_File - A file path in string format to a users expression matrix dataframe.
+#' @param Meta_Data_File - A file path in string format to a users meta/clinical dataframe.
+#' @param Meta_Data_Param_File - (Optional) A file path in string format to a users meta/clinical data parameters dataframe.
+#' @param Output_Path - A string denoting the file path where the user would like the output files to be when completed.
+#' @param quantiseq - Boolean - TRUE to run the method - FALSE to not run the method
+#' @param mcp_counter - Boolean - TRUE to run the method - FALSE to not run the method
+#' @param xcell - Boolean - TRUE to run the method - FALSE to not run the method
+#' @param epic - Boolean - TRUE to run the method - FALSE to not run the method
+#' @param abis - Boolean - TRUE to run the method - FALSE to not run the method
+#' @param estimate - Boolean - TRUE to run the method - FALSE to not run the method
+#' @param cibersort - (Optional) Boolean - TRUE to run the method - FALSE to not run the method
+#' @param cibersort_abs - (Optional) Boolean - TRUE to run the method - FALSE to not run the method
+#' @param CIBERSORT_Script - (Optional) "Path/To/CIBERSORT.R"
+#' @param LM22_File - (Optional) "Path/To/LM22.txt"
+#' @returns An immune deconvolution score matrix, and a meta/clinical data and parameters file with appeneded columns of immune deconvolution scores that can be loaded into the PATHJ-SURVEYORS app.
 
 
 ####----User Input----####
 
 ProjectName <- "PANICI_SkinCancer"
-
-Expression_Matrix_File <- "Test_Input_Data/Expression_Data_PAN_ICI_iAtlas_SkinCancer.zip"
-
+Expression_Matri_File <- "Test_Input_Data/Expression_Data_PAN_ICI_iAtlas_SkinCancer.zip"
 Meta_Data_File <- "Test_Input_Data/Clinical_Data_PAN_ICI_iAtlas_SkinCancer.txt"
-
 Meta_Data_Param_File <- "Test_Input_Data/Clinical_Parameters_PAN_ICI_iAtlas_SkinCancer.txt"
-
 Output_Path <- "Test_Output_Data/"
 
 quantiseq <- TRUE
