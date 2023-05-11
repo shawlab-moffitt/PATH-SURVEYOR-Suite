@@ -41,12 +41,12 @@ Users can download and employ all of the tools locally to perform analyses and g
 * Clinical Meta Information
   * Tab-delimited file which should contain a first column of sample names matching the names in the expression matrix, followed by event and time-to-event information, as well as additional covariates or pre-processed scores
 *	Clinical Feature Parameter
-  * Tab-delimited two-column file where the first column consists of column names of the “Clinical Meta Information File” and the second column defining the column type
-    * **SampleName** (mandatory): Contains sample names matching the expression data 
-    * **SurvivalTime** (mandatory): Contains the overall survival time in days for the samples (can be other types of survival)
-    * **SurvivalID** (mandatory): Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
-    * **SampleType** (optional): Higher level grouping of patient samples 
-    * **Feature** (mandatory): One of more clinical or non-clinical features that can be included in the Cox-hazard analysis model.
+   * Tab-delimited two-column file where the first column consists of column names of the “Clinical Meta Information File” and the second column defining the column type
+     * **SampleName** (mandatory): Contains sample names matching the expression data 
+     * **SurvivalTime** (mandatory): Contains the overall survival time in days for the samples (can be other types of survival)
+     * **SurvivalID** (mandatory): Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
+     * **SampleType** (optional): Higher level grouping of patient samples 
+     * **Feature** (mandatory): One of more clinical or non-clinical features that can be included in the Cox-hazard analysis model.
 
 * **NEW FEATURE** added to clean, properly format, and generate a Clinical Feature Parameter File for you here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-FilePrep
 
