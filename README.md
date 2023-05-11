@@ -16,43 +16,44 @@ Users can download and employ all of the tools locally to perform analyses and g
 * R Shiny PATH-SURVEYOR App with User File Input: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/6-PATH-SURVEYOR-UserInput-App
 * PATH-SURVEYOR Docker Suite: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/7-PATH-SURVEYOR-Docker
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/mian_schematic.PNG?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/Main_schematic.PNG?raw=true)
 
 * Users can now explore various use cases of the PATH-SURVEYOR Suite of tools which are currently pending further review for publication, but can be seen here: https://github.com/shawlab-moffitt/PATH-SURVEYOR_Manuscript_Supplementary
 
 # Installation
 
 * Install DRPPM-PATH-SURVEIOR Suite GitHub repository
-  * git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite.git
+  * `git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite.git`
   * Download and unzip repository https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/archive/refs/heads/main.zip
-* Set working directory to DRPPM-PATH-SURVEIOR-Suite folder
+  * Install with Docker, instructions here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/7-PATH-SURVEYOR-Docker
 * Install required R packages
   * Suite of tools was built on R version 4.1
-  * R script for package installation is provided in the “1-Getting_Started” folder
-  * https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/1-Getting_Started/1-R_Package_Installation/R_Package_Installation.R
+  * R package installation script here: [1-Getting_Started/1-R_Package_Installation](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/1-R_Package_Installation)
 
 # Required Files
 
 * **NEW FEATURE** added to clean, properly format, and generate a Clinical Feature Parameter File for you here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-FilePrep
 
-* Gene Expression File
-  * Tab delimited matrix with gene symbols in the first column and sample names as the first-row header
-  * Remove duplicate gene symbols
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/ExampleData.PNG?raw=true)
+
+* Expression Matrix
+  * Tab delimited matrix with **HGNC gene symbols** in the first column and sample names as the first-row header
+  * Remove duplicate gene symbols is preferred, will check on app startup
   * Depending on the size, users may want to remove lowly expressed genes to reduce load time
-* Clinical Meta Information File
+* Clinical Meta Information
   * Tab-delimited file which should contain a first column of sample names matching the names in the expression matrix, followed by event and time-to-event information, as well as additional covariates or pre-processed scores
-*	Clinical Feature Parameter File
+*	Clinical Feature Parameter
   * Tab-delimited two-column file where the first column consists of column names of the “Clinical Meta Information File” and the second column defining the column type
     * **SampleName** (mandatory): Contains sample names matching the expression data 
     * **SurvivalTime** (mandatory): Contains the overall survival time in days for the samples (can be other types of survival)
     * **SurvivalID** (mandatory): Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
-    * **SampleType**: Higher level grouping of patient samples 
-    * **Feature** (optional): Clinical or non-clinical features that can be included in the Cox-hazard analysis model.
+    * **SampleType** (optional): Higher level grouping of patient samples 
+    * **Feature** (mandatory): One of more clinical or non-clinical features that can be included in the Cox-hazard analysis model.
 
-# Immune Deconvolution
+# Immune Deconvolution Pre-Processing (Optional)
 
 * Script
-  * 1-Getting_Started/2-Immune_Deconvolution/Immune_Deconvolution.R
+  * [1-Getting_Started/2-Immune_Deconvolution/Immune_Deconvolution.R](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/1-Getting_Started/3-Immune_Deconvolution/Immune_Deconvolution.R)
   * Only available for R version 4.1 or greater
 * Input
   * ProjectName: A descriptive name for your project/data
@@ -63,28 +64,28 @@ Users can download and employ all of the tools locally to perform analyses and g
   * Updated clinical meta information and clinical meta feature parameter file which can be used as input to the interactive Shiny app
 
 
-More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-Immune_Deconvolution
+More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/3-Immune_Deconvolution
 
 # PATH-SURVEYOR: Interactive Mode
 
 * Script
-  * PATH-SURVEYOR-Suite/2-PATH-SURVEYOR-InteractiveApp/app.R
+  * [2-PATH-SURVEYOR-Interactive-App/app.R](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/app.R)
 * Input
   * Project Name: A descriptive name for your project/data
   * File inputs: Supply the path and file name or your expression matrix, clinical meta information, and clinical meta feature parameter files
   * Advanced User Input
     * Pre-set UI input options to be chosen upon startup, further described in GitHub README
   * Gene Set and Markdown files
-    * These are proved files in the GitHub repository. Please ensure the path to these files are correct
+    * These are provided files in the GitHub repository. Please ensure the path to these files are correct
 
-More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp
+More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App
 
 # PATH-SURVEYOR: Pipeline Mode
 
 * Script
-  * Scripts to run in R Studio and in a command line interface found here: PATH-SURVEYOR-Suite/3-PATH-SURVEYOR-Pipeline/
+  * Scripts to run in R Studio and in a command line interface found here: [3-PATH-SURVEYOR-Pipeline/](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline)
 * Input
-  * Parameter File: Tab-delimited two-column file containing input file paths and run parameters described in the GitHub https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline#parameter-file
+  * Parameter File: Tab-delimited two-column file containing input file paths and run parameters described in the GitHub [3-PATH-SURVEYOR-Pipeline#parameter-file](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline#parameter-file)
     * Pathway Level: When ranking gene set pathways according to Cox proportional hazards, a gene set file and name is required. Users can include a number of top pathways ranked on significance, and a Jaccard connectivity matrix will be included in the output
     * Gene Level: When ranking individual genes, no gene set file is required, though, if one is included, users can select to perform GSEA with a hazard ratio ranked list of genes upon Cox regression completion.
 * Output
@@ -94,10 +95,10 @@ More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tr
 
 More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline
 
-# PATH-SURVEYOR: Jaccard Connectivity
+# PATH-SURVEYOR: Pathway Connectivity
 
 * Script
-  * PATH-SURVEYOR-Suite/4-DRPPM-Jaccard_Connectivity_App/app.R
+  * [4-Pathway-Connectivity-App/app.R](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/4-Pathway-Connectivity-App/app.R)
 * Input
   * Gene Set File: 
     * GeneSet_Data/Comprehensive_GeneSet.Rdata
@@ -107,19 +108,19 @@ More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tr
 * For gene cluster annotation (Optional) 
     * GMT file of gene set pathways is also accepted
 
-More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/4-Pathway_Connectivity_App
+More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/4-Pathway-Connectivity-App
 
-# PATH-SURVEYOR: Hazard Ratio Ranked GSEA
+# PATH-SURVEYOR: Pre-Ranked Hazard Ratio Ranked GSEA
 
 * Script
-    * PATH-SURVEYOR-Suite/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App/app.R
+    * [5-PreRanked-HazardRatio-GSEA-App/app.R](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/5-PreRanked-HazardRatio-GSEA-App/app.R)
 * Input
     * Gene Set File:
       * GeneSet_Data/GeneSets.zip
     * User-Derived (Input upon app start-up)
       * CoxPH output file from PATH-SURVEYOR Pipeline gene analysis
 
-More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/5-Hazard_Ratio_Ranked_GSEA_App
+More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/5-PreRanked-HazardRatio-GSEA-App
 
 
 
