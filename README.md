@@ -8,12 +8,15 @@ Users can download and employ all of the tools locally to perform analyses and g
 
 ## The PATH-SURVEYOR Family
 
-* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-InteractiveApp
+* R Shiny PATH-SURVEYOR File Prep App: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-FilePrep
+* R Shiny PATH-SURVEYOR App [Interactive Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App
 * R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline
-* R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/4-DRPPM-Jaccard_Connectivity_App
-* R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App
+* R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/4-Pathway-Connectivity-App
+* R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/5-PreRanked-HazardRatio-GSEA-App
+* R Shiny PATH-SURVEYOR App with User File Input: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/6-PATH-SURVEYOR-UserInput-App
+* PATH-SURVEYOR Docker Suite: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/7-PATH-SURVEYOR-Docker
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-InteractiveApp/App_Demo_Pictures/mian_schematic.PNG?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/mian_schematic.PNG?raw=true)
 
 * Users can now explore various use cases of the PATH-SURVEYOR Suite of tools which are currently pending further review for publication, but can be seen here: https://github.com/shawlab-moffitt/PATH-SURVEYOR_Manuscript_Supplementary
 
