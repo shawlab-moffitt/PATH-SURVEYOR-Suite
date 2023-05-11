@@ -6,23 +6,24 @@ output: html_document
 ---
 
 
-# DRPPM - PATH SURVEIOR Shiny App
+# PATH-SURVEYORS Shiny App
 
 ## Purpose and Overview
 
-The integration of patient genome expression data, phenotypye data, and clinical data can serve as an integral resource for patient prognosis. DRPPM PATH SURVEIOR: **Path**way level **Surv**ival **E**xam**i**nat**or** serves to do just that, by examining the interaction of pathway analysis with patient expression and cilinical data to discover prominent features that take part in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards pathway analysis of patient survival. Gene Set pathways utilized in this workflow include the Molecular Signatures Database (MSigDB), LINCS L1000 Small-Molecule Perturbations, and Clue.io ER Stress signtatures, as well as user provided gene sets. 
+The integration of patient genome expression data, phenotypye data, and clinical data can serve as an integral resource for patient prognosis. PATH-SURVEYORS: **Path**way level **Surv**ival Anal**y**sis of Immune C**o**mponents and Drug ta**r**get**s** serves to do just that, by examining the interaction of pathway analysis with patient expression and cilinical data to discover prominent features that take part in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards pathway analysis of patient survival. Gene Set pathways utilized in this workflow include the Molecular Signatures Database (MSigDB), LINCS L1000 Small-Molecule Perturbations, and Clue.io ER Stress signtatures, as well as user provided gene sets. 
 
-Here we focus on the Interactive mode of this workflow with the DRPPM-PATH-SURVEIOR R Shiny App. With the expression, phenotype, and clincial data provided by the user we can integrate single sample GSEA (ssGSEA) pathway analysis with the comprehensive list of gene set pathways provided (or user provided). Additionally, upon app start-up, if the "immunedeconv" package is installed, immune deconvolution using ESTIMATE and MCP Counter methods will be performed. The score data is able to be partitioned and viewed in the survival plots or as a feature using median cut-point. The user can view a variety of survival plots based on binning the score data into quartile, quantile, above/below median, and optimal cut-point, or look through the lense of univariate, bivariate, and multivariate analysis with the integration of additional phenotype and clincal patient data. Further data exploration is available within the app to observe ssGSEA score density across the cohort as well as box plots and heatmaps to examine risk and feature stratification. The Shiny app comes complete with the ability to subset your cohort of patients, upload your own gene set data, along with customization and download of plots and tables throughout the app.
+Here we focus on the Interactive mode of this workflow with the PATH-SURVEYORS R Shiny App. With the expression, phenotype, and clincial data provided by the user we can integrate single sample GSEA (ssGSEA) pathway analysis with the comprehensive list of gene set pathways provided (or user provided). Additionally, upon app start-up, if the "immunedeconv" package is installed, immune deconvolution using ESTIMATE and MCP Counter methods will be performed. The score data is able to be partitioned and viewed in the survival plots or as a feature using median cut-point. The user can view a variety of survival plots based on binning the score data into quartile, quantile, above/below median, and optimal cut-point, or look through the lense of univariate, bivariate, and multivariate analysis with the integration of additional phenotype and clincal patient data. Further data exploration is available within the app to observe ssGSEA score density across the cohort as well as box plots and heatmaps to examine risk and feature stratification. The Shiny app comes complete with the ability to subset your cohort of patients, upload your own gene set data, along with customization and download of plots and tables throughout the app.
 
-To facilitate identifying significant genes and pathways for further analysis, we have developed a Cox Proportional Hazard ranking script which ranks pathways or genes based on ssGSEA score or raw gene expression, respectively, above and below the median which returns a comprehensive table of pathways or genes ranked by Hazard Ratio which allows the user to find high-risk features with ease. When these are identified, the user can return to the interactive R Shiny App and visualize these features in real-time and perform additional bivariate or multivariate analyses to observe how the pathway survival interacts with covariates. More information on this pipeline can be found in our GitHub repository here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline.
+To facilitate identifying significant genes and pathways for further analysis, we have developed a Cox Proportional Hazard ranking script which ranks pathways or genes based on ssGSEA score or raw gene expression, respectively, above and below the median which returns a comprehensive table of pathways or genes ranked by Hazard Ratio which allows the user to find high-risk features with ease. When these are identified, the user can return to the interactive R Shiny App and visualize these features in real-time and perform additional bivariate or multivariate analyses to observe how the pathway survival interacts with covariates. More information on this pipeline can be found in our GitHub repository here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline.
 
-### The DRPPM-PATH-SURVEIOR Family
+### The PATH-SURVEYORS Family
 
-* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/2-DRPPM-PATH-SURVEIOR-InteractiveApp
-* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/3-DRPPM-PATH-SURVEIOR-Pipeline
-* R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/4-DRPPM-Jaccard_Connectivity_App
-* R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/5-DRPPM-Hazard_Ratio_Ranked_GSEA_App
-* R Shiny Base Survival App with In-App User Input: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Suite/tree/main/6-DRPPM-PATH-SURVEIOR-UserInput
+* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App
+* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline
+* R Shiny Pathway Connectivity App: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/4-Pathway-Connectivity-App
+* R Shiny Pre-Ranked Hazard Ratio GSEA App: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/5-PreRanked-HazardRatio-GSEA-App
+* R Shiny Base Survival App with In-App User Input: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/6-PATH-SURVEYOR-UserInput-App
+* PATH-SURVEYOR Docker Suite: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/7-PATH-SURVEYOR-Docker
 
 
 # Methods
@@ -46,7 +47,7 @@ Immune deconvolution allows the user the elucidate gene expression data and iden
 
 Many computational methodologies have been developed which produce a variety of cell type categories for the user to delineate their samples. We have provided an immune deconvolution script if the user would like to pre-process immune deconvolution scores from an array of methods. This script will append the calculated immune deconvolution scrore and median cut-point to the users meta data and meta parameters. If the immunedeconv package is install, upon app start up the script will check to see if MCP-counter or ESTIMATE immune deconvolution scores are included in the meta data, and if not the `deconvolute()` function will run generate these scores to be examined in the application. 
 
-More information on the immune deconvolution methods and pre-processing can be found here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/tree/main/Immune_Deconvolution
+More information on the immune deconvolution methods and pre-processing can be found here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/3-Immune_Deconvolution
 
 
 ## Data Exploration
