@@ -22,7 +22,7 @@ Users can download and employ all of the tools locally to perform analyses and g
 
 # Installation
 
-* Install DRPPM-PATH-SURVEIOR Suite GitHub repository
+* Install PATH-SURVEYOR Suite GitHub repository
   * `git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite.git`
   * Download and unzip repository https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/archive/refs/heads/main.zip
   * Install with Docker, instructions here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/7-PATH-SURVEYOR-Docker
