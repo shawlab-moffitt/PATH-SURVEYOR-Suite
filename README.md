@@ -16,7 +16,7 @@ Users can download and employ all of the tools locally to perform analyses and g
 * R Shiny PATH-SURVEYOR App with User File Input: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/6-PATH-SURVEYOR-UserInput-App
 * PATH-SURVEYOR Docker Suite: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/7-PATH-SURVEYOR-Docker
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/Main_schematic.PNG?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/PATH_SURVEYOR_Main_schematic.PNG?raw=true)
 
 * Users can now explore various use cases of the PATH-SURVEYOR Suite of tools which are currently pending further review for publication, but can be seen here: https://github.com/shawlab-moffitt/PATH-SURVEYOR_Manuscript_Supplementary
 
