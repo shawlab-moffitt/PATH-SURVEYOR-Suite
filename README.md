@@ -32,8 +32,6 @@ Users can download and employ all of the tools locally to perform analyses and g
 
 # Required Files
 
-* **NEW FEATURE** added to clean, properly format, and generate a Clinical Feature Parameter File for you here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-FilePrep
-
 ![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/ExampleData.PNG?raw=true)
 
 * Expression Matrix
@@ -49,6 +47,8 @@ Users can download and employ all of the tools locally to perform analyses and g
     * **SurvivalID** (mandatory): Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
     * **SampleType** (optional): Higher level grouping of patient samples 
     * **Feature** (mandatory): One of more clinical or non-clinical features that can be included in the Cox-hazard analysis model.
+
+* **NEW FEATURE** added to clean, properly format, and generate a Clinical Feature Parameter File for you here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-FilePrep
 
 # Immune Deconvolution Pre-Processing (Optional)
 
