@@ -41,4 +41,4 @@ docker run -it --rm -p 3838:3838 ShinyApp:latest
 
 #### Use
 
-The loaded application can then be accessed locally through typing the address http://127.0.0.1:3838 in your browser.
+The loaded application can then be accessed locally through typing the address [http://127.0.0.1:3838](http://127.0.0.1:3838 (Windows) or http://0.0.0.0:3838 (Mac and Linux) in your browser.
