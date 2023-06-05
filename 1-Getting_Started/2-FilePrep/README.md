@@ -1,6 +1,7 @@
 # PATH-SURVEYOR FilePrep R Shiny App
 
-To help ease the set-up process of the PATH-SURVEYOR suite of tools, we have developed two methods for the user to prepare their files to be compatible with the applications and various scripts. Users can cole the Github repo and run the application or script locally (both perform the same task), or the user can visit the following link to a server hosting the app: http://shawlab.science/shiny/Dev/PATH_SURVEYOR_FilePrep/
+To help ease the set-up process of the PATH-SURVEYOR suite of tools, we have developed two methods for the user to prepare their files to be compatible with the applications and various scripts. Users can cole the Github repo and run the application or script locally (both perform the same task), or the user can visit the following link to a server hosting the app: 
+https://shawlab-moffitt.shinyapps.io/path_surveyor_fileprep/
 
 # Features
 
