@@ -2,7 +2,7 @@
 
 ####----Command Line Arguments----####
 
-Param_File <- "~/R/data/IPI_NEO_08144/IPINEO_08144_OS_Pre_ImmuneGenes_CoxH_Params_RS.txt"
+Param_File <- "Example_Run_Files/PAN_ICI_Pipeline_Example1/Input/PAN_ICI_iAtlas_Skin_OS_MSigDBHallmark_Params.txt"
 
 
 ############################ Copyright 2022 Moffitt Cancer Center ############################
