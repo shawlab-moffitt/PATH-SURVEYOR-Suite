@@ -1,3 +1,17 @@
+
+
+
+####---- Read in Files----####
+
+GeneSet_File <- "GeneSet_Data/GeneSet_List_HS.RData"
+
+ExamplePathway_File <- "Example_Input_Files/Pathways_Of_Interest.txt"
+
+ExampleAnnotation_File <- "Example_Input_Files/Gene_Annoation.txt"
+
+PreSet_CoxH_Ranked_Feature_file <- ""
+
+
 ####----Install and load packages----####
 
 packages <- c("shiny","shinyjqui","pheatmap","RColorBrewer",
@@ -16,18 +30,6 @@ if (any(installed_packages_BIOC == FALSE)) {
   BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
 }
 invisible(lapply(bioCpacks, library, character.only = TRUE))
-
-
-####---- Read in Files----####
-
-GeneSet_File <- "GeneSet_List_HS_v5.RData"
-
-ExamplePathway_File <- "Pathways_Of_Interest.txt"
-
-ExampleAnnotation_File <- "Gene_Annoation.txt"
-
-PreSet_CoxH_Ranked_Feature_file <- ""
-
 
 # R Data list load function for naming
 loadRData <- function(fileName){
