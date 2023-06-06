@@ -3,21 +3,14 @@
 
 ProjectName <- "PAN ICI Melanoma - Van Allen anti-CTLA4"
 
-ExpressionMatrix_file <- "PANICI_Skin_VanAllen_antiCTLA4_2015_Expr.txt"
+ExpressionMatrix_file <- "Example_Data/Expression_Data.zip"
 
-MetaData_file <- "PANICI_Skin_VanAllen_antiCTLA4_2015_Meta.txt"
+ClinicalData_file <- "Example_Data/Clinical_Data.txt"
 
-MetaParam_File <- "PANICI_iAtlas_Global_Clincal_Params.txt"
-
-
+ClincalParam_File <- "Example_Data/Clinical_Parameters.txt"
 
 
-##--Provided Input--##
-## User make sure paths are correct
-GeneSet_File <- "GeneSet_List_HS_v5.RData"
-GeneSetTable_File <- "GeneSet_CatTable_v5.zip"
-About_MD_File <- "PurposeAndMethods.Rmd"
-
+##--Advanced Setup--##
 ## Pre-Selected Inputs
 # An option from the meta, All, or NULL
 PreSelect_SamplyType <- "all"
@@ -26,9 +19,18 @@ PreSelect_Feature <- "all"
 PreSelect_SubFeature <- NULL
 PreSelect_SecondaryFeature <- "Responder"
 
-##--Advanced Setup--##
 SurvPlot_Height <- "550px"
 SurvPlot_Width <- "850px"
+
+
+##--Provided Input--##
+## User make sure paths are correct
+GeneSet_File <- "GeneSet_Data/GeneSet_List.RData"
+GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable.zip"
+About_MD_File <- "App_Markdowns/PurposeAndMethods.Rmd"
+
+
+
 
 
 
@@ -64,12 +66,12 @@ invisible(lapply(bioCpacks, library, character.only = TRUE))
 ####----Read In Files----####
 
 ##--Meta--##
-meta <- as.data.frame(readr::read_delim(MetaData_file,delim = '\t', col_names = T))
+meta <- as.data.frame(readr::read_delim(ClinicalData_file,delim = '\t', col_names = T))
 NAmetaCols <- colnames(meta[,colSums(is.na(meta))==nrow(meta)])
 meta <- meta[,colSums(is.na(meta))<nrow(meta)]
 
 ##--Meta Param--##
-MetaParam <- as.data.frame(readr::read_delim(MetaParam_File,delim = '\t',col_names = F))
+MetaParam <- as.data.frame(readr::read_delim(ClincalParam_File,delim = '\t',col_names = F))
 MetaParam <- MetaParam[which(!MetaParam[,1] %in% NAmetaCols),]
 MetaParam <- as.data.frame(apply(MetaParam,2,trimws))
 MetaParam <- MetaParam[which(!MetaParam[,1] %in% NAmetaCols),]
