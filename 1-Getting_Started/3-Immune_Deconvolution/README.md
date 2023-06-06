@@ -30,13 +30,13 @@ Many computational methodologies have been developed which produce a variety of 
 
 * **Expression Martix (.txt/.tsv):**
   * Must be tab delimited with gene names as symbols located in the first column with subsequent columns consiting of the sample name as the header and expression data down the column.
-  * Example file here: `Test_Input_Data/Expression_Data_PAN_ICI_iAtlas_SkinCancer.zip.zip`
+  * Example file here: `Test_Input_Data/Expression_Data.zip`
 
 * **Meta Data (.txt/.tsv):**
   * This file is optional, but recommended if the user plans to view the immune deconvolution results in the [PATH-SURVEYOR App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App)
     * Including this file allows the script to output an updated meta file with the immune deconvolution result columns added
   * This should be a tab delimited file with each row depicting a sample by the same name as in the expression matrix followed by informative columns containing survival data and other features to analyze the samples by.
-  * An example file here `Test_Input_Data/Clinical_Data_PAN_ICI_iAtlas_SkinCancer.txt.txt`
+  * An example file here `Test_Input_Data/Clinical_Data.txt`
 
 * **Meta Data Parameters (.txt/.tsv):**
   * This file is optional, but recommended if the user plans to view the immune deconvolution results in the [PATH-SURVEYOR App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App)
@@ -44,18 +44,18 @@ Many computational methodologies have been developed which produce a variety of 
     * If this is not included, the script will output the feature rows and the user could append them to the parameter file manually
   * This should be a two-column tab-delimited file with the first column containing the column names of the meta file and the second column containing the column type of that meta column
     * Described in further detail [here](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App#required-files---user-provided)
-  * And example file here: `Test_Input_Data/Clinical_Parameters_PAN_ICI_iAtlas_SkinCancer.txt`
+  * And example file here: `Test_Input_Data/Clinical_Parameters.txt`
 
 # Set-Up
 
 * Input desired Project name, file names and paths, and an output path for the processed data to be held
 ```{r}
 ####----User Input----####
-ProjectName <- "PAN_ICI_Skin_Kidney"
-Expression_Matrix_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip"
-Meta_Data_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt"
-Meta_Data_Param_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
-Output_Path <- "Pan_ICI_Example_Data/"
+ProjectName <- "PANICI_Melanome_VanAllen"
+Expression_Matrix_File <- "Test_Input_Data/Expression_Data.zip"
+Clinical_Data_File <- "Test_Input_Data/Clinical_Data.txt"
+Clinical_Data_Param_File <- "Test_Input_Data/Clinical_Parameters.txt"
+Output_Path <- "Test_Output_Data/"
 ```
 * Denote `TRUE` or `FALSE` for which methods you want to run through in the script
   * `mcp_counter` and `estimate` are ran in the [PATH-SURVEYOR App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App) upon start up if it is not included in the app sart-up files
@@ -67,12 +67,12 @@ epic <- TRUE
 abis <- TRUE
 estimate <- TRUE
 ```
-* If the user would like to run the CIBERSORT methods please follow the instructions to obtain the proper files [in the installation step](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/Immune_Deconvolution/README.md#immune-deconvolution-package)
+* If the user would like to run the CIBERSORT methods please follow the instructions to obtain the proper files [in the installation step](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/3-Immune_Deconvolution#immune-deconvolution-package)
 * The script must be able to find the required files in the paths provided
   * If the CIBERSORT methods denote `TRUE` but the files are not found, the script will not run those methods
 ```{r}
-cibersort <- TRUE
-cibersort_abs <- TRUE
+cibersort <- FALSE
+cibersort_abs <- FALSE
 # CIBERSORT.R path and file name
 CIBERSORT_Script <- "Path/To/CIBERSORT.R"
 # LM22 path and file name
