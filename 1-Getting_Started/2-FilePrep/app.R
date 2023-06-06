@@ -1,5 +1,10 @@
 
 
+
+
+ExampleExpr_File <- "Example_Input_Files/Expression_Data.txt"
+ExampleClin_File <- "Example_Input_Files/Clinical_Data.txt"
+
 library(shiny)
 library(readr)
 library(dplyr)
@@ -9,11 +14,6 @@ library(shinyjs)
 
 #increase file upload size
 options(shiny.maxRequestSize=5000*1024^2)
-
-ExampleExpr_File <- "Expression_Data.txt"
-ExampleClin_File <- "Clinical_Data.txt"
-
-
 ####----UI----####
 
 ui <-
