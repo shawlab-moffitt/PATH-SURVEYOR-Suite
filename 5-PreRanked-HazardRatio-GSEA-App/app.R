@@ -1,6 +1,22 @@
 
 
 
+####----File Input----####
+
+GeneSetCat_File <- "GeneSet_Data/GeneSet_CatCountTable.zip"
+
+GeneSet_File <- "GeneSet_Data/GeneSet_gsNsym.zip"
+
+ExampleGeneList_File <- "Example_Input_File/PreRanked_GeneList.txt"
+
+##--Advanced Set Up--##
+# Optional preset input file
+PreSet_RankedGeneList_File <- ""
+
+
+
+
+
 ####----Install and load packages----####
 
 packages <- c("shiny","shinycssloaders","DT","readr")
@@ -19,16 +35,7 @@ installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
 invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
-####----File Input----####
 
-
-GeneSetCat_File <- "GeneSet_CatCountTable_v5.zip"
-
-GeneSet_File <- "GeneSet_gsNsym_HS_v5.zip"
-
-ExampleGeneList_File <- "PreRanked_GeneList.txt"
-
-PreSet_RankedGeneList_File <- ""
 
 ####----Read In and Sort File----####
 
@@ -48,11 +55,6 @@ if (is.character(PreSet_RankedGeneList_File)) {
 #increase file upload size
 options(shiny.maxRequestSize=50*1024^2)
 
-load_data <- function() {
-  Sys.sleep(2)
-  hide("loading_page")
-  show("main_content")
-}
 
 ui <- 
   
