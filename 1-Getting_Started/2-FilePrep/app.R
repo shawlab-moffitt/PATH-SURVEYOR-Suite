@@ -10,7 +10,6 @@ library(readr)
 library(dplyr)
 library(tools)
 library(DT)
-library(shinyjs)
 
 #increase file upload size
 options(shiny.maxRequestSize=5000*1024^2)
@@ -18,7 +17,6 @@ options(shiny.maxRequestSize=5000*1024^2)
 
 ui <-
   fluidPage(
-    shinyjs::useShinyjs(),
     titlePanel("{ PATH-SURVEYOR File Prep }"),
     
     ####----Side Bar----####
