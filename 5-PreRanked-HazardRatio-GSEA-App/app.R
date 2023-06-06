@@ -22,16 +22,16 @@ PreSet_RankedGeneList_File <- ""
 packages <- c("shiny","shinycssloaders","DT","readr")
 
 installed_packages <- packages %in% rownames(installed.packages())
-#if (any(installed_packages == FALSE)) {
-#  install.packages(packages[!installed_packages])
-#}
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
 invisible(lapply(packages, library, character.only = TRUE))
 #bioconductor packages
 bioCpacks <- c("clusterProfiler","enrichplot")
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
-#if (any(installed_packages_BIOC == FALSE)) {
-#  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
-#}
+if (any(installed_packages_BIOC == FALSE)) {
+  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
+}
 invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
