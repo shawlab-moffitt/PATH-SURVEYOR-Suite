@@ -1,24 +1,21 @@
 ###########################
 ##                       ##
-##  DRPPM PATH SURVEIOR  ##
+##  DRPPM PATH SURVEYOR  ##
 ##      User Input       ##
 ##                       ##
 ###########################
 
 
-
-
-
 ##--Provided Input--##
 ## User make sure paths are correct
-GeneSet_File <- "GeneSet_List_HS_v5.RData"
-GeneSetTable_File <- "GeneSet_CatTable_v5.zip"
-About_MD_File <- "PurposeAndMethods.Rmd"
+GeneSet_File <- "GeneSet_Data/GeneSet_List_HS.RData"
+GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable.zip"
+About_MD_File <- "App_Markdowns/PurposeAndMethods.Rmd"
 
 
-ExampleExpr_File <- "Expression_Data.txt"
-ExampleClin_File <- "Clinical_Data.txt"
-ExampleParam_File <- "Clinical_Parameters.txt"
+ExampleExpr_File <- "Example_Data/Expression_Data.txt"
+ExampleClin_File <- "Example_Data/Clinical_Data.txt"
+ExampleParam_File <- "Example_Data/Clinical_Parameters.txt"
 
 
 
