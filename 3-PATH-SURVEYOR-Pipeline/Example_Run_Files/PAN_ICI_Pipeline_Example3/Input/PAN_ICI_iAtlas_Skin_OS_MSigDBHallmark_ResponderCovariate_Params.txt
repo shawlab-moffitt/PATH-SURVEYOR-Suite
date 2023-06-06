@@ -1,6 +1,6 @@
-Project_Name	Pan_ICI_iAtlas_Skin_OS
-Expression_Matrix_file	Example_Run_Files/Expression_Data_PAN_ICI_iAtlas_SkinCancer.zip
-Meta_Data_File	Example_Run_Files/Clinical_Data_PAN_ICI_iAtlas_SkinCancer.txt
+Project_Name	PAN_ICI_Melanoma_OS
+Expression_Matrix_file	Example_Run_Files/Expression_Data.zip
+Meta_Data_File	Example_Run_Files/Clinical_Data.txt
 Gene_Set_File	GeneSets/MSigDB/MSigDB_Hallmark_GeneSets.txt
 Gene_Set_Name	MSigDB.Hallmark
 Output_File_Path	Example_Run_Files/PAN_ICI_Pipeline_Example3/Output
