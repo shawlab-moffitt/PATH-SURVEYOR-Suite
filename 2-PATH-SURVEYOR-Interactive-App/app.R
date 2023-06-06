@@ -49,16 +49,16 @@ packages <- c("shiny","shinyjqui","gtsummary","tidyr","RColorBrewer",
               "readr","shinycssloaders","survminer","gridExtra","viridis","plotly","ggrepel")
 
 installed_packages <- packages %in% rownames(installed.packages())
-#if (any(installed_packages == FALSE)) {
-#  install.packages(packages[!installed_packages])
-#}
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
 invisible(lapply(packages, library, character.only = TRUE))
 #bioconductor packages
 bioCpacks <- c("GSVA")
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
-#if (any(installed_packages_BIOC == FALSE)) {
-#  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
-#}
+if (any(installed_packages_BIOC == FALSE)) {
+  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
+}
 invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
