@@ -5,18 +5,30 @@ library(readr)
 library(dplyr)
 library(tools)
 library(DT)
+library(shinyjs)
 
 #increase file upload size
 options(shiny.maxRequestSize=5000*1024^2)
 
+ExampleExpr_File <- "Example_Input_Files/Expression_Data.txt"
+ExampleClin_File <- "Example_Input_Files/Clinical_Data.txt"
+
+
+####----UI----####
+
 ui <-
   fluidPage(
-    titlePanel("{ File Prep }"),
+    shinyjs::useShinyjs(),
+    titlePanel("{ PATH-SURVEYOR File Prep }"),
+    
+    ####----Side Bar----####
+    
     sidebarPanel(
+      width = 3,
       h4("File Input"),
       fluidRow(
         column(8,
-               fileInput("ExprFileInput","Expression File"),
+               fileInput("ExprFileInput","Expression File")
         ),
         column(4,
                selectInput("ExprDelim","Delimeter", choices = c("Tab","Comma","Sapce"))
@@ -24,14 +36,19 @@ ui <-
       ),
       fluidRow(
         column(8, style = 'margin-top:-20px;',
-               fileInput("MetaFileInput","Meta File"),
+               fileInput("MetaFileInput","Meta File")
         ),
         column(4, style = 'margin-top:-20px;',
                selectInput("MetaDelim","Delimeter", choices = c("Tab","Comma","Sapce"))
         )
       ),
-      #uiOutput("rendSampNameCol")
-      h4("Parameter File Formatting"),
+      fluidRow(
+        column(12, style = 'margin-top:-20px;',
+               actionButton("UseExpData","Load Example Data"),
+               tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/File_Prep_App/", "Download example data", target='_blank')
+               )
+      ),
+      uiOutput("rendParamFileHeader"),
       fluidRow(
         column(8,
                uiOutput("rendSurvTimeColSelect"),
@@ -41,11 +58,22 @@ ui <-
                uiOutput("rendSurvTimeUnits")
         )
       ),
-      h4("Download Prepped Files"),
-      downloadButton("dnldExprOutFile","Expression File"),
-      downloadButton("dnldMetaOutFile","Meta File"),
-      downloadButton("dnldParamOutFile","Meta Parameter File")
+      uiOutput("rendDownloadHeader"),
+      fluidRow(
+        column(4, style = 'padding-right:0px;',
+               uiOutput("renddnldExprOutFile")
+               ),
+        column(3, style = 'padding-right:0px;padding-left:0px;',
+               uiOutput("renddnldMetaOutFile")
+        ),
+        column(5, style = 'padding-left:0px;',
+               uiOutput("renddnldParamOutFile")
+        )
+      )
     ),
+    
+    ####----Main Panel----####
+    
     mainPanel(
       tabsetPanel(
         tabPanel("Expression Data Preview",
@@ -71,17 +99,39 @@ ui <-
     )
   )
 
+####----Server----####
 
 server <- function(input, output, session) {
   
   ####----Reactives----####
   
-  exprIn <- reactive({
-    
+  exprIn <- reactiveVal()
+  metaIn <- reactiveVal()
+  
+  exprFileName <- reactiveVal()
+  metaFileName <- reactiveVal()
+  
+  observeEvent(input$UseExpData, {
+    exprIn(as.data.frame(readr::read_delim(ExampleExpr_File, delim = '\t', col_names = T)))
+    ext <- tools::file_ext(ExampleExpr_File)
+    ExampleExpr_File <- gsub(paste0(".",ext), "", basename(ExampleExpr_File))
+    exprFileName(ExampleExpr_File)
+  })
+  
+  observeEvent(input$UseExpData, {
+    metaIn(as.data.frame(readr::read_delim(ExampleClin_File, delim = '\t', col_names = T)))
+    ext <- tools::file_ext(ExampleClin_File)
+    ExampleClin_File <- gsub(paste0(".",ext), "", basename(ExampleClin_File))
+    metaFileName(ExampleClin_File)
+  })
+  
+  observe({
     exprFile <- input$ExprFileInput
     delim <- input$ExprDelim
     ext <- tools::file_ext(exprFile$datapath)
     req(exprFile)
+    fileName <- gsub(paste0(".",ext), "", basename(exprFile$name))
+    exprFileName(fileName)
     
     if (delim == "Tab") {
       expr <- as.data.frame(readr::read_delim(exprFile$datapath, delim = '\t', col_names = T))
@@ -92,16 +142,16 @@ server <- function(input, output, session) {
     else if (delim == "Space") {
       expr <- as.data.frame(readr::read_delim(exprFile$datapath, delim = ' ', col_names = T))
     }
-    expr
-    
+    exprIn(expr)
   })
   
-  metaIn <- reactive({
-    
+  observe({
     metaFile <- input$MetaFileInput
     delim <- input$MetaDelim
     ext <- tools::file_ext(metaFile$datapath)
     req(metaFile)
+    fileName <- gsub(paste0(".",ext), "", basename(metaFile$name))
+    metaFileName(fileName)
     
     if (delim == "Tab") {
       meta <- as.data.frame(readr::read_delim(metaFile$datapath, delim = '\t', col_names = T))
@@ -112,12 +162,12 @@ server <- function(input, output, session) {
     else if (delim == "Space") {
       meta <- as.data.frame(readr::read_delim(metaFile$datapath, delim = ' ', col_names = T))
     }
-    meta
-    
+    metaIn(meta)
   })
   
   exprReForm <- reactive({
     
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
     expr <- exprIn()
     meta <- metaIn()
     #metaSampCol <- input$SampNameCol
@@ -165,6 +215,8 @@ server <- function(input, output, session) {
   
   metaReForm <- reactive({
     
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
+    
     expr <- exprIn()
     meta <- metaIn()
     TimeUnits <- input$SurvTimeUnits
@@ -205,6 +257,8 @@ server <- function(input, output, session) {
   
   metaParam <- reactive({
     
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
+    
     meta <- metaReForm()
     metacol_survtime <- input$SurvTimeColSelect
     metacol_survid <- input$SurvIDColSelect
@@ -232,17 +286,9 @@ server <- function(input, output, session) {
   
   ####----Render UI----####
   
-  #output$rendSampNameCol <- renderUI({
-  #  
-  #  meta <- metaIn()
-  #  ColOpt <- colnames(meta)
-  #  selectInput("SampNameCol","Select Sample Name Column", choices = ColOpt, selected = 1)
-  #  
-  #})
-  
   output$rendSurvTimeColSelect <- renderUI({
     
-    req(input$MetaFileInput)
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
     meta <- metaIn()
     ColumnCheck <- grep(paste(c("OS_time","EFS_time","PFI_time","PFS_time","RFS_time","DSS_time","DFI_time",
                                 "OS.time","EFS.time","PFI.time","PFS.time","RFS.time","DSS.time","DFI.time"),collapse = "|"),
@@ -258,14 +304,14 @@ server <- function(input, output, session) {
   
   output$rendSurvTimeUnits <- renderUI({
     
-    req(input$MetaFileInput)
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
     selectizeInput("SurvTimeUnits","Time Units:", choices = c("Days","Months","Years"))
     
   })
   
   output$rendSurvIDColSelect <- renderUI({
     
-    req(input$MetaFileInput)
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
     meta <- metaIn()
     ColumnCheckTime <- grep(paste(c("OS_time","EFS_time","PFI_time","PFS_time","RFS_time","DSS_time","DFI_time",
                                     "OS.time","EFS.time","PFI.time","PFS.time","RFS.time","DSS.time","DFI.time"),collapse = "|"),
@@ -284,9 +330,50 @@ server <- function(input, output, session) {
     
   })
   
+  output$rendParamFileHeader <- renderUI({
+    
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
+    h4("Parameter File Formatting")
+    
+  })
+  
+  output$rendDownloadHeader <- renderUI({
+    
+    #req(isTruthy(input$ExprFileInput) || isTruthy(input$MetaFileInput))
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
+    h4("Download Prepped Files")
+    
+  })
+  
+  output$renddnldExprOutFile <- renderUI({
+    
+    #req(input$ExprFileInput)
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
+    downloadButton("dnldExprOutFile","Expression")
+    
+  })
+  
+  output$renddnldMetaOutFile <- renderUI({
+    
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
+    downloadButton("dnldMetaOutFile","Clinical")
+    
+  })
+  
+  output$renddnldParamOutFile <- renderUI({
+    
+    #req(input$MetaFileInput)
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
+    downloadButton("dnldParamOutFile","Clinical Parameters")
+    
+  })
+  
   ####----Text Output----####
   
   output$FileCheckAlerts <- renderPrint({
+    
+    #req(isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput))
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
     
     expr <- exprIn()
     meta <- metaIn()
@@ -354,6 +441,9 @@ server <- function(input, output, session) {
   
   output$InExprPreview <- DT::renderDataTable({
     
+    #req(isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput))
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
+    
     df <- exprIn()
     
     DT::datatable(df,
@@ -371,6 +461,8 @@ server <- function(input, output, session) {
   
   output$InMetaPreview <- DT::renderDataTable({
     
+    
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
     df <- metaIn()
     
     DT::datatable(df,
@@ -387,6 +479,7 @@ server <- function(input, output, session) {
   
   output$OutExprPreview <- DT::renderDataTable({
     
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
     df <- exprReForm()
     
     DT::datatable(df,
@@ -404,6 +497,7 @@ server <- function(input, output, session) {
   
   output$OutMetaPreview <- DT::renderDataTable({
     
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
     df <- metaReForm()
     
     DT::datatable(df,
@@ -420,6 +514,7 @@ server <- function(input, output, session) {
   
   output$MetaParamPreview <- DT::renderDataTable({
     
+    req((isTruthy(input$ExprFileInput) && isTruthy(input$MetaFileInput)) | isTruthy(input$UseExpData))
     df <- metaParam()
     
     DT::datatable(df,
@@ -435,9 +530,10 @@ server <- function(input, output, session) {
   
   output$dnldExprOutFile <- downloadHandler(
     filename = function() {
-      exprFile <- input$ExprFileInput
-      ext <- tools::file_ext(exprFile$datapath)
-      fileName <- gsub(paste0(".",ext), "", basename(exprFile$name))
+      #exprFile <- input$ExprFileInput
+      #ext <- tools::file_ext(exprFile$datapath)
+      #fileName <- gsub(paste0(".",ext), "", basename(exprFile$name))
+      fileName <- exprFileName()
       paste0(fileName,"_Cleaned.txt")
     },
     content = function(file) {
@@ -448,9 +544,10 @@ server <- function(input, output, session) {
   
   output$dnldMetaOutFile <- downloadHandler(
     filename = function() {
-      metaFile <- input$MetaFileInput
-      ext <- tools::file_ext(metaFile$datapath)
-      fileName <- gsub(paste0(".",ext), "", basename(metaFile$name))
+      #metaFile <- input$MetaFileInput
+      #ext <- tools::file_ext(metaFile$datapath)
+      #fileName <- gsub(paste0(".",ext), "", basename(metaFile$name))
+      fileName <- metaFileName()
       paste0(fileName,"_Cleaned.txt")
     },
     content = function(file) {
@@ -461,9 +558,10 @@ server <- function(input, output, session) {
   
   output$dnldParamOutFile <- downloadHandler(
     filename = function() {
-      metaFile <- input$MetaFileInput
-      ext <- tools::file_ext(metaFile$datapath)
-      fileName <- gsub(paste0(".",ext), "", basename(metaFile$name))
+      #metaFile <- input$MetaFileInput
+      #ext <- tools::file_ext(metaFile$datapath)
+      #fileName <- gsub(paste0(".",ext), "", basename(metaFile$name))
+      fileName <- metaFileName()
       paste0(fileName,"_Parameters.txt")
     },
     content = function(file) {
