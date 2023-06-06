@@ -6,12 +6,6 @@
 #                                                      #
 ####------------------------------------------------####
 
-bioCpacks <- "clusterProfiler"
-installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
-if (any(installed_packages_BIOC == FALSE)) {
-  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
-}
-invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
 ####----User Input----####
@@ -24,6 +18,16 @@ header.gs <- TRUE
 OutFile_PathAndName <- '~/R/data/GeneSetData/Misc/ERstress_Genes.RData'
 
 
+
+
+
+
+bioCpacks <- "clusterProfiler"
+installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
+if (any(installed_packages_BIOC == FALSE)) {
+  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
+}
+invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 ####----Read File----####
 
