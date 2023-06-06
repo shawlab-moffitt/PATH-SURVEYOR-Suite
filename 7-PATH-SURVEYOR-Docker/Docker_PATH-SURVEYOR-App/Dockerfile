@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     && rm -rf /var/lib/apt/lists/*
 RUN install.r shiny
-RUN R -e 'install.packages(c("pbkrtest", "lme4", "car", "FactoMineR", "ggpubr", "shiny","shinydashboard","shinythemes","shinyjqui","shinyjs","pheatmap","RColorBrewer","ggdendro","factoextra","dplyr","DT","viridis","readr","shinycssloaders","stringr","tools","plotly","reshape2", "BiocManager","ggplot2","survival","readr","shinycssloaders","survminer","gridExtra","ggrepel"))'
+RUN R -e 'install.packages(c("pbkrtest", "lme4", "car", "FactoMineR", "ggpubr", "shiny","shinydashboard","shinythemes","shinyjqui","pheatmap","RColorBrewer","ggdendro","factoextra","dplyr","DT","viridis","readr","shinycssloaders","stringr","tools","plotly","reshape2", "BiocManager","ggplot2","survival","readr","shinycssloaders","survminer","gridExtra","ggrepel"))'
 RUN R -e 'BiocManager::install("clusterProfiler", ask = F)'
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libxml2 \
