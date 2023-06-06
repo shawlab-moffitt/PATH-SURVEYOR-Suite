@@ -28,7 +28,7 @@ immudecon_check <- immudecon %in% rownames(installed.packages())
 if (immudecon_check == TRUE) {
   library(immunedeconv)
 }
-packages <- c("shiny","shinyjqui","gtsummary","tidyr","RColorBrewer","shinyjs",
+packages <- c("shiny","shinyjqui","gtsummary","tidyr","RColorBrewer",
               "dplyr","DT","ggplot2","ggpubr","tibble","survival","pheatmap","stringr",
               "readr","shinycssloaders","survminer","gridExtra","viridis","plotly","ggrepel")
 
@@ -140,7 +140,6 @@ gsubCheck <- function(string) {
 
 ui <-
   navbarPage("{ DRPPM-PATH-SURVEYOR }",
-             shinyjs::useShinyjs(),
              
              ####----Data Input----####
              
@@ -1043,9 +1042,6 @@ ui <-
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   
-  observeEvent(input$ResetButton, {
-    shinyjs::refresh()
-  })
   
   
   ####----Data Input Panel----####
