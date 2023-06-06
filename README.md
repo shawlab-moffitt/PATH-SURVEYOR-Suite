@@ -36,7 +36,6 @@ Users can download and employ all of the tools locally to perform analyses and g
 
 * Expression Matrix
   * Tab delimited matrix with **HGNC gene symbols** in the first column and sample names as the first-row header
-  * Remove duplicate gene symbols is preferred, will check on app startup
   * Depending on the size, users may want to remove lowly expressed genes to reduce load time
 * Clinical Meta Information
   * Tab-delimited file which should contain a first column of sample names matching the names in the expression matrix, followed by event and time-to-event information, as well as additional covariates or pre-processed scores
