@@ -1,41 +1,32 @@
-
-
-
-####---- Read in Files----####
-
-GeneSet_File <- "GeneSet_Data/Comprehensive_GeneSet.RData"
-
-
-############################ Copyright 2022 Moffitt Cancer Center ############################
-# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-# 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-##############################################################################################
-
-
-
-
 ####----Install and load packages----####
 
-packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","ggdendro","factoextra",
-              "dplyr","DT","viridis","readr","shinycssloaders","stringr","tools","plotly","reshape2")
-
+packages <- c("shiny","shinyjqui","pheatmap","RColorBrewer",
+              "ggdendro","factoextra","dplyr","DT","viridis","readr","ggrepel",
+              "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra")
 
 installed_packages <- packages %in% rownames(installed.packages())
-if (any(installed_packages == FALSE)) {
-  install.packages(packages[!installed_packages])
-}
+#if (any(installed_packages == FALSE)) {
+#  install.packages(packages[!installed_packages])
+#}
 invisible(lapply(packages, library, character.only = TRUE))
 #bioconductor packages
 bioCpacks <- c("clusterProfiler")
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
-if (any(installed_packages_BIOC == FALSE)) {
-  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
-}
+#if (any(installed_packages_BIOC == FALSE)) {
+#  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
+#}
 invisible(lapply(bioCpacks, library, character.only = TRUE))
 
+
+####---- Read in Files----####
+
+GeneSet_File <- "GeneSet_List_HS_v5.RData"
+
+ExamplePathway_File <- "Pathways_Of_Interest.txt"
+
+ExampleAnnotation_File <- "Gene_Annoation.txt"
+
+PreSet_CoxH_Ranked_Feature_file <- ""
 
 
 # R Data list load function for naming
@@ -47,6 +38,13 @@ loadRData <- function(fileName){
 gs <- loadRData(GeneSet_File)
 names(gs) <- gsub("[[:punct:]]",".",names(gs))
 
+if (is.character(PreSet_CoxH_Ranked_Feature_file)) {
+  if (file.exists(PreSet_CoxH_Ranked_Feature_file)) {
+    PreSet_CoxH_Ranked_Features <- as.data.frame(readr::read_delim(PreSet_CoxH_Ranked_Feature_file, delim = '\t', col_names = T, comment = "#"))
+  } else { PreSet_CoxH_Ranked_Features <- NULL }
+} else { PreSet_CoxH_Ranked_Features <- NULL }
+
+
 #learn Jaccard index function
 jaccard <- function(a, b) {  
   a = unique(a)
@@ -56,11 +54,6 @@ jaccard <- function(a, b) {
   return (1-(intersection/union))
 }
 
-#CV function for variance
-cv <- function(x){
-  (sd(x)/mean(x))*100
-}
-
 g_legend<-function(a.gplot){
   tmp <- ggplot_gtable(ggplot_build(a.gplot))
   leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
@@ -68,20 +61,18 @@ g_legend<-function(a.gplot){
   legend
 }
 
-## Initial Pathway Selected
-Path_Selec <- NULL
-
-shinytheme("sandstone")
 
 #increase file upload size
 options(shiny.maxRequestSize=5000*1024^2)
 
 
 
+####----UI----####
+
 ui <- 
-  navbarPage("{ Connectivity Index }",
+  navbarPage("{ Jaccard Pathway Connectivity Index }",
              
-             ####----Intra-Pathway Connectivity----####
+             ####----Pathway Connectivity----####
              
              tabPanel("Pathway Connectivity",
                       fluidPage(
@@ -91,7 +82,7 @@ ui <-
                             width = 3,
                             tabsetPanel(
                               
-                              ####----Pathway Input----####
+                              ####----Pathway Parameters----####
                               
                               tabPanel("Pathway Parameters",
                                        p(),
@@ -99,37 +90,50 @@ ui <-
                                        fluidRow(
                                          column(9,
                                                 fileInput("UserPathwayFile","Upload File (.gmt/.tsv/.txt)",
-                                                          accept = c(".gmt",".tsv",".txt")),
-                                                uiOutput("rendTopFeatureSelect"),
+                                                          accept = c(".gmt",".tsv",".txt"))
                                          ),
                                          column(3,
                                                 checkboxInput("HeaderCheckIntra","Header",value = T)
                                          )
                                        ),
-                                       hr(),
-                                       h4("Clustering Parameters"),
                                        fluidRow(
-                                         column(4,
-                                                selectInput("ClustMethodIntra","Clustering Method:",
-                                                            choices = c("ward.D", "complete", "ward.D2", "single", "average", "mcquitty", "median", "centroid"))
+                                         column(6, style = 'margin-top:-15px;',
+                                                uiOutput("rendUseExpData")
                                          ),
-                                         column(8,
-                                                numericInput("NumClusters", step = 1, label = "Number of Clusters (Cut Tree with ~k)", value = 10)
+                                         column(6, style = 'margin-top:-15px;',
+                                                uiOutput("rendDownloadLink")
+                                                )
+                                       ),
+                                       p(),
+                                       uiOutput("rendTopFeatureSelect"),
+                                       uiOutput("rendHRLine1"),
+                                       uiOutput("rendClusterHeader"),
+                                       fluidRow(
+                                         column(6,
+                                                uiOutput("rendClustMethodIntra"),
+                                                uiOutput("rendViewClustTabIntra")
+                                         ),
+                                         column(6,
+                                                uiOutput("rendNumClusters"),
+                                                uiOutput("renddnldClustTabIntra")
                                          )
                                        ),
-                                       checkboxInput("ViewClustTabIntra","View Cluster Results Table"),
                                        uiOutput("rendClustTabIntra"),
-                                       downloadButton("dnldClustTabIntra","Download Cluster Result"),
-                                       hr(),
-                                       h4("SIF Download"),
-                                       numericInput("JaccDistCutoff","Jaccard Distance Cutoff",
-                                                    min = 0,max = 1, step = 0.1, value = 0.9, width = "200px"),
-                                       checkboxInput("PrevSIF","Preview SIF File",value = F),
+                                       uiOutput("rendHRLine2"),
+                                       uiOutput("rendSIFheader"),
+                                       fluidRow(
+                                         column(6,
+                                                uiOutput("rendJaccDistCutoff")
+                                                ),
+                                         column(6,
+                                                uiOutput("rendPrevSIF")
+                                                )
+                                       ),
                                        uiOutput("rendSIFPreview"),
-                                       downloadButton("dnldSIFTabIntra","Download SIF File")
+                                       uiOutput("renddnldSIFTabIntra")
                               ),
                               
-                              ####----Figure Parameters----####
+                              ####----Pathway Figure Parameters----####
                               
                               tabPanel("Figure Parameters",
                                        h4("Heatmap Parameters"),
@@ -159,7 +163,7 @@ ui <-
                                                              value = 50, step = 1)
                                          )
                                        ),
-                                       hr(),
+                                       shiny::hr(),
                                        h4("Connectivity Visualization Parameters"),
                                        selectInput("ConnView","View Connectivity as:",
                                                    choices = c("Phylogeny" = "phylogenic","Dendrogram" = "rectangle","Circular" = "circular")),
@@ -170,16 +174,17 @@ ui <-
                                          ),
                                          column(6,
                                                 numericInput("ConnFontSize","Font Size:",
-                                                             value = 0.4, step = 0.1)
+                                                             value = 0.6, step = 0.1)
                                          )
                                        )
                               )
                             )
                           ),
+                          
+                          ####----Pathway Main Panel----####
+                          
                           mainPanel(
                             tabsetPanel(
-                              
-                              ####----Jaccard Table----####
                               
                               tabPanel("Jaccard Pathway Connectivity Table",
                                        p(),
@@ -187,15 +192,11 @@ ui <-
                                        uiOutput("renddnldJaccTabIntra")
                               ),
                               
-                              ####----Jaccard Heatmap----####
-                              
                               tabPanel("Heatmap",
-                                       withSpinner(jqui_resizable(plotOutput('JaccHeatmapIntra', width = "100%", height = "800px")), type = 6),
+                                       shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput('JaccHeatmapIntra', width = "100%", height = "800px")), type = 6),
                                        downloadButton("dnldJaccHeatmapIntraPDF","Download as PDF"),
                                        downloadButton("dnldJaccHeatmapIntraSVG","Download as SVG")
                               ),
-                              
-                              ####----Jaccard Clustering----####
                               
                               tabPanel("Clustering",
                                        uiOutput("rendJaccDendo"),
@@ -203,11 +204,18 @@ ui <-
                                        downloadButton("dnldJaccDendoSVG","Download as SVG")
                               ),
                               
-                              ####----Jaccard Cluster Annotation----####
-                              
                               tabPanel("Gene Clusters and Annoation",
-                                       fileInput("UserAnnotationFile","Upload Annotation File",
-                                                 accept = c(".tsv",".txt",".csv")),
+                                       fluidRow(
+                                         column(3,
+                                                fileInput("UserAnnotationFile","Upload Annotation File",
+                                                          accept = c(".tsv",".txt",".csv"))
+                                                ),
+                                         column(8,
+                                                h2(),
+                                                actionButton("useExpAnnoData","Load Example Data"),
+                                                tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/Pathway_Connectivity_App/GeneAnnoationFile_Upload/", "Download example data", target='_blank'),
+                                                )
+                                         ),
                                        div(DT::dataTableOutput("ClusterTabAnno"), style = "font-size:12px"),
                                        uiOutput("renddnldClusterTabAnno")
                               )
@@ -218,6 +226,9 @@ ui <-
                       
                       
              ),
+             
+             ####----Matrix Connectivity----####
+             
              tabPanel("Matrix Clustering",
                       fluidPage(
                         title = "Matrix Clustering",
@@ -225,31 +236,45 @@ ui <-
                           sidebarPanel(
                             width = 3,
                             tabsetPanel(
-                              ####----Cluster Parameters----####
+                              
+                              ####----Matrix Cluster Parameters----####
                               
                               tabPanel("Cluster Parameters",
                                        p(),
                                        fileInput("UserMatrixFile","Upload Matrix", accept = c(".txt",".tsv",".csv")),
-                                       hr(),
-                                       h4("Clustering Parameters"),
+                                       uiOutput("rendHRLine3"),
+                                       #shiny::hr(),
+                                       uiOutput("rendClusterParamsHeader2"),
+                                       #h4("Clustering Parameters"),
                                        fluidRow(
-                                         column(4,
-                                                selectInput("ClustMethodMat","Clustering Method:",
-                                                            choices = c("ward.D", "complete", "ward.D2", "single", "average", "mcquitty", "median", "centroid"))
+                                         column(6,
+                                                uiOutput("rendClustMethodMat")
+                                                #selectInput("ClustMethodMat","Method:",
+                                                #            choices = c("ward.D", "complete", "ward.D2", "single", "average", "mcquitty", "median", "centroid"))
                                          ),
-                                         column(8,
-                                                numericInput("NumClustersMat", step = 1, label = "Number of Clusters (Cut Tree with ~k)", value = 10)
+                                         column(6,
+                                                uiOutput("rendNumClustersMat")
+                                                #numericInput("NumClustersMat", step = 1, label = "Number of Clusters", value = 10)
                                          )
                                        ),
-                                       checkboxInput("ViewClustTabMat","View Cluster Results Table"),
+                                       uiOutput("rendViewClustTabMat"),
+                                       #checkboxInput("ViewClustTabMat","View Cluster Results Table"),
                                        uiOutput("rendClustTabMat"),
-                                       downloadButton("dnldClustTabMat","Download Cluster Result"),
-                                       hr(),
-                                       h4("SIF Download"),
-                                       checkboxInput("PrevSIFMat","Preview SIF File",value = F),
+                                       uiOutput("renddnldClustTabMat"),
+                                       #downloadButton("dnldClustTabMat","Download Cluster Result"),
+                                       uiOutput("rendHRLine4"),
+                                       #shiny::hr(),
+                                       uiOutput("rendSIFdnldHeader2"),
+                                       #h4("SIF Download"),
+                                       uiOutput("rendPrevSIFMat"),
+                                       #checkboxInput("PrevSIFMat","Preview SIF File",value = F),
                                        uiOutput("rendSIFPreviewMat"),
-                                       downloadButton("dnldSIFTabMat","Download SIF File")
+                                       uiOutput("renddnldSIFTabMat"),
+                                       #downloadButton("dnldSIFTabMat","Download SIF File")
                               ),
+                              
+                              ####----Matrix Figure Parameters----####
+                              
                               tabPanel("Figure Parameters",
                                        p(),
                                        h4("Heatmap Parameters"),
@@ -279,7 +304,7 @@ ui <-
                                                              value = 50, step = 1)
                                          )
                                        ),
-                                       hr(),
+                                       shiny::hr(),
                                        h4("Connectivity Visualization Parameters"),
                                        selectInput("ConnViewMat","View Connectivity as:",
                                                    choices = c("Phylogeny" = "phylogenic","Dendrogram" = "rectangle","Circular" = "circular")),
@@ -296,6 +321,9 @@ ui <-
                               )
                             )
                           ),
+                          
+                          ####----Matrix Main Panel----####
+                          
                           mainPanel(
                             tabsetPanel(
                               tabPanel("Table Preview",
@@ -304,7 +332,7 @@ ui <-
                               ),
                               tabPanel("Heatmap",
                                        p(),
-                                       withSpinner(jqui_resizable(plotOutput('UserMatrixHeatmap', width = "100%", height = "800px")), type = 6),
+                                       shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput('UserMatrixHeatmap', width = "100%", height = "800px")), type = 6),
                                        downloadButton("dnldUserMatrixHeatmapPDF","Download as PDF"),
                                        downloadButton("dnldUserMatrixHeatmapSVG","Download as SVG")
                               ),
@@ -322,24 +350,134 @@ ui <-
 
 
 
+
+
+
 server <- function(input, output, session) {
   
   ####----Jaccard Connectivity----####
   
   ####----Render UI----####
   
+  output$rendUseExpData <- renderUI({
+    
+    if (is.null(PreSet_CoxH_Ranked_Features)) {
+      actionButton("UseExpData","Load Example Data")
+    }
+    
+  })
+  
+  output$rendDownloadLink <- renderUI({
+    
+    if (is.null(PreSet_CoxH_Ranked_Features)) {
+      tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/Pathway_Connectivity_App/PathwayFile_Upload/", "Download example data", target='_blank')
+    }
+    
+  })
+  
+  output$rendHRLine1 <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    shiny::hr()
+    
+  })
+  
+  output$rendHRLine2 <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    shiny::hr()
+    
+  })
+  
+  output$renddnldClustTabIntra <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    downloadButton("dnldClustTabIntra","Cluster Results")
+    
+  })
+  
+  output$renddnldSIFTabIntra <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    downloadButton("dnldSIFTabIntra","SIF File")
+    
+  })
+  
+  output$rendClusterHeader <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    h4("Clustering Parameters")
+    
+  })
+  
+  output$rendClustMethodIntra <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    selectInput("ClustMethodIntra","Method:",
+                choices = c("ward.D", "complete", "ward.D2", "single", "average", "mcquitty", "median", "centroid"))
+    
+  })
+  
+  output$rendNumClusters <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    numericInput("NumClusters", step = 1, label = "Number of Clusters", value = 10)
+    
+  })
+  
+  output$rendViewClustTabIntra <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    checkboxInput("ViewClustTabIntra","View Cluster Results")
+    
+  })
+  
+  output$rendSIFheader <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    h4("SIF Download")
+    
+  })
+  
+  output$rendJaccDistCutoff <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    numericInput("JaccDistCutoff","Jaccard Distance Cutoff",
+                 min = 0,max = 1, step = 0.1, value = 0.9, width = "200px")
+    
+  })
+  
+  output$rendPrevSIF <- renderUI({
+    
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    checkboxInput("PrevSIF","Preview SIF File",value = F)
+    
+  })
+  
   output$rendTopFeatureSelect <- renderUI({
     
-    req(input$UserPathwayFile)
-    header_check <- input$HeaderCheckIntra
-    gs.u <- input$UserPathwayFile
-    ext <- tools::file_ext(gs.u$datapath)
-    ranked_file <- as.data.frame(read_delim(gs.u$datapath, delim = '\t', col_names = header_check, comment = "#"))
     
-    if (ext == "txt" | ext == "tsv") {
-      if (ncol(ranked_file) > 2) {
-        numericInput("TopFeatureSelect","Top Number of Features to Process:",
-                     value = 50, min = 3, width = "250px")
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    ranked_file <- user_file_loaded()
+    FileName <- fileInName()
+    ext <- tools::file_ext(FileName)
+    if (length(ext) > 0) {
+      if (ext == "txt" | ext == "tsv") {
+        if (ncol(ranked_file) > 2) {
+          numericInput("TopFeatureSelect","Number of Top Features for Clustering:",
+                       value = 50, min = 3, width = "300px")
+        }
       }
     }
     
@@ -347,27 +485,37 @@ server <- function(input, output, session) {
   
   output$rendClustTabIntra <- renderUI({
     
-    if (input$ViewClustTabIntra == TRUE) {
-      
-      div(DT::dataTableOutput("ClustTabIntra"), style = "font-size:10px; height:400px; overflow-X: scroll")
-      
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    if (!is.null(input$ViewClustTabIntra)) {
+      if (input$ViewClustTabIntra == TRUE) {
+        
+        div(DT::dataTableOutput("ClustTabIntra"), style = "font-size:10px; overflow-X: scroll")
+        
+      }
     }
     
   })
   
   output$rendSIFPreview <- renderUI({
     
-    if (input$PrevSIF == TRUE) {
-      
-      div(DT::dataTableOutput("SIFPreview"), style = "font-size:10px; height:400px; overflow-X: scroll")
-      
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
+    if (!is.null(input$PrevSIF)) {
+      if (input$PrevSIF == TRUE) {
+        
+        #DT::dataTableOutput("SIFPreview")
+        div(DT::dataTableOutput("SIFPreview"), style = "font-size:10px; overflow-X: scroll")
+        
+      }
     }
     
   })
   
   output$renddnldJaccTabIntra <- renderUI({
     
-    req(input$UserPathwayFile)
+    
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
     downloadButton("dnldJaccTabIntra","Download Jaccard Connectivity Table")
     
   })
@@ -384,12 +532,12 @@ server <- function(input, output, session) {
     VisType <- input$ConnView
     if (VisType == "rectangle" | VisType == "phylogenic") {
       
-      withSpinner(jqui_resizable(plotlyOutput('JaccDendoIntra', width = "100%", height = "900px")), type = 6)
+      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotly::plotlyOutput('JaccDendoIntra', width = "100%", height = "900px")), type = 6)
       
     }
     else if (VisType == "circular") {
       
-      withSpinner(jqui_resizable(plotOutput('JaccDendoIntraCirc', width = "100%", height = "900px")), type = 6)
+      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput('JaccDendoIntraCirc', width = "100%", height = "900px")), type = 6)
       
     }
     
@@ -413,67 +561,142 @@ server <- function(input, output, session) {
   
   ####----Reactives----####
   
-  user_file_loaded <- reactive({
+  user_file_loaded <- reactiveVal()
+  user_anno <- reactiveVal()
+  
+  fileInName <- reactiveVal()
+  fileInName_base <- reactiveVal()
+  
+  observeEvent(input$UseExpData, {
+    input <- as.data.frame(readr::read_delim(ExamplePathway_File, delim = '\t', col_names = T))
+    input[,1] <- gsub("[[:punct:]]",".",input[,1])
+    user_file_loaded(input)
     
-    header_check <- input$HeaderCheckIntra
-    gs.u <- input$UserPathwayFile
-    ext <- tools::file_ext(gs.u$datapath)
-    req(gs.u)
-    validate(need(ext == c("tsv","txt","gmt"), "Please upload .tsv, .txt, or .gmt file"))
+    ext <- tools::file_ext(ExamplePathway_File)
+    fileInName(ExamplePathway_File)
+    Example_File_Name <- gsub(paste0(".",ext), "", basename(ExamplePathway_File))
+    fileInName_base(Example_File_Name)
+  })
+  
+  observe({
     
-    if (ext == "gmt") {
-      gmt <- read.gmt(gs.u$datapath)
-      ranked_file <- data.frame(GeneSet = unique(gmt[,1]))
+    if (!is.null(PreSet_CoxH_Ranked_Features)) {
+      ranked_file <- PreSet_CoxH_Ranked_Features
+      user_file_loaded(ranked_file)
+      fileInName(PreSet_CoxH_Ranked_Feature_file)
+      ext <- tools::file_ext(PreSet_CoxH_Ranked_Feature_file)
+      Example_File_Name <- gsub(paste0(".",ext), "", basename(PreSet_CoxH_Ranked_Feature_file))
+      fileInName_base(Example_File_Name)
+    } else {
+      header_check <- input$HeaderCheckIntra
+      gs.u <- input$UserPathwayFile
+      fileInName(gs.u$datapath)
+      ext <- tools::file_ext(gs.u$datapath)
+      req(gs.u)
+      validate(need(ext == c("tsv","txt","gmt"), "Please upload .tsv, .txt, or .gmt file"))
+      
+      if (ext == "gmt") {
+        gmt <- clusterProfiler::read.gmt(gs.u$datapath)
+        ranked_file <- data.frame(GeneSet = unique(gmt[,1]))
+      }
+      else {
+        ranked_file <- as.data.frame(readr::read_delim(gs.u$datapath, delim = '\t', col_names = header_check, comment = "#"))
+      }
+      
+      ranked_file[,1] <- gsub("[[:punct:]]",".",ranked_file[,1])
+      
+      user_file_loaded(ranked_file)
     }
-    else {
-      ranked_file <- as.data.frame(read_delim(gs.u$datapath, delim = '\t', col_names = header_check, comment = "#"))
-    }
-    
-    ranked_file[,1] <- gsub("[[:punct:]]",".",ranked_file[,1])
-    
-    ranked_file
     
   })
   
   ## User Upload gene set list reactive
   user_gs <- reactive({
     
-    req(input$UserPathwayFile)
-    header_check <- input$HeaderCheckIntra
-    gs.u <- input$UserPathwayFile
-    ext <- tools::file_ext(gs.u$datapath)
     
-    ranked_file <- user_file_loaded()
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
     
-    if (ext == "gmt") {
-      gmt <- read.gmt(gs.u$datapath)
-      gmt <- gmt[which(gmt[,2] != "NA"),]
-      gs_u2 <- list()
-      for (i in unique(gmt[,1])){
-        gs_u2[[i]] <- gmt[gmt[,1] == i,]$gene
+    if (!is.null(PreSet_CoxH_Ranked_Features)) {
+      ranked_file <- PreSet_CoxH_Ranked_Features
+      if (ncol(ranked_file) == 2) {
+        ranked_file <- ranked_file[which(ranked_file[,2] != "NA"),]
+        gs_u2 <- list()
+        for (i in unique(ranked_file[,1])){
+          gs_u2[[i]] <- ranked_file[ranked_file[,1] == i,][,2]
+        }
+        gs_u2
       }
-    }
-    else if (ncol(ranked_file) == 2) {
-      ranked_file <- ranked_file[which(ranked_file[,2] != "NA"),]
-      gs_u2 <- list()
-      for (i in unique(ranked_file[,1])){
-        gs_u2[[i]] <- ranked_file[ranked_file[,1] == i,][,2]
+      else {
+        TopFeat <- input$TopFeatureSelect
+        if (isTruthy(TopFeat)) {
+          if (TopFeat > 0) {
+            paths <- as.vector(ranked_file[,1])
+            paths <- gsub("[[:punct:]]",".",paths)
+            gs_u <- gs[unique(paths)]
+            gs_u2 <- gs_u[c(1:TopFeat)]
+            gs_u2 <- Filter(Negate(is.null), gs_u2)
+            gs_u2
+          }
+        }
       }
+      #gs_u2
+    } else {
+      header_check <- input$HeaderCheckIntra
+      gs.u <- input$UserPathwayFile
+      ext <- tools::file_ext(gs.u$datapath)
+      
+      ranked_file <- user_file_loaded()
+      FileName <- fileInName()
+      ext <- tools::file_ext(FileName)
+      
+      if (ext == "gmt") {
+        gmt <- clusterProfiler::read.gmt(gs.u$datapath)
+        gmt <- gmt[which(gmt[,2] != "NA"),]
+        gs_u2 <- list()
+        for (i in unique(gmt[,1])){
+          gs_u2[[i]] <- gmt[gmt[,1] == i,]$gene
+        }
+        gs_u2
+      }
+      else if (ncol(ranked_file) == 2) {
+        ranked_file <- ranked_file[which(ranked_file[,2] != "NA"),]
+        gs_u2 <- list()
+        for (i in unique(ranked_file[,1])){
+          gs_u2[[i]] <- ranked_file[ranked_file[,1] == i,][,2]
+        }
+        gs_u2
+      }
+      else {
+        if (is.null(input$TopFeatureSelect)) {
+          TopFeat <- 50
+          paths <- as.vector(ranked_file[,1])
+          paths <- gsub("[[:punct:]]",".",paths)
+          gs_u <- gs[unique(paths)]
+          gs_u2 <- gs_u[c(1:TopFeat)]
+          gs_u2 <- Filter(Negate(is.null), gs_u2)
+          gs_u2
+        } else {
+          TopFeat <- input$TopFeatureSelect
+          paths <- as.vector(ranked_file[,1])
+          paths <- gsub("[[:punct:]]",".",paths)
+          gs_u <- gs[unique(paths)]
+          gs_u2 <- gs_u[c(1:TopFeat)]
+          gs_u2 <- Filter(Negate(is.null), gs_u2)
+          gs_u2
+        }
+      }
+      
+      #gs_u2
     }
-    else {
-      TopFeat <- input$TopFeatureSelect
-      paths <- as.vector(ranked_file[,1])
-      paths <- gsub("[[:punct:]]",".",paths)
-      gs_u <- gs[unique(paths)]
-      gs_u2 <- gs_u[c(1:TopFeat)]
-      gs_u2 <- Filter(Negate(is.null), gs_u2)
-    }
-    
-    gs_u2
     
   })
   
-  user_anno <- reactive({
+  observeEvent(input$useExpAnnoData, {
+    data <- as.data.frame(readr::read_delim(ExampleAnnotation_File, delim = '\t', col_names = T, comment = "#"))
+    user_anno(data)
+  })
+  
+  observe({
     
     gs.u <- input$UserAnnotationFile
     ext <- tools::file_ext(gs.u$datapath)
@@ -481,16 +704,16 @@ server <- function(input, output, session) {
     validate(need(ext == c("tsv","txt","csv"), "Please upload .tsv, .txt, or .csv file"))
     if (ext == "txt" | ext == "tsv") {
       
-      df <- as.data.frame(read_delim(gs.u$datapath, delim = '\t', col_names = T, comment = "##"))
+      df <- as.data.frame(readr::read_delim(gs.u$datapath, delim = '\t', col_names = T, comment = "#"))
       
     }
     else if (ext == "csv") {
       
-      df <- as.data.frame(read_delim(gs.u$datapath, delim = ',', col_names = T))
+      df <- as.data.frame(readr::read_delim(gs.u$datapath, delim = ',', col_names = T))
       
     }
     
-    df
+    user_anno(df)
     
   })
   
@@ -531,7 +754,7 @@ server <- function(input, output, session) {
   
   ClusterTabAnno_react <- reactive({
     
-    if (is.null(input$UserAnnotationFile) == F) {
+    if (!is.null(user_anno())) {
       
       ## user annotation table
       anno_df <- user_anno()
@@ -567,13 +790,13 @@ server <- function(input, output, session) {
     ## Merge geneset and cluster table
     df2 <- merge(resultDF,clustTab, by = "Pathways")
     
-    if (is.null(input$UserAnnotationFile) == F) {
+    if (!is.null(user_anno())) {
       
       colnames(anno_df)[1] <- "Genes"
       df3 <- merge(df2,anno_df,by = "Genes", all.x = T)
       
     }
-    else if (is.null(input$UserAnnotationFile) == T) {
+    else if (is.null(user_anno())) {
       
       df3 <- df2
       
@@ -588,24 +811,44 @@ server <- function(input, output, session) {
     
   })
   
+  SIF_tab_PAthConn <- reactive({
+    
+    jacc_df <- jacc_react_Intra()
+    dist_cutoff <- input$JaccDistCutoff
+    jacc_df <- as.data.frame(jacc_df)
+    jacc_df_melt <- melt(jacc_df)
+    jacc_cols <- colnames(jacc_df)
+    jacc_df_melt$Pathway_B <- rep_len(jacc_cols,length.out = nrow(jacc_df_melt))
+    colnames(jacc_df_melt)[c(1,2)] <- c("Pathway_A","Jaccard_Distance")
+    jacc_df_melt <- jacc_df_melt[which(jacc_df_melt$Jaccard_Distance <= dist_cutoff),]
+    jacc_df_melt <- jacc_df_melt[which(jacc_df_melt$Pathway_A != jacc_df_melt$Pathway_B),]
+    jacc_df_melt <- jacc_df_melt[!duplicated(t(apply(jacc_df_melt,1,sort))),]
+    jacc_df_melt
+    
+  })
+  
   ####----Data Tables----####
   
   ## Jaccard Matrix Table - INTRA pathway
   output$JaccTableIntra <- DT::renderDataTable({
     
+    req(isTruthy(input$UserPathwayFile) | isTruthy(input$UseExpData) | isTruthy(PreSet_CoxH_Ranked_Features))
     ## Jaccard Table
     jacc_df <- as.data.frame(jacc_react_Intra())
-    colnames(jacc_df) <- gsub("[[:punct:]]", " ",colnames(jacc_df))
+    if (sum(dim(jacc_df)) > 0) {
+      colnames(jacc_df) <- gsub("[[:punct:]]", " ",colnames(jacc_df))
+      
+      DT::datatable(jacc_df,
+                    extensions = "FixedColumns",
+                    options = list(lengthMenu = c(10,20,50,100,1000,5000,10000),
+                                   pageLength = 20,
+                                   scrollX = TRUE,
+                                   autoWidth = TRUE,
+                                   fixedColumns = list(leftColumns = 1)),
+                    selection=list(mode = "multiple")) %>%
+        formatRound(columns = c(1:ncol(jacc_df)), digits = 4)
+    }
     
-    DT::datatable(jacc_df,
-                  extensions = "FixedColumns",
-                  options = list(lengthMenu = c(10,20,50,100,1000,5000,10000),
-                                 pageLength = 20,
-                                 scrollX = TRUE,
-                                 autoWidth = TRUE,
-                                 fixedColumns = list(leftColumns = 1)),
-                  selection=list(mode = "multiple")) %>%
-      formatRound(columns = c(1:ncol(jacc_df)), digits = 4)
     
   })
   
@@ -629,6 +872,7 @@ server <- function(input, output, session) {
     DT::datatable(clustTab,
                   options = list(keys = TRUE,
                                  searchHighlight = TRUE,
+                                 scrollX = TRUE,
                                  pageLength = 10,
                                  lengthMenu = c("10", "25", "50", "100")),
                   rownames = F)
@@ -651,21 +895,15 @@ server <- function(input, output, session) {
   
   output$SIFPreview <- DT::renderDataTable({
     
-    jacc_df <- user_matrix_loaded()
-    jacc_df <- as.data.frame(jacc_df)
-    jacc_df_melt <- melt(jacc_df)
-    jacc_cols <- colnames(jacc_df)
-    jacc_df_melt$Pathway_B <- rep_len(jacc_cols,length.out = nrow(jacc_df_melt))
-    colnames(jacc_df_melt)[c(1,2)] <- c("Pathway_A","Jaccard_Distance")
-    jacc_df_melt <- jacc_df_melt[which(round(jacc_df_melt$Jaccard_Distance,4) <= dist_cutoff),]
-    jacc_df_melt <- jacc_df_melt[which(jacc_df_melt$Pathway_A != jacc_df_melt$Pathway_B),]
-    jacc_df_melt <- jacc_df_melt[!duplicated(t(apply(jacc_df_melt,1,sort))),]
+    jacc_df_melt <- SIF_tab_PAthConn()
+    colnames(jacc_df_melt) <- gsub("_"," ",colnames(jacc_df_melt))
     DT::datatable(jacc_df_melt,
                   options = list(keys = TRUE,
                                  searchHighlight = TRUE,
                                  pageLength = 10,
                                  lengthMenu = c("10", "25", "50", "100")),
-                  rownames = F)
+                  rownames = F) %>%
+      formatRound(columns = 2, digits = 4)
     
   })
   
@@ -706,7 +944,7 @@ server <- function(input, output, session) {
       hmcols <- inferno(500)
     }
     else if (col_pall == "Viridis") {
-      hmcols <- viridis(500)
+      hmcols <- viridis::viridis(500)
     }
     else if (col_pall == "Plasma") {
       hmcols <- plasma(500)
@@ -770,19 +1008,19 @@ server <- function(input, output, session) {
       if (VisType == "rectangle") {
         
         FontSize <- FontSize * 6
-        g <- ggdendrogram(dend_data,
-                          rotate = TRUE,
-                          theme_dendro = TRUE,
-                          leaf_labels = F,
-                          segments = T,
-                          labels = F) + 
+        g <- ggdendro::ggdendrogram(dend_data,
+                                    rotate = TRUE,
+                                    theme_dendro = TRUE,
+                                    leaf_labels = F,
+                                    segments = T,
+                                    labels = F) + 
           labs(title = "") +
           scale_y_continuous(expand = c(0.4, 0))
         if (LableChoice == TRUE) {
           g <- g + geom_text(data=label(dend_data), aes(x, y, label=label, hjust=1, color=cluster),size=FontSize)
         }
         
-        gp <- ggplotly(g)
+        gp <- plotly::ggplotly(g)
         
       }
       else if (VisType == "phylogenic") {
@@ -797,8 +1035,8 @@ server <- function(input, output, session) {
         
         if (LableChoice == TRUE) {
           k = nclust
-          gp <- ggplotly(
-            fviz_dend(
+          gp <- plotly::ggplotly(
+            factoextra::fviz_dend(
               hc_dend,
               cex = FontSize,
               k = nclust,
@@ -813,8 +1051,8 @@ server <- function(input, output, session) {
         }
         else if (LableChoice == FALSE) {
           k = nclust
-          gp <- ggplotly(
-            fviz_dend(
+          gp <- plotly::ggplotly(
+            factoextra::fviz_dend(
               hc,
               cex = FontSize,
               k = k,
@@ -857,7 +1095,7 @@ server <- function(input, output, session) {
       
       hc <- hclust(dist(jacc_mat), method = clust_me)
       hc_dend <- as.dendrogram(hc)
-      f <- fviz_dend(hc_dend, k = nclust, cex = FontSize, color_labels_by_k = T, type = "circular", show_labels = LableChoice) +
+      f <- factoextra::fviz_dend(hc_dend, k = nclust, cex = FontSize, color_labels_by_k = T, type = "circular", show_labels = LableChoice) +
         theme(legend.position="none") +
         labs(title = "") +
         theme(axis.ticks.x = element_blank(),axis.text.x = element_blank(),axis.title.x = element_blank(),
@@ -882,8 +1120,80 @@ server <- function(input, output, session) {
   
   ####----Render UI----####
   
+  output$rendHRLine3 <- renderUI({
+    
+    req(input$UserMatrixFile)
+    shiny::hr()
+    
+  })
+  
+  output$rendClusterParamsHeader2 <- renderUI({
+    
+    req(input$UserMatrixFile)
+    h4("Clustering Parameters")
+    
+  })
+  
+  output$rendClustMethodMat <- renderUI({
+    
+    req(input$UserMatrixFile)
+    selectInput("ClustMethodMat","Method:",
+                choices = c("ward.D", "complete", "ward.D2", "single", "average", "mcquitty", "median", "centroid"))
+    
+  })
+  
+  output$rendNumClustersMat <- renderUI({
+    
+    req(input$UserMatrixFile)
+    numericInput("NumClustersMat", step = 1, label = "Number of Clusters", value = 10)
+    
+  })
+  
+  output$rendViewClustTabMat <- renderUI({
+    
+    req(input$UserMatrixFile)
+    checkboxInput("ViewClustTabMat","View Cluster Results Table")
+    
+  })
+  
+  output$renddnldClustTabMat <- renderUI({
+    
+    req(input$UserMatrixFile)
+    downloadButton("dnldClustTabMat","Download Cluster Result")
+    
+  })
+  
+  output$rendHRLine4 <- renderUI({
+    
+    req(input$UserMatrixFile)
+    shiny::hr()
+    
+  })
+  
+  output$rendSIFdnldHeader2 <- renderUI({
+    
+    req(input$UserMatrixFile)
+    h4("SIF Download")
+    
+  })
+  
+  output$rendPrevSIFMat <- renderUI({
+    
+    req(input$UserMatrixFile)
+    checkboxInput("PrevSIFMat","Preview SIF File",value = F)
+    
+  })
+  
+  output$renddnldSIFTabMat <- renderUI({
+    
+    req(input$UserMatrixFile)
+    downloadButton("dnldSIFTabMat","Download SIF File")
+    
+  })
+  
   output$rendClustTabMat <- renderUI({
     
+    req(input$UserMatrixFile)
     if (input$ViewClustTabMat == TRUE) {
       
       div(DT::dataTableOutput("ClustTabMat"), style = "font-size:10px; height:400px; overflow-X: scroll")
@@ -894,6 +1204,7 @@ server <- function(input, output, session) {
   
   output$rendSIFPreviewMat <- renderUI({
     
+    req(input$UserMatrixFile)
     if (input$PrevSIFMat == TRUE) {
       
       div(DT::dataTableOutput("SIFPreviewMat"), style = "font-size:10px; height:400px; overflow-X: scroll")
@@ -907,12 +1218,12 @@ server <- function(input, output, session) {
     VisType <- input$ConnViewMat
     if (VisType == "rectangle" | VisType == "phylogenic") {
       
-      withSpinner(jqui_resizable(plotlyOutput('JaccDendoMat', width = "100%", height = "900px")), type = 6)
+      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotly::plotlyOutput('JaccDendoMat', width = "100%", height = "900px")), type = 6)
       
     }
     else if (VisType == "circular") {
       
-      withSpinner(jqui_resizable(plotOutput('JaccDendoMatCirc', width = "100%", height = "900px")), type = 6)
+      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput('JaccDendoMatCirc', width = "100%", height = "900px")), type = 6)
       
     }
     
@@ -944,10 +1255,10 @@ server <- function(input, output, session) {
     validate(need(ext == c("tsv","txt","csv"), "Please upload .tsv, .txt, or .csv file"))
     
     if (ext == "csv") {
-      matrix.u <- as.data.frame(read_delim(gs.u$datapath, delim = ',', col_names = T))
+      matrix.u <- as.data.frame(readr::read_delim(gs.u$datapath, delim = ',', col_names = T))
     }
     else {
-      matrix.u <- as.data.frame(read_delim(gs.u$datapath, delim = '\t', col_names = T))
+      matrix.u <- as.data.frame(readr::read_delim(gs.u$datapath, delim = '\t', col_names = T))
     }
     
     
@@ -1062,7 +1373,7 @@ server <- function(input, output, session) {
       hmcols <- inferno(500)
     }
     else if (col_pall == "Viridis") {
-      hmcols <- viridis(500)
+      hmcols <- viridis::viridis(500)
     }
     else if (col_pall == "Plasma") {
       hmcols <- plasma(500)
@@ -1129,19 +1440,19 @@ server <- function(input, output, session) {
       if (VisType == "rectangle") {
         
         FontSize <- FontSize * 6
-        g <- ggdendrogram(dend_data,
-                          rotate = TRUE,
-                          theme_dendro = TRUE,
-                          leaf_labels = F,
-                          segments = T,
-                          labels = F) + 
+        g <- ggdendro::ggdendrogram(dend_data,
+                                    rotate = TRUE,
+                                    theme_dendro = TRUE,
+                                    leaf_labels = F,
+                                    segments = T,
+                                    labels = F) + 
           labs(title = "") +
           scale_y_continuous(expand = c(0.4, 0))
         if (LableChoice == TRUE) {
           g <- g + geom_text(data=label(dend_data), aes(x, y, label=label, hjust=1, color=cluster),size=FontSize)
         }
         
-        gp <- ggplotly(g)
+        gp <- plotly::ggplotly(g)
         
       }
       else if (VisType == "phylogenic") {
@@ -1156,8 +1467,8 @@ server <- function(input, output, session) {
         
         if (LableChoice == TRUE) {
           k = nclust
-          gp <- ggplotly(
-            fviz_dend(
+          gp <- plotly::ggplotly(
+            factoextra::fviz_dend(
               hc_dend,
               cex = FontSize,
               k = nclust,
@@ -1172,8 +1483,8 @@ server <- function(input, output, session) {
         }
         else if (LableChoice == FALSE) {
           k = nclust
-          gp <- ggplotly(
-            fviz_dend(
+          gp <- plotly::ggplotly(
+            factoextra::fviz_dend(
               hc,
               cex = FontSize,
               k = k,
@@ -1216,7 +1527,7 @@ server <- function(input, output, session) {
       
       hc <- hclust(dist(jacc_mat), method = clust_me)
       hc_dend <- as.dendrogram(hc)
-      f <- fviz_dend(hc_dend, k = nclust, cex = FontSize, color_labels_by_k = T, type = "circular", show_labels = LableChoice) +
+      f <- factoextra::fviz_dend(hc_dend, k = nclust, cex = FontSize, color_labels_by_k = T, type = "circular", show_labels = LableChoice) +
         theme(legend.position="none") +
         labs(title = "") +
         theme(axis.ticks.x = element_blank(),axis.text.x = element_blank(),axis.title.x = element_blank(),
@@ -1235,6 +1546,8 @@ server <- function(input, output, session) {
     f
     
   })
+  
+  
   
   
   ####----Downloads----####
@@ -1319,7 +1632,7 @@ server <- function(input, output, session) {
       cut_k <- input$NumClusters
       clustTab <- data.frame(Pathways = rownames(jacc_df),
                              Cluster = cutree(hm_res$tree_row,k = cut_k))
-      write_delim(clustTab,file,delim = '\t')
+      readr::write_delim(clustTab,file,delim = '\t')
       
     }
   )
@@ -1345,7 +1658,8 @@ server <- function(input, output, session) {
       jacc_df_melt <- jacc_df_melt[which(jacc_df_melt$Jaccard_Distance <= dist_cutoff),]
       jacc_df_melt <- jacc_df_melt[which(jacc_df_melt$Pathway_A != jacc_df_melt$Pathway_B),]
       jacc_df_melt <- jacc_df_melt[!duplicated(t(apply(jacc_df_melt,1,sort))),]
-      write_delim(jacc_df_melt,file,delim = '\t')
+      jacc_df_melt <- SIF_tab_PAthConn()
+      readr::write_delim(jacc_df_melt,file,delim = '\t')
       
       
     }
@@ -1369,7 +1683,7 @@ server <- function(input, output, session) {
       jacc_df$Pathways <- rownames(jacc_df)
       jacc_df <- jacc_df %>%
         relocate(Pathways)
-      write_delim(jacc_df,file,delim = '\t')
+      readr::write_delim(jacc_df,file,delim = '\t')
       
     }
   )
@@ -1388,7 +1702,7 @@ server <- function(input, output, session) {
     content = function(file) {
       
       df <- ClusterTabAnno_react()
-      write_delim(df,file,delim = '\t')
+      readr::write_delim(df,file,delim = '\t')
       
     }
   )
@@ -1469,7 +1783,7 @@ server <- function(input, output, session) {
       cut_k <- input$NumClustersMat
       clustTab <- data.frame(Pathways = rownames(df),
                              Cluster = cutree(hm_res$tree_row,k = cut_k))
-      write_delim(clustTab,file,delim = '\t')
+      readr::write_delim(clustTab,file,delim = '\t')
       
     }
   )
@@ -1495,17 +1809,30 @@ server <- function(input, output, session) {
       colnames(df_melt)[c(1,2)] <- c("Sample_A","Distance")
       df_melt <- df_melt[which(df_melt$Sample_A != df_melt$Sample_B),]
       df_melt <- df_melt[!duplicated(t(apply(df_melt,1,sort))),]
-      write_delim(df_melt,file,delim = '\t')
+      readr::write_delim(df_melt,file,delim = '\t')
       
       
     }
   )
   
-  
-  
 }
 
 
+shinyApp(ui,server)
 
-# Run the application
-shinyApp(ui = ui, server = server)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

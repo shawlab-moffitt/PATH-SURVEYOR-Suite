@@ -1,43 +1,48 @@
 
 
 
-####----Gene Set File Input----####
-
-GeneSet_File <- "GeneSet_Data/GeneSets.zip"
-
-
-
-############################ Copyright 2022 Moffitt Cancer Center ############################
-# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-# 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-##############################################################################################
-
-
 ####----Install and load packages----####
 
-packages <- c("shiny","shinythemes","shinyjqui","shinycssloaders","dplyr","DT","readr","ggplot2","shinyjs")
+packages <- c("shiny","shinycssloaders","DT","readr")
 
 installed_packages <- packages %in% rownames(installed.packages())
-if (any(installed_packages == FALSE)) {
-  install.packages(packages[!installed_packages])
-}
+#if (any(installed_packages == FALSE)) {
+#  install.packages(packages[!installed_packages])
+#}
 invisible(lapply(packages, library, character.only = TRUE))
 #bioconductor packages
 bioCpacks <- c("clusterProfiler","enrichplot")
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
-if (any(installed_packages_BIOC == FALSE)) {
-  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
-}
+#if (any(installed_packages_BIOC == FALSE)) {
+#  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
+#}
 invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
+####----File Input----####
 
-####----Read In File----####
 
-GeneSet <- as.data.frame(read_delim(GeneSet_File, delim = '\t', col_names = T))
+GeneSetCat_File <- "GeneSet_CatCountTable_v5.zip"
+
+GeneSet_File <- "GeneSet_gsNsym_HS_v5.zip"
+
+ExampleGeneList_File <- "PreRanked_GeneList.txt"
+
+PreSet_RankedGeneList_File <- ""
+
+####----Read In and Sort File----####
+
+GeneSetCats <- as.data.frame(readr::read_delim(GeneSetCat_File, delim = '\t', col_names = T))
+GeneSetCats_tab <- GeneSetCats[,-4]
+GeneSetCats_tab <- unique(GeneSetCats_tab)
+
+GeneSet <- as.data.frame(readr::read_delim(GeneSet_File, delim = '\t', col_names = T))
+
+if (is.character(PreSet_RankedGeneList_File)) {
+  if (file.exists(PreSet_RankedGeneList_File)) {
+    PreSet_RankedGeneList <- as.data.frame(readr::read_delim(PreSet_RankedGeneList_File, delim = '\t', col_names = T, comment = "#"))
+  } else { PreSet_RankedGeneList <- NULL }
+} else { PreSet_RankedGeneList <- NULL }
 
 
 #increase file upload size
@@ -49,33 +54,28 @@ load_data <- function() {
   show("main_content")
 }
 
-
-####----UI----####
-
 ui <- 
   
-  tagList(
+  #tagList(
     
-    useShinyjs(),
-    div(
-      id = "loading_page",
-      h1("Loading...")
-    ),
-    hidden(
-      div(
-        id = "main_content",
+    #shinyjs::useShinyjs(),
+    #div(
+    #  id = "loading_page",
+    #  h1("Loading...")
+    #),
+    #hidden(
+      #div(
+      #  id = "main_content",
         
         navbarPage("{ Hazard Ratio Ranked GSEA }",
                    
-                   ####----Enrichment Table----####
+                   ####----Enrichment Table Tab----####
                    
                    tabPanel("Enrichment Table",
                             fluidPage(
                               title = "Enrichment Table",
                               sidebarPanel(
                                 width = 3,
-                                p(),
-                                #p("File input pre-loaded with PAN ICI melanoma pre-treatment OS CoxH genes ranked inverse. This is the file output from DRPPM-PATH-SURVEIOR Pipeline and the inverse of the hazard ration is used."),
                                 fluidRow(
                                   column(9,
                                          fileInput("UserGeneList","Upload Ranked Gene List")
@@ -85,16 +85,26 @@ ui <-
                                   )
                                 ),
                                 fluidRow(
-                                  column(9,
+                                  column(6, style = 'margin-top:-10px;',
+                                         uiOutput("rendUseExpData")
+                                         #actionButton("UseExpData","Load Example Data")
+                                         ),
+                                  column(6, style = 'margin-top:-10px;',
+                                         uiOutput("rendDownloadLink")
+                                         #tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/HazardRatio_PreRanked_GSEA_App/", "Download example data", target='_blank')
+                                         )
+                                ),
+                                p(),
+                                fluidRow(
+                                  column(7,
                                          numericInput("gseaPval","GSEA Adj Pvalue Cutoff",value = 1)
                                   ),
-                                  column(3,
+                                  column(5,
                                          numericInput("UserSeedSet","Set Seed:",value = 101)
                                   )
                                 ),
-                                uiOutput("rendSpecimenType"),
-                                uiOutput("rendGeneSetChosen"),
-                                uiOutput("rendUserUploadCheck"),
+                                h4("Select a Gene Set:"),
+                                div(DT::dataTableOutput("GenesetCatTable"), style = "font-size:10px"),
                                 checkboxInput("UserUploadCheck","Upload Gene Set"),
                                 fluidRow(
                                   column(9,
@@ -114,6 +124,9 @@ ui <-
                               )
                             )
                    ),
+                   
+                   ####----Enrichment Plot Tab----####
+                   
                    tabPanel("Enrichment Plot",
                             fluidPage(
                               title = "Enrichment Plot",
@@ -124,7 +137,7 @@ ui <-
                               mainPanel(
                                 h3("GSEA Enrichment Plot"),
                                 verbatimTextOutput("NESandPval"),
-                                withSpinner(plotOutput("enrichplot", width = "500px", height = "450px"), type = 6),
+                                shinycssloaders::withSpinner(plotOutput("enrichplot", width = "500px", height = "450px"), type = 6),
                                 fluidRow(
                                   downloadButton("dnldPlotSVG_gsea","Download as SVG"),
                                   downloadButton("dnldPlotPDF_gsea","Download as PDF")
@@ -136,55 +149,57 @@ ui <-
                             )
                    )
         )
-      )
-    )
-  )
+      #)
+    #)
+  #)
 
-
-####----Server----####
 
 server <- function(input, output, session) {
   
-  load_data()
+  #load_data()
   
   ####----Render UI----####
   
-  output$rendSpecimenType <- renderUI({
+  
+  output$rendUseExpData <- renderUI({
     
-    if (input$UserUploadCheck == FALSE) {
-      
-      radioButtons("SpecimenType","Choose Specimen Type:", choices = c("Human","Mouse"), inline = T)
-      
+    if (is.null(PreSet_RankedGeneList)) {
+      actionButton("UseExpData","Load Example Data")
     }
     
   })
   
-  
-  output$rendGeneSetChosen <- renderUI({
+  output$rendDownloadLink <- renderUI({
     
-    data_options <- unique(GeneSet[,3])
-    data_options_HS <- grep("_mm",data_options,value = T, invert = T)
-    
-    if (input$UserUploadCheck == FALSE) {
-      if (!is.null(input$SpecimenType)) {
-        if (input$SpecimenType == "Human") {
-          selectInput("GeneSetChosen","Choose Gene Set:",
-                      choices = c("MSigDB - Hallmark",data_options_HS),
-                      selected = "MSigDB - Hallmark")
-        }
-        else if (input$SpecimenType == "Mouse") {
-          selectInput("GeneSetChosen","Choose Gene Set:",
-                      choices = c("MSigDB - Hallmark" = "Hallmark_mm","MSigDB" = "msigdb_mm","Cell Marker" = "cellm_mm"),
-                      selected = "MSigDB - Hallmark")
-        }
-      }
+    if (is.null(PreSet_RankedGeneList)) {
+      tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/HazardRatio_PreRanked_GSEA_App/", "Download example data", target='_blank')
     }
     
   })
+  
+  #output$rendPreSetDataUI <- renderUI({
+  #  
+  #  if (is.null(PreSet_RankedGeneList)) {
+  #    fluidRow(
+  #      column(6, style = 'margin-top:-10px;',
+  #             #uiOutput("rendUseExpData")
+  #             actionButton("UseExpData","Load Example Data")
+  #      ),
+  #      column(6, style = 'margin-top:-10px;',
+  #             #uiOutput("rendDownloadLink")
+  #             tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/HazardRatio_PreRanked_GSEA_App/", "Download example data", target='_blank')
+  #      )
+  #    )
+  #    p()
+  #  }
+  #  
+  #})
+  
   
   output$rendEnrichTable <- renderUI({
     
     #req(input$UserGeneList)
+    req(isTruthy(input$UserGeneList) | isTruthy(input$UseExpData) | isTruthy(PreSet_RankedGeneList))
     withSpinner(DT::dataTableOutput("EnrichTable", width = "100%"), type = 6)
     
   })
@@ -192,13 +207,14 @@ server <- function(input, output, session) {
   output$renddnldEnrichTable <- renderUI({
     
     #req(input$UserGeneList)
+    req(isTruthy(input$UserGeneList) | isTruthy(input$UseExpData) | isTruthy(PreSet_RankedGeneList))
     downloadButton("dnldEnrichTable","Download Enriched Signatures Table")
     
   })
   
   output$rendUserGSupload <- renderUI({
     
-    if (is.null(input$GeneSetChosen) == FALSE) {
+    #if (is.null(input$GeneSetChosen) == FALSE) {
       
       if (input$UserUploadCheck == TRUE) {
         
@@ -206,13 +222,13 @@ server <- function(input, output, session) {
         
       }
       
-    }
+    #}
     
   })
   
   output$rendUserGSheaderCheck <- renderUI({
     
-    if (is.null(input$GeneSetChosen) == FALSE) {
+    #if (is.null(input$GeneSetChosen) == FALSE) {
       
       if (input$UserUploadCheck == TRUE) {
         
@@ -220,11 +236,14 @@ server <- function(input, output, session) {
         
       }
       
-    }
+    #}
     
   })
   
   ####----Reactives----####
+  
+  user_gl_df <- reactiveVal()
+  user_gl_df_fileName <- reactiveVal()
   
   ## User Upload gene set reactive
   user_gs <- reactive({
@@ -237,7 +256,7 @@ server <- function(input, output, session) {
     
     # If user provides GMT file
     if (ext == "gmt") {
-      gmt <- read.gmt(gs.u$datapath)
+      gmt <- clusterProfiler::read.gmt(gs.u$datapath)
       colnames(gmt) <- c("term","gene")
       gs_u <- gmt
     }
@@ -245,7 +264,7 @@ server <- function(input, output, session) {
     # If user provides tab-delim file
     else if (ext == "txt" | ext == "tsv") {
       
-      gmt <- as.data.frame(read_delim(gs.u$datapath, delim = '\t', col_names = header_check))
+      gmt <- as.data.frame(readr::read_delim(gs.u$datapath, delim = '\t', col_names = header_check))
       
       if (ncol(gmt) == 1) {
         paths <- as.vector(gmt[,1])
@@ -276,31 +295,12 @@ server <- function(input, output, session) {
       #req(input$UserGeneList)
       gmt <- user_gs()
       
-    }
-    else {
+    } else {
       
-      gs_chosen <- input$GeneSetChosen
+      gs_chosen <- as.character(GeneSetCats_tab[input$GenesetCatTable_rows_selected,3])
       
-      if (gs_chosen == "MSigDB - Hallmark") {
-        
-        msigdb_sub <- GeneSet[which(GeneSet[,3] == "MSigDB"),]
-        GeneSet_sub <- msigdb_sub[which(grepl("HALLMARK",msigdb_sub$term)),]
-        gmt <- GeneSet_sub[,c(1,2)]
-        
-      }
-      else if (gs_chosen == "Hallmark_mm") {
-        
-        msigdb_sub <- GeneSet[which(GeneSet[,3] == "msigdb_mm"),]
-        GeneSet_sub <- msigdb_sub[which(grepl("HALLMARK",msigdb_sub$term)),]
-        gmt <- GeneSet_sub[,c(1,2)]
-        
-      }
-      else {
-        
-        GeneSet_sub <- GeneSet[which(GeneSet[,3] == gs_chosen),]
-        gmt <- GeneSet_sub[,c(1,2)]
-        
-      }
+      GeneSets <- GeneSetCats[which(GeneSetCats$GeneSet_Sub_Category == gs_chosen),"GeneSet_Name"]
+      gmt <- GeneSet[which(GeneSet[,1] %in% GeneSets),]
       
     }
     
@@ -318,41 +318,52 @@ server <- function(input, output, session) {
   
   output$GeneSetPreview <- DT::renderDataTable({
     
-    gmt <- gmt_react()
-    geneset_names <- data.frame("Gene_Set_Name" = unique(gmt[,1]))
-    DT::datatable(geneset_names,
-                  options = list(keys = TRUE,
-                                 searchHighlight = TRUE,
-                                 pageLength = 10,
-                                 lengthMenu = c("10", "20", "50", "100")),
-                  rownames = F)
+    #if (input$PreviewGeneSet == TRUE) {
+      
+      gmt <- gmt_react()
+      geneset_names <- data.frame("Gene_Set_Name" = unique(gmt[,1]))
+      DT::datatable(geneset_names,
+                    options = list(keys = TRUE,
+                                   searchHighlight = TRUE,
+                                   pageLength = 10,
+                                   lengthMenu = c("10", "20", "50", "100")),
+                    rownames = F)
+      
+    #}
     
     
   })
   
-  #generate ranked list of genes
-  user_gl_df <- reactive({
+  observeEvent(input$UseExpData, {
     
-    #print(input$UserGeneList)
-    #if (is.null(input$UserGeneList)) {
-    #  df <- PreSet_CoxH_Ranked_Genes
-    #  df
-    #} else {
+    df <- as.data.frame(readr::read_delim(ExampleGeneList_File, delim = '\t', col_names = T, comment = "#"))
+    user_gl_df(df)
+    user_gl_df_fileName(ExampleGeneList_File)
+    
+  })
+  
+  observe({
+    
+    if (!is.null(PreSet_RankedGeneList)) {
+      df <- PreSet_RankedGeneList
+      user_gl_df(df)
+    } else {
       header_check <- input$UserGeneListheaderCheck
       gs.u <- input$UserGeneList
       ext <- tools::file_ext(gs.u$datapath)
       req(gs.u)
       validate(need(ext == c("tsv","txt"), "Please upload .tsv or .txt file"))
       
-      df <- as.data.frame(read_delim(gs.u$datapath, delim = '\t', col_names = header_check, comment = "#"))
-      df
-    #}
+      df <- as.data.frame(readr::read_delim(gs.u$datapath, delim = '\t', col_names = header_check, comment = "#"))
+      user_gl_df(df)
+    }
     
   })
   
   #generate ranked list of genes
   user_gl <- reactive({
     
+    req(isTruthy(input$UserGeneList) | isTruthy(input$UseExpData) | isTruthy(PreSet_RankedGeneList))
     df <- user_gl_df()
     
     # assume just list of gene symbols
@@ -398,16 +409,18 @@ server <- function(input, output, session) {
   
   EnrichTabReact <- reactive({
     
+    req(isTruthy(input$UserGeneList) | isTruthy(input$UseExpData) | isTruthy(PreSet_RankedGeneList))
     set.seed(input$UserSeedSet)
     gmt <- gmt_react()
     ranked_genes <- user_gl()
+    head(ranked_genes)
     pval <- input$gseaPval
-    gsea.res <- GSEA(ranked_genes,
+    gsea.res <- clusterProfiler::GSEA(ranked_genes,
                      TERM2GENE = gmt,
                      eps = NA, pvalueCutoff = pval,
                      minGSSize = 5, maxGSSize = 10000,
                      nPermSimple = 5000,
-                     seed = T)
+                     seed = T, verbose = T)
     gsea.res
     
   })
@@ -415,6 +428,7 @@ server <- function(input, output, session) {
   
   LeadingEdgeReact <- reactive({
     
+    req(isTruthy(input$UserGeneList) | isTruthy(input$UseExpData) | isTruthy(PreSet_RankedGeneList))
     res <- EnrichTabReact()
     res_df <- res@result
     geneset_name <- as.character(res_df[input$GeneSetTable_rows_selected,1])
@@ -473,8 +487,24 @@ server <- function(input, output, session) {
   
   ####----Data Tables----####
   
+  output$GenesetCatTable <- DT::renderDataTable({
+    
+    colnames(GeneSetCats_tab) <- gsub("_"," ",colnames(GeneSetCats_tab))
+    DT::datatable(GeneSetCats_tab,
+                  extensions = c("KeyTable"),
+                  selection = list(mode = 'single', selected = 1),
+                  options = list(keys = T,
+                                 searchHighlight = T,
+                                 pageLength = 5,
+                                 lengthMenu = c("5","10", "25", "50", "100"),
+                                 scrollX = T),
+                  rownames = F)
+    
+  })
+  
   output$EnrichTable <- DT::renderDataTable({
     
+    req(isTruthy(input$UserGeneList) | isTruthy(input$UseExpData) | isTruthy(PreSet_RankedGeneList))
     res <- EnrichTabReact()
     res_df <- res@result
     
@@ -488,7 +518,7 @@ server <- function(input, output, session) {
                   extensions = c("KeyTable", "FixedHeader","FixedColumns"),
                   options = list(keys = T,
                                  searchHighlight = T,
-                                 pageLength = 20,
+                                 pageLength = 25,
                                  lengthMenu = c("10", "25", "50", "100"),
                                  scrollX = T,
                                  autoWidth = TRUE,
@@ -517,6 +547,7 @@ server <- function(input, output, session) {
   
   output$LeadingEdgeGenes <- DT::renderDataTable({
     
+    req(isTruthy(input$UserGeneList) | isTruthy(input$UseExpData) | isTruthy(PreSet_RankedGeneList))
     LEGs <- LeadingEdgeReact()
     DT::datatable(LEGs,
                   options = list(paging = F,
@@ -530,12 +561,13 @@ server <- function(input, output, session) {
   
   output$enrichplot <- renderPlot({
     
+    req(isTruthy(input$UserGeneList) | isTruthy(input$UseExpData) | isTruthy(PreSet_RankedGeneList))
     if (length(input$GeneSetTable_rows_selected) > 0) {
       
       res <- EnrichTabReact()
       res_df <- res@result
       geneset_name <- as.character(res_df[input$GeneSetTable_rows_selected,1])
-      gseaplot2(res,
+      enrichplot::gseaplot2(res,
                 geneset_name,
                 geneset_name,
                 pvalue_table = F)
@@ -546,6 +578,7 @@ server <- function(input, output, session) {
   
   output$NESandPval <- renderText({
     
+    req(isTruthy(input$UserGeneList) | isTruthy(input$UseExpData) | isTruthy(PreSet_RankedGeneList))
     if (length(input$GeneSetTable_rows_selected) > 0){
       res <- EnrichTabReact()
       gsea.df <- as.data.frame(res@result)
@@ -643,6 +676,16 @@ server <- function(input, output, session) {
 
 
 
+shinyApp(ui,server)
 
-# Run the application
-shinyApp(ui = ui, server = server)
+
+
+
+
+
+
+
+
+
+
+
