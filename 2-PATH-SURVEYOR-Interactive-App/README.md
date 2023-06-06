@@ -6,18 +6,21 @@ The integration of patient genome expression data, phenotype data, and clinical 
 
 Here we focus on the Interactive mode of this workflow with the PATH-SURVEYOR R Shiny App. With the expression, phenotype, and clincial data provided by the user we can integrate single sample GSEA (ssGSEA) pathway analysis with the comprehensive list of gene set pathways provided (or user provided). Additionally, upon app start-up, if the "immunedeconv" package is installed, immune deconvolution using ESTIMATE and MCP Counter methods will be performed. The score data is able to be partitioned and viewed in the survival plots or as a feature using median cut-point. The user can view a variety of survival plots based on binning the score data into quartile, quantile, above/below median, and optimal cut-point, or look through the lense of univariate, bivariate, and multivariate analysis with the integration of additional phenotype and clincal patient data. Further data exploration is available within the app to observe ssGSEA score density across the cohort as well as box plots and heatmaps to examine risk and feature stratification. The Shiny app comes complete with the ability to subset your cohort of patients, upload your own gene set data, along with customization and download of plots and tables throughout the app.
 
-An example app using the PAN ICI iAtlas Checkpoint data can be see here: http://shawlab.science/shiny/PATH_SURVEYOR_PAN_ICI_iAtlas_Survival_App/ and is free to explore. This is the app that would be set up with the test data provided in this GitHub.
+An example app using the PAN ICI iAtlas Checkpoint data can be see [here](https://shawlab-moffitt.shinyapps.io/path_surveyor_preloaded_example_melanomaicivanallen/) and is free to explore. This is the app that would be set up with the test data provided in this GitHub.
 
-To facilitate identifying significant genes and pathways for further analysis, we have developed a Cox Proportional Hazard ranking script which ranks pathways or genes based on ssGSEA score or raw gene expression, respectively, above and below the median which returns a comprehensive table of pathways or genes ranked by Hazard Ratio which allows the user to find high-risk features with ease. When these are identified, the user can return to the interactive R Shiny App and visualize these features in real-time and perform additional bivariate or multivariate analyses to observe how the pathway survival interacts with covariates. More information on this pipeline can be found in our GitHub repository here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline.
+To facilitate identifying significant genes and pathways for further analysis, we have developed a Cox Proportional Hazard ranking script which ranks pathways or genes based on ssGSEA score or raw gene expression, respectively, above and below the median which returns a comprehensive table of pathways or genes ranked by Hazard Ratio which allows the user to find high-risk features with ease. When these are identified, the user can return to the interactive R Shiny App and visualize these features in real-time and perform additional bivariate or multivariate analyses to observe how the pathway survival interacts with covariates. More information on this pipeline can be found in our GitHub repository here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline.
 
 ## The PATH-SURVEYOR Family
 
-* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR
-* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline
-* R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/Pathway-Connectivity
-* R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/PreRanked-GSEA
+* [PATH-SURVEYOR File Prep App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/2-FilePrep)
+* [PATH-SURVEYOR App [Interactive Mode]](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App)
+* [PATH-SURVEYOR Cox Proportional Hazards Ranking [Pipeline Mode]](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline)
+* [Pathway Connectivity App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/4-Pathway-Connectivity-App)
+* [Pre-Ranked Hazard Ratio GSEA App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/5-PreRanked-HazardRatio-GSEA-App)
+* [PATH-SURVEYOR App with User File Input](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/6-PATH-SURVEYOR-UserInput-App)
+* [PATH-SURVEYOR Docker Suite](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/7-PATH-SURVEYOR-Docker)
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/FlowChart_InteractiveMode.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/PATH_SURVEYOR_Main_schematic.PNG?raw=true)
 
 # Installation
 
@@ -38,7 +41,7 @@ To facilitate identifying significant genes and pathways for further analysis, w
 
 * Above are the required packages for the R Shiny Application
 * Users are encouraged to pre-intall the packages for quicker initial start-up of the application
-* A package installation script is provided [R_Package_Installation.R](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/R_Package_Installation.R)
+* A package installation script is provided [R_Package_Installation.R](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/1-Getting_Started/1-R_Package_Installation/R_Package_Installation.R)
   * This is also in the app.R script in case the user does not pre-install
 
 ### Immune Deconvolution
@@ -50,11 +53,11 @@ To facilitate identifying significant genes and pathways for further analysis, w
 
 * The application processes MCP-counter and ESTIMATE deconvolution methods if the package is installed
 * The immune deconvolution scores may be pre-process with the help of the R script we developed, this will supply you with the application update file inputs if performed according to instructions.
-* More information found in the [Immune_Deconvolution folder](https://github.com/shawlab-moffitt/PATH-SURVEYOR/tree/main/Immune_Deconvolution) of this repository.
+* More information found in the [Immune_Deconvolution folder](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/3-Immune_Deconvolution) of this repository.
 
 ## Via Download
 
-1. Download the [Zip File](https://github.com/shawlab-moffitt/PATH-SURVEYOR/archive/refs/heads/main.zip) from this GitHub repository: https://github.com/shawlab-moffitt/PATH-SURVEYOR
+1. Download the [Zip File](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/archive/refs/heads/main.zip) from this GitHub repository: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main
 2. Unzip the downloaded file into the folder of your choice.
 4. Set your working directory in R to the local version of the repository
    * This can be done through the "More" settings in the bottom-right box in R Stuido
@@ -62,10 +65,10 @@ To facilitate identifying significant genes and pathways for further analysis, w
 
 ## Via Git Clone
 
-1. Clone the [GitHub Repository](https://github.com/shawlab-moffitt/PATH-SURVEYOR.git) into the destination of your choice.
+1. Clone the [GitHub Repository](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main) into the destination of your choice.
    * Can be done in R Studio Terminal or a terminal of your choice
 ```bash
-git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
+git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite.git
 ```
 3. Set your working directory in R to the cloned repository
    * This can be done through the "More" settings in the bottom-right box in R Stuido
@@ -73,52 +76,23 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 # Required Files - User Provided
 
-* **Expression Matrix (.tsv/.txt):**
-  * Must be tab delimited with gene names as symbols located in the first column with subsequent columns consiting of the sample name as the header and expression data down the column.
-  *  The App expects lowly expressed genes filtered out and normalized data either to FPKM or TMM.
-     * Larger files might inflict memory issues for you local computer.
-  * An example file with data from the PAN ICI iAtlas study on Skin and Kidney cancer tissue is loacted here [Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/ExampleData.png?raw=true)
 
-* **Meta Data (.tsv/.txt):**
-  * This should be a tab delimited file with each row depicting a sample by the same name as in the expression matrix followed by informative columns containing survival data and other features to analyze the samples by.
-  * Required columns:
-    * A sample name column
-    * A survival time (in days) and ID column (can be more than one type of survival time)
-    * Feature column(s) that allow for grouping of samples for analysis
-  * Optional Column
-    * A sample type column that allows for an initial subsetting of samples followed by grouping by feature (ex. Tissue or Disease Type)
-    * Description column(s) that give additional information on the samples
-  * An example file with data from the PAN ICI iAtlas study on Skin and Kidney cancer tissue is loacted here [Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt)
-  * If you chose to perform the immune deconvolution pre-processing, the output meta data from that script should be used
-    * Example here: [Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_ImmDeconv.txt](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_ImmDeconv.txt)
-
-* **Meta Data Parameters (.tsv/.txt):**
-  * This should be a two-column tab-delimited file with the first column containing the column names of the meta file and the second column containing the column type of that meta column
-  * The first column containing the users meta column names can be named however the user chooses, the **second column must have names matching the format provided below**.
-    * For example, the survival ID column containing the 0/1 for events in the meta data could be nammed "OS" or "ID" or "OS.ID", but the column type in the second column meta parameter file must say "SurvivalID" for that specific column.
-  * Column types and exmplinations:
-    * **SampleName:** Contains sample names matching exprssion data (ONLY ONE ALLOWED)
-    * **SampleType:** Contains a way to group and subset samples for further analysis (ONLY ONE ALLOWED and OPTIONAL)
-    * **SurvivalTime:** Contains the overall survival time in days for the samples (can be other types of survival)
-    * **SurvivalID:** Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
-    * **Feature:** Contains a feature that allows the samples to be grouped for analysis (More than one feature column allowed)
-    * **Description:** Contains descriptions for the samples that may be viewed in the app (OPTIONAL)
-  * Below is an example of these catagories and a full example file can be found here: [Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt)
-  * If you chose to perform the immune deconvolution pre-processing, the output meta data from that script should be used
-    * Example here: [Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_Params_ImmDeconv.txt](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_Params_ImmDeconv.txt)
-
-|  |  |
-| --- | --- |
-| sample | SampleName |
-| Cancer_Tissue | SampleType |
-| OS.time | SurvivalTime |
-| OS.ID | SurivalID |
-| EFS.time | SurvivalTime |
-| EFS.ID | SurivalID |
-| Responder | Feature |
-| Race | Feature |
-| Age | Description |
-| Center | Description |
+* Expression Matrix
+  * Tab delimited matrix with **HGNC gene symbols** in the first column and sample names as the first-row header
+  * Depending on the size, users may want to remove lowly expressed genes to reduce load time
+  * An example file with data from the PAN ICI iAtlas Melanoma cohort is loacted here [Example_Data/Expression_Data.zip](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/Expression_Data.zip)
+* Clinical Meta Information
+  * Tab-delimited file which should contain a first column of sample names matching the names in the expression matrix, followed by event and time-to-event information, as well as additional covariates or pre-processed scores
+  * An example file with data from the PAN ICI iAtlas Melanoma cohort is loacted here [Example_Data/Clinical_Data.txt](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/Clinical_Data.txt)
+*	Clinical Feature Parameter
+    * Tab-delimited two-column file where the first column consists of column names of the “Clinical Meta Information File” and the second column defining the column type
+      * **SampleName** (mandatory): Contains sample names matching the expression data 
+      * **SurvivalTime** (mandatory): Contains the overall survival time in days for the samples (can be other types of survival)
+      * **SurvivalID** (mandatory): Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
+      * **SampleType** (optional): Higher level grouping of patient samples 
+      * **Feature** (mandatory): One of more clinical or non-clinical features that can be included in the Cox-hazard analysis model.
+    * An example file with data from the PAN ICI iAtlas Melanoma cohort is loacted here [Example_Data/Clinical_Parameters.txt](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/Clinical_Parameters.txt)
 
 # Required Files - Provided
 
@@ -127,7 +101,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 * **Gene Set File:**
   * This is the file that contains the gene set names and genes for each gene set.
   * It is provided in RData list format
-  * This file ([GeneSet_Data/GeneSet_List.RData](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/GeneSet_Data/GeneSet_List.RData)) contains gene sets from the following resources:
+  * This file [GeneSet_Data/GeneSet_List.RData](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/GeneSet_Data/GeneSet_List.RData) contains gene sets from the following resources:
     * [The Molecular Signatures Database (MSigDB)](http://www.gsea-msigdb.org/gsea/msigdb/index.jsp)
     * [LINCS L1000 Small Molecule Perturbations](https://lincsproject.org/LINCS/)
     * [Cell Marker](https://academic.oup.com/nar/article/47/D1/D721/5115823)
@@ -137,25 +111,23 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 * **Gene Set Master Table:**
   * This is a three-column tab-delimited table the catagorizes and subcatagorizes the gene sets provided
   * It allows for organization of the large gene set list in the UI of the gene set selection for the Shiny App.
-  * This file can be found here: [GeneSet_Data/GeneSet_Table.zip](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/GeneSet_Data/GeneSet_Table.zip)
+  * This file can be found here: [GeneSet_Data/GeneSet_CatTable.zip](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/GeneSet_Data/GeneSet_CatTable.zip)
 
 # App Set-Up
 
-* When using the DRPPM_SURVIVE App with the Pan ICI Checkpoint example data, you may follow the [Installation Section](https://github.com/shawlab-moffitt/PATH-SURVEYOR#installation) of the README and may press the 'Run App' button in R studio or use the `runApp()` function in your console with the path to the directory of the app.R file.
-* **When using your own files, please ensure all the required files above are in the proper directory**
-  * The user must provide an expression matrix, meta data, and mata data parameter file.
-* At the top of the app.R script you will find the user data input section where you input the path of your desired files (previewed below)
-* When these files are entered the user may run the App by pressing the 'Run App' button in R studio or use the `runApp()` function in your terminal with the path to the app.R file
+* Once the app is loaded into the environment of you choice, ensure the paths to the user input data are correct at the top of the script
+* The user may load the app by pressing "Run App" at the top of the script or use the `runApp()` function in the R console writing in the path to the Shiny app.
+
 ```{r}
 ####----User Input----####
 
-ProjectName <- "Pan ICI Checkpoint Atlas"
+ProjectName <- "PAN ICI Melanoma - Van Allen anti-CTLA4"
 
-ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip"
+ExpressionMatrix_file <- "Example_Data/Expression_Data.zip"
 
-MetaData_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt"
+ClinicalData_file <- "Example_Data/Clinical_Data.txt"
 
-MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
+ClincalParam_File <- "Example_Data/Clinical_Parameters.txt"
 ```
 
 
@@ -168,11 +140,11 @@ MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
   * Sample Type choice with **PreSelect_SamplyType**
     * If there is a SampleType column in the meta, the user may select a variable from that column and write it in quotations
     * If NULL no choice will be pre-selected, the app will show the first option
-    * If "all" (case ignored) the pre-selected option will be "All_Sample_Types"
+    * If "all" (case ignored) the pre-selected option will be "Show All Sample Types"
   * Feature choice with **PreSelect_Feature**
     * Feature options come from feature columns in the meta data, the user would write the column name in quotations
     * If NULL no choice will be pre-selected, the app will show the first option
-    * If "all" (case ignored) the pre-selected option will be "All_Features"
+    * If "all" (case ignored) the pre-selected option will be "Show All Samples"
   * Sub-Feature Choice with **PreSelect_SubFeature**
     * This is only used when a Feature is pre-selected
     * SubFeature options come from unique values of the feature column that is pre-selected from the meta data, this would be writen in quotations
@@ -184,20 +156,21 @@ MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
 * Below is an example of this secion take from the app. It is located just below the user file input.
 
 ```{r}
+##--Advanced Setup--##
 ## Pre-Selected Inputs
 # An option from the meta, All, or NULL
-PreSelect_SamplyType <- NULL
-PreSelect_Feature <- "All"
+PreSelect_SamplyType <- "all"
+PreSelect_Feature <- "all"
 # An option from the meta or NULL
 PreSelect_SubFeature <- NULL
-PreSelect_SecondaryFeature <- NULL
+PreSelect_SecondaryFeature <- "Responder"
 ```
 
 ### Immune Deconvolution
 
 Due to the variety of immune deconvolution methods available, we have developed a pre-processing script which allows the user to process through an array of different methods, add those features to the meta data and meta parameters, and view those results in correlation with survival data within the application.
 
-More information on the pre-processing of this data can be found in the [Immune_Deconvolution folder](https://github.com/shawlab-moffitt/PATH-SURVEYOR/tree/main/Immune_Deconvolution) of this repository
+More information on the pre-processing of this data can be found in the [Immune_Deconvolution folder](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/1-Getting_Started/3-Immune_Deconvolution) of this repository
 
 # App Features
 
@@ -205,7 +178,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Sample Selection and Parameters
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
 
 1. Sample Type selection is an optional parameter that will appear if the user has a SampleType column to subset their data by. 
    * The user can select a single sample type to analyze or select all sample types
@@ -221,7 +194,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Survival Parameters
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/SideBar_SurvivalParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/SideBar_SurvivalParameters.png?raw=true)
 
 1. The user may select to view a specific type of survival analysis based on the available survival types in the meta data provided. 
    * For exmaple, OS, EFS, or PFS amoung others
@@ -231,7 +204,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Figure Parameters
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/SideBar_FigureParamaters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/SideBar_FigureParamaters.png?raw=true)
 
 1. The limit on years for the survival plots may be adjusted
 2. The user may adjust the font and dot size, as well as the text orientation and stat comparison method for the boxplots within the app
@@ -245,7 +218,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Survival Analysis of Pathway Activity
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
 
 1. The Quartile Survival Plot shows at the top with a descriptive title indicating the feature, gene set, and score method
 2. Each plot on the screen allows for the display of a hazard ratio table by selecting the checkbox
@@ -254,7 +227,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Univariate Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/MainPanel_Univar_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Univar_Survival.png?raw=true)
 
 1. The user may view survival outcome based on a selected feature from the meta data
 2. If the feature chosen is continuous, please check the box so the proper Cox Proportional Hazard analysis is performed
@@ -263,7 +236,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Bivariate Additive Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/MainPanel_BivarAdd_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_BivarAdd_Survival.png?raw=true)
 
 1. Two features may be selected to view an additive Coxh survival analyis
 2. If either feature is continuous the box should be checked
@@ -273,7 +246,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Bivariate Interaction Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/MainPanel_Bivar_Inter_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Bivar_Inter_Survival.png?raw=true)
 
 1. Two features may be selected to view an additive Coxh survival analyis
 2. If either feature is continuous the box should be checked
@@ -282,7 +255,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Multivariate Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/MainPanel_Multivar_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Multivar_Survival.png?raw=true)
 
 1. The user may select multiple features to perform a Cox Proportion Hazard regression analysis on
    * If too many features are added the model may become convoluted
@@ -291,7 +264,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Meta Data Exploration
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/MainPanel_MetaTable.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_MetaTable.png?raw=true)
 
 1. The user may select columns from the cumulative meta data to view in the UI table.
    * The table appears standard with the survival time, status, and current feature of interest
@@ -310,7 +283,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Risk Stratification Box Plot
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/MainPanel_RiskStrat_BoxPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_RiskStrat_BoxPlot.png?raw=true)
 
 1. Survival parameters may be set in the side panel to bin the samples into two groups based on a user specified survival time and event status
 2. A Survival Boxplot is generated based on the sample and feature parameters selected with the title indicating the gene set, score method, and feature
@@ -319,7 +292,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Risk Stratification Heatmap
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/MainPanel_RiskStrat_Heatmap.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_RiskStrat_Heatmap.png?raw=true)
 
 1. Survival parameters may be set in the side panel to bin the samples into two groups based on a user specified survival time and event status
    * The Survival Heatmap is generated with the same Survival Parameters as the Survival Boxplot with the cutoff indication in the annotation at the top of the heatmap
@@ -330,7 +303,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Feature Box Plot
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/MainPanel_Feature_Boxplot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Feature_Boxplot.png?raw=true)
 
 1. A feature may be selected to view amoung the samples that have been already subset by sample type, feature and feature condition
    * The boxplot title will indicate the gene set, score method, feature, and the additional feature being observed
@@ -339,7 +312,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Feature Heatmap
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR/blob/main/App_Demo_Pictures/MainPanel_Feature_Heatmap.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Feature_Heatmap.png?raw=true)
 
 1. The Feature Heatmap is similar to the Feature Boxplot described above, where you may select an additional feature to view amoung you previously subset samples
 2. The feature grouping is indicated and annotated at the top of the heatmap
