@@ -24,10 +24,10 @@
 
 ####----User Input----####
 
-ProjectName <- "PANICI_SkinCancer"
-Expression_Matri_File <- "Test_Input_Data/Expression_Data_PAN_ICI_iAtlas_SkinCancer.zip"
-Meta_Data_File <- "Test_Input_Data/Clinical_Data_PAN_ICI_iAtlas_SkinCancer.txt"
-Meta_Data_Param_File <- "Test_Input_Data/Clinical_Parameters_PAN_ICI_iAtlas_SkinCancer.txt"
+ProjectName <- "PANICI_Melanome_VanAllen"
+Expression_Matrix_File <- "Test_Input_Data/Expression_Data.zip"
+Clinical_Data_File <- "Test_Input_Data/Clinical_Data.txt"
+Clinical_Data_Param_File <- "Test_Input_Data/Clinical_Parameters.txt"
 Output_Path <- "Test_Output_Data/"
 
 quantiseq <- TRUE
@@ -41,8 +41,8 @@ estimate <- TRUE
 #-Requires License and specific files from https://cibersortx.stanford.edu/csdownload.php
 #-Requires CIBERSORT.R and LM22.txt files
 
-cibersort <- TRUE
-cibersort_abs <- TRUE
+cibersort <- FALSE
+cibersort_abs <- FALSE
 
 # CIBERSORT.R path and file name
 CIBERSORT_Script <- "Path/To/CIBERSORT.R"
@@ -83,14 +83,14 @@ expr <- expr[,-1]
 colnames(expr) <- gsub("[[:punct:]]",".",colnames(expr))
 
 ##--Meta--##
-if (file.exists(Meta_Data_File)) {
-  meta <- as.data.frame(read_delim(Meta_Data_File, delim = '\t', col_names = T))
+if (file.exists(Clinical_Data_File)) {
+  meta <- as.data.frame(read_delim(Clinical_Data_File, delim = '\t', col_names = T))
   meta[,1] <- gsub("[[:punct:]]",".",meta[,1])
   
 }
 colnames(meta)[1] <- "SampleName"
-if (file.exists(Meta_Data_Param_File)) {
-  meta_param <- as.data.frame(read_delim(Meta_Data_Param_File,delim = '\t', col_names = F))
+if (file.exists(Clinical_Data_Param_File)) {
+  meta_param <- as.data.frame(read_delim(Clinical_Data_Param_File,delim = '\t', col_names = F))
 }
 
 
@@ -147,22 +147,22 @@ for (i in 1:length(deconv_params)) {
 ####----Merge With Existing Data----####
 
 ##--Meta--##
-if (file.exists(Meta_Data_File)) {
+if (file.exists(Clinical_Data_File)) {
   meta2 <- merge(meta,deconv_res_df, by = "SampleName")
-  write_delim(meta2,paste(Output_Path,ProjectName,"_Meta_ImmDeconv.txt", sep = ""),delim = '\t')
+  write_delim(meta2,paste(Output_Path,ProjectName,"_Clinical_ImmDeconv.txt", sep = ""),delim = '\t')
 }
 
 ##--Meta Param--##
 deconv_cols2 <- colnames(deconv_res_df)[c(2:ncol(deconv_res_df))]
 deconv_meta_params <- data.frame(deconv_cols2,"Feature")
-if (file.exists(Meta_Data_Param_File)) {
+if (file.exists(Clinical_Data_Param_File)) {
   colnames(deconv_meta_params) <- colnames(meta_param)
   meta_param2 <- rbind(meta_param,deconv_meta_params)
-  write_delim(meta_param2,paste(Output_Path,ProjectName,"_Meta_Params_ImmDeconv.txt", sep = ""),delim = '\t', col_names = F)
+  write_delim(meta_param2,paste(Output_Path,ProjectName,"_Clinical_Params_ImmDeconv.txt", sep = ""),delim = '\t', col_names = F)
 }
-if (!file.exists(Meta_Data_Param_File)) {
+if (!file.exists(Clinical_Data_Param_File)) {
   meta_param2 <- deconv_meta_params
-  write_delim(meta_param2,paste(Output_Path,ProjectName,"_Meta_Params_ImmDeconv.txt", sep = ""),delim = '\t', col_names = F)
+  write_delim(meta_param2,paste(Output_Path,ProjectName,"_Clinical_Params_ImmDeconv.txt", sep = ""),delim = '\t', col_names = F)
 }
 
 ##--Immune Deconvolution Scores--##
