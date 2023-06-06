@@ -5,16 +5,16 @@ packages <- c("shiny","shinyjqui","pheatmap","RColorBrewer",
               "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra")
 
 installed_packages <- packages %in% rownames(installed.packages())
-#if (any(installed_packages == FALSE)) {
-#  install.packages(packages[!installed_packages])
-#}
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
 invisible(lapply(packages, library, character.only = TRUE))
 #bioconductor packages
 bioCpacks <- c("clusterProfiler")
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
-#if (any(installed_packages_BIOC == FALSE)) {
-#  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
-#}
+if (any(installed_packages_BIOC == FALSE)) {
+  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
+}
 invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
