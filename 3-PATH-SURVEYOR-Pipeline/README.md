@@ -83,7 +83,7 @@ git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite.git
   * This file will contain all the necessary information for the pipeline to run.
   * Some parameters are optional (Gene_Set_File,Gene_Set_Name,Covariate_Column_Label,Covariate_Reference).
   * The order does not matter, but the parameter names do matter
-  * Filled in example files [here](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline/tree/main/Example_Run_Files)
+  * Filled in example files [here](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline/Example_Run_Files)
 * Project Name
   * Please be descriptive and add the survival data type in the name (OS/EFS/PFI/ect)
 * Output File Path
@@ -151,7 +151,7 @@ Rscript DRPPM_Coxh_Ranking.R [parameter_file]
 * The given example uses PAN ICI iAtlas checkpoint data from skin cancer patients. The expression and meta data is provided.
   * This data is the skin cancer subset from the PAN ICI iAtlas example data used in the [PATH-SURVEYOR R Shiny App](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App)
 * [PAN_ICI_iAtlas_Skin_OS_MSigDBHallmark_Params](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/3-PATH-SURVEYOR-Pipeline/Example_Run_Files/PAN_ICI_Pipeline_Example1/Input/PAN_ICI_iAtlas_Skin_OS_MSigDBHallmark_Params.txt)
-  * This parameter file runs the example data with only the 50 MSigDB Hallmark gene sets provided in the [GeneSets](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline/tree/main/GeneSets) folder
+  * This parameter file runs the example data with only the 50 MSigDB Hallmark gene sets provided in the [GeneSets](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline/GeneSets) folder
     * Output example for this run is shown [here](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline/Example_Run_Files/PAN_ICI_Pipeline_Example1/Output)
 * [PAN_ICI_iAtlas_Skin_OS_MSigDBHallmark_withGenes_Params](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/3-PATH-SURVEYOR-Pipeline/Example_Run_Files/PAN_ICI_Pipeline_Example2/Input/PAN_ICI_iAtlas_Skin_OS_MSigDBHallmark_withGenes_Params.txt)
   * This parameter file runs the 50 Hallmark Gene sets, as well as the raw gene expression analysis based on the genes in the expression data
