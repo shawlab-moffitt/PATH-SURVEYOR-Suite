@@ -178,7 +178,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Sample Selection and Parameters
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
 
 1. Sample Type selection is an optional parameter that will appear if the user has a SampleType column to subset their data by. 
    * The user can select a single sample type to analyze or select all sample types
@@ -194,7 +194,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Survival Parameters
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/SideBar_SurvivalParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/SideBar_SurvivalParameters.png?raw=true)
 
 1. The user may select to view a specific type of survival analysis based on the available survival types in the meta data provided. 
    * For exmaple, OS, EFS, or PFS amoung others
@@ -204,7 +204,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Figure Parameters
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/SideBar_FigureParamaters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/SideBar_FigureParamaters.png?raw=true)
 
 1. The limit on years for the survival plots may be adjusted
 2. The user may adjust the font and dot size, as well as the text orientation and stat comparison method for the boxplots within the app
@@ -218,7 +218,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Survival Analysis of Pathway Activity
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
 
 1. The Quartile Survival Plot shows at the top with a descriptive title indicating the feature, gene set, and score method
 2. Each plot on the screen allows for the display of a hazard ratio table by selecting the checkbox
@@ -227,7 +227,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Univariate Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Univar_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Univar_Survival.png?raw=true)
 
 1. The user may view survival outcome based on a selected feature from the meta data
 2. If the feature chosen is continuous, please check the box so the proper Cox Proportional Hazard analysis is performed
@@ -236,7 +236,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Bivariate Additive Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_BivarAdd_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_BivarAdd_Survival.png?raw=true)
 
 1. Two features may be selected to view an additive Coxh survival analyis
 2. If either feature is continuous the box should be checked
@@ -246,7 +246,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Bivariate Interaction Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Bivar_Inter_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Bivar_Inter_Survival.png?raw=true)
 
 1. Two features may be selected to view an additive Coxh survival analyis
 2. If either feature is continuous the box should be checked
@@ -255,7 +255,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Multivariate Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Multivar_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Multivar_Survival.png?raw=true)
 
 1. The user may select multiple features to perform a Cox Proportion Hazard regression analysis on
    * If too many features are added the model may become convoluted
@@ -264,7 +264,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Meta Data Exploration
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_MetaTable.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_MetaTable.png?raw=true)
 
 1. The user may select columns from the cumulative meta data to view in the UI table.
    * The table appears standard with the survival time, status, and current feature of interest
@@ -283,7 +283,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Risk Stratification Box Plot
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_RiskStrat_BoxPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_RiskStrat_BoxPlot.png?raw=true)
 
 1. Survival parameters may be set in the side panel to bin the samples into two groups based on a user specified survival time and event status
 2. A Survival Boxplot is generated based on the sample and feature parameters selected with the title indicating the gene set, score method, and feature
@@ -292,7 +292,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Risk Stratification Heatmap
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_RiskStrat_Heatmap.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_RiskStrat_Heatmap.png?raw=true)
 
 1. Survival parameters may be set in the side panel to bin the samples into two groups based on a user specified survival time and event status
    * The Survival Heatmap is generated with the same Survival Parameters as the Survival Boxplot with the cutoff indication in the annotation at the top of the heatmap
@@ -303,7 +303,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Feature Box Plot
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Feature_Boxplot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Feature_Boxplot.png?raw=true)
 
 1. A feature may be selected to view amoung the samples that have been already subset by sample type, feature and feature condition
    * The boxplot title will indicate the gene set, score method, feature, and the additional feature being observed
@@ -312,7 +312,7 @@ More information on the pre-processing of this data can be found in the [Immune_
 
 ### Feature Heatmap
 
-![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Feature_Heatmap.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/2-PATH-SURVEYOR-Interactive-App/App_Demo_Pictures/MainPanel_Feature_Heatmap.png?raw=true)
 
 1. The Feature Heatmap is similar to the Feature Boxplot described above, where you may select an additional feature to view amoung you previously subset samples
 2. The feature grouping is indicated and annotated at the top of the heatmap
