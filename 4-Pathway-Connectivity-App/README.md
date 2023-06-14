@@ -84,52 +84,32 @@ git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite.git
 
 # App Features
 
-## Sidebar Panel
+## Landing PAge
 
-###   Pathway and Clustering Parameters
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/4-Pathway-Connectivity-App/App_Demo_Pictures/Pathway_Connectivity_StartPage.png?raw=true)
 
-![alt text](https://github.com/shawlab-moffitt/Pathway-Connectivity/blob/main/App_Pictures/Jaccard_Conn_Sidebar1.png?raw=true)
 
-1. The user may pload their pathways of interest here
-2. The user has the ability to choose which clustering method they want to use for the hclust() function, as well as the number of clusters they want to form with their data
-3. A distance cutoff can be used input to generate a SIF file that can be downloaded (4) into a further application by the user. All gene set pair below the designated cutoff will be included in the file.
 
-### Figure Parameters
+## Jaccard Pathway Connectivity Table
 
-![alt text](https://github.com/shawlab-moffitt/Pathway-Connectivity/blob/main/App_Pictures/Jaccard_Conn_Sidebar2.png?raw=true)
-
-1. Figure parameter for theheatmap may be adjusted, such as color palette, column and row names, and dendrogram height.
-2. The connectivity visualization can be customized to be viewed as a rectangular or circular denrogram or a phylogeny figure. 
-   * If phylogeny is chosen a veriety of options to view the phylogeny figure as is provided.
-
-## Main Panel
-
-### Jaccard Pathway Connectivity Table
-
-![alt text](https://github.com/shawlab-moffitt/Pathway-Connectivity/blob/main/App_Pictures/Jaccard_Conn_MainTable.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/4-Pathway-Connectivity-App/App_Demo_Pictures/Pathway_Connectivity_MainPage.png?raw=true)
 
 1. When a file is uploaded to the app, after a few moments a Jaccard Connectivity able will appear showing the jaccard distance, 0-1, (similarity) between gene sets
    * The smaller the number, the more similar the gene set
 2. The table can be downloaded for further use
 
-### Connectivity Heatmap
+## Clustering
 
-![alt text](https://github.com/shawlab-moffitt/Pathway-Connectivity/blob/main/App_Pictures/Jaccard_Conn_heatmap.png?raw=true)
-
-1. The heatmap give a global picture of similarit between gene sets
-
-### Clustering
-
-![alt text](https://github.com/shawlab-moffitt/Pathway-Connectivity/blob/main/App_Pictures/Jaccard_Conn_clustering.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/4-Pathway-Connectivity-App/App_Demo_Pictures/Pathway_Connectivity_ConnPage.png?raw=true)
 
 1. Clustering can be shown as a phylogenetic object, with or without names displyed. The names can be displayed also by hovering the points
    * The visualization is a plotly object, so the user may zoom in to interact with the plot
 2. A dendrogram is another form of visualization available to see the clustering. This is also made with plotly, so the user may zoom in to examine the branches
 3. The clusters can also be viewed as a circular dendrogram. This is not a plotly object and can not be interacted with.
 
-### Clustering Annotation
+## Clustering Annotation
 
-![alt text](https://github.com/shawlab-moffitt/Pathway-Connectivity/blob/main/App_Pictures/Jaccard_Conn_annotation.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/4-Pathway-Connectivity-App/App_Demo_Pictures/Pathway_Connectivity_AnnoPage.png?raw=true)
 
 * A data frame is displayed on the last tab starting with the gene set, cluster, and gene for each row. This allows users to see what genes are in the gene sets and cluster
 1. A table provided by the user can be uploaded to annotate the genes. The uploaded table must list the gene symbol in the firsst column, the corresponding column can be any annotation the user chooses.
