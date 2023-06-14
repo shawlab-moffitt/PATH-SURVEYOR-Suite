@@ -88,15 +88,17 @@ git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite.git
 
 ![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/4-Pathway-Connectivity-App/App_Demo_Pictures/Pathway_Connectivity_StartPage.png?raw=true)
 
-1. File input 
+1. File input to upload the output file derived from the [PATH-SURVEYOR Pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline)
+2. Users can load example data into the app or download example data through the link
 
 ## Jaccard Pathway Connectivity Table
 
 ![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/4-Pathway-Connectivity-App/App_Demo_Pictures/Pathway_Connectivity_MainPage.png?raw=true)
 
-1. When a file is uploaded to the app, after a few moments a Jaccard Connectivity able will appear showing the jaccard distance, 0-1, (similarity) between gene sets
-   * The smaller the number, the more similar the gene set
-2. The table can be downloaded for further use
+1. Users can define the number of top geneset they want to analyze connectivity between
+   * A larger nuber will result in longer load time
+3. Users can set cluster parameters, such as method, number of clusters, and viewing the cluster results
+4. A SIF file can be generated and download for use in other software.
 
 ## Clustering
 
@@ -111,9 +113,9 @@ git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite.git
 
 ![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/4-Pathway-Connectivity-App/App_Demo_Pictures/Pathway_Connectivity_AnnoPage.png?raw=true)
 
-* A data frame is displayed on the last tab starting with the gene set, cluster, and gene for each row. This allows users to see what genes are in the gene sets and cluster
-1. A table provided by the user can be uploaded to annotate the genes. The uploaded table must list the gene symbol in the firsst column, the corresponding column can be any annotation the user chooses.
-   * It is recommended to use the input from the PATH-SURVEYOR Pipeline raw gene expresison ranking output.
+1. There are heatmap parameters for the heatmap tab of the connectivity matrix
+2. Users can select how they want to view the connectivity between pathways as phylogeny or a rectangular or circular dendrogram
+3. The figure will show as an interactive plotly image
 
 # Quesions and Comments
 
