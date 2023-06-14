@@ -84,7 +84,7 @@ git clone https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite.git
 
 # App Features
 
-## Landing PAge
+## Landing Page
 
 ![alt text](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/blob/main/4-Pathway-Connectivity-App/App_Demo_Pictures/Pathway_Connectivity_StartPage.png?raw=true)
 
