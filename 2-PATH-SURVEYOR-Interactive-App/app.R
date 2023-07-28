@@ -105,6 +105,7 @@ if (TRUE %in% duplicated(expr[,1])) {
     group_by(Symbol) %>%
     summarise_all(max)
 }
+expr <- as.data.frame(expr)
 rownames(expr) <- expr[,1]
 expr <- expr[,-1]
 num_test <- apply(expr,2, is.numeric)
