@@ -2006,7 +2006,7 @@ server <- function(input, output, session) {
       IntMetaCols <- apply(meta[,MetaClass_num],2,function(x) any(round(x) != x)) #Find which column have decimals
       MaybeShow <- names(IntMetaCols[which(IntMetaCols == FALSE)]) #subset column names that are not decimals
       ## Checks if integer columns might be categorical or continuous
-      MaybeShowCols <- apply(meta[,MaybeShow],2,function(x) any(length(levels(as.factor(meta[,"Age"])))<(nrow(meta)*0.75)))
+      MaybeShowCols <- apply(meta[,MaybeShow],2,function(x) any(length(levels(as.factor(x)))<(nrow(meta)*0.75)))
       MaybeNotShow <- names(MaybeShowCols[which(MaybeShowCols == FALSE)])
       DoNotShow <- c(MaybeNotShow,names(IntMetaCols[which(IntMetaCols == TRUE)]))
       FeatureChoices <- FeatureChoices[!FeatureChoices %in% DoNotShow]
@@ -2576,9 +2576,9 @@ server <- function(input, output, session) {
     
     ## Only show if more than one option
     metacol_survtime <- metacol_survtime()
-    if (length(metacol_survtime) > 1) {
+    #if (length(metacol_survtime) > 1) {
       selectInput("SurvivalType_time","Survival Time Data:", choices = metacol_survtime)
-    }
+    #}
     
   })
   
@@ -2597,9 +2597,9 @@ server <- function(input, output, session) {
     
     ## Only show if more than one option
     metacol_survid <- metacol_survid()
-    if (length(metacol_survid) > 1) {
+    #if (length(metacol_survid) > 1) {
       selectInput("SurvivalType_id","Survival ID Data:", choices = metacol_survid)
-    }
+    #}
     
   })
   
@@ -7088,7 +7088,8 @@ server <- function(input, output, session) {
            title = paste(GeneSet," ",scoreMethod,": ",Feature,SampleTypeLab,"Patients",sep = "")) +
       theme_bw() +
       ggpubr::stat_compare_means(method = input$boxoptselec) +
-      theme(text = element_text(size = font))
+      theme(text = element_text(size = font),
+            legend.position = "none")
     plot
     
   })
@@ -7260,7 +7261,8 @@ server <- function(input, output, session) {
              fill = FeatureSelec) +
         theme_bw() +
         ggpubr::stat_compare_means(method = StatMethod) +
-        theme(text = element_text(size = font)) +
+        theme(text = element_text(size = font),
+                legend.position = "none") +
         scale_x_discrete(guide = guide_axis(n.dodge = 2))
     }
     
@@ -7275,7 +7277,8 @@ server <- function(input, output, session) {
                fill = FeatureSelec) +
           theme_bw() +
           ggpubr::stat_compare_means(method = StatMethod) +
-          theme(text = element_text(size = font))
+          theme(text = element_text(size = font),
+                legend.position = "none")
       }
       else if (as.numeric(boxplotang) == 45) {
         ggplot(boxTab, aes(factor(boxTab[,FeatureSelec]), boxTab[,GeneSet], fill = boxTab[,FeatureSelec])) +
@@ -7288,7 +7291,8 @@ server <- function(input, output, session) {
           theme_bw() +
           ggpubr::stat_compare_means(method = StatMethod) +
           theme(text = element_text(size = font),
-                axis.text.x = element_text(angle = as.numeric(boxplotang), hjust = 1))
+                axis.text.x = element_text(angle = as.numeric(boxplotang), hjust = 1),
+                legend.position = "none")
       }
       else if (as.numeric(boxplotang) == 90) {
         ggplot(boxTab, aes(factor(boxTab[,FeatureSelec]), boxTab[,GeneSet], fill = boxTab[,FeatureSelec])) +
@@ -7301,7 +7305,8 @@ server <- function(input, output, session) {
           theme_bw() +
           ggpubr::stat_compare_means(method = StatMethod) +
           theme(text = element_text(size = font),
-                axis.text.x = element_text(angle = as.numeric(boxplotang)))
+                axis.text.x = element_text(angle = as.numeric(boxplotang)),
+                legend.position = "none")
       }
       
     }
