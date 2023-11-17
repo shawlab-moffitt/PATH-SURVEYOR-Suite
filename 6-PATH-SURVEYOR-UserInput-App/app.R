@@ -72,6 +72,40 @@ geneset_name_first <- GeneSetTable_og[1,4]
 
 ####----Functions----####
 
+# Function to identify numeric or character columns
+column_type_check <- function(data, type = "numeric", max_na_prop = 0.1) {
+  # Check if the 'data' argument is a data frame
+  if (!is.data.frame(data)) {
+    stop("Input must be a data frame.")
+  }
+  
+  # Initialize a vector to store column names
+  num_cols <- c()
+  chr_cols <- c()
+  
+  for (col in names(data)) {
+    max_na <- (length(data[,col][!is.na(data[,col])]) - length(data[,col][is.infinite(data[,col])])) * max_na_prop
+    if (!is.logical(data[[col]])) {
+      if (!all(is.na(as.numeric(data[[col]]))) | sum(is.na(as.numeric(data[[col]]))) <= max_na) {
+        num_cols <- c(num_cols,col)
+      } else {
+        chr_cols <- c(chr_cols,col)
+      }
+    } else {
+      chr_cols <- c(chr_cols,col)
+    }
+  }
+  
+  if (tolower(type) == "numeric") {
+    return(num_cols)
+  } else if (tolower(type) == "character") {
+    return(chr_cols)
+  } else {
+    stop("Invalid 'type' argument. Use 'numeric' or 'character'.")
+  }
+  
+}
+
 StatCols <- c("MedianCutP","QuartileCutP","OptimalCutP","TopBottomCutP","UserCutP")
 
 ## Quartile Conversion
@@ -1969,47 +2003,48 @@ server <- function(input, output, session) {
       if (input$SampleTypeSelection == "All_Sample_Types") {
         
         FeatureChoices <- c(metacol_sampletype,metacol_feature,"Show All Samples")
-        MetaClass <- sapply(as_tibble(meta), typeof)
-        MetaClass_num <- names(MetaClass[which(MetaClass %in% c("integer","double"))])
-        IntMetaCols <- apply(meta[,MetaClass_num],2,function(x) any(round(x) != x))
-        MaybeShow <- names(IntMetaCols[which(IntMetaCols == FALSE)])
-        ## Checks if integer columns might be categorical or continuous
-        MaybeShowCols <- apply(meta[,MaybeShow],2,function(x) any(length(levels(as.factor(x)))<(nrow(meta)*0.75)))
-        MaybeNotShow <- names(MaybeShowCols[which(MaybeShowCols == FALSE)])
-        DoNotShow <- c(MaybeNotShow,names(IntMetaCols[which(IntMetaCols == TRUE)]))
-        FeatureChoices <- FeatureChoices[!FeatureChoices %in% DoNotShow]
+        FeatureChoices <- c("Show All Samples",metacol_sampletype,suppressWarnings(column_type_check(meta[,metacol_feature],"character")))
+        #MetaClass <- sapply(as_tibble(meta), typeof)
+        #MetaClass_num <- names(MetaClass[which(MetaClass %in% c("integer","double"))])
+        #IntMetaCols <- apply(meta[,MetaClass_num],2,function(x) any(round(x) != x))
+        #MaybeShow <- names(IntMetaCols[which(IntMetaCols == FALSE)])
+        ### Checks if integer columns might be categorical or continuous
+        #MaybeShowCols <- apply(meta[,MaybeShow],2,function(x) any(length(levels(as.factor(x)))<(nrow(meta)*0.75)))
+        #MaybeNotShow <- names(MaybeShowCols[which(MaybeShowCols == FALSE)])
+        #DoNotShow <- c(MaybeNotShow,names(IntMetaCols[which(IntMetaCols == TRUE)]))
+        #FeatureChoices <- FeatureChoices[!FeatureChoices %in% DoNotShow]
         selectInput("FeatureSelection","Select Feature to Subset Samples:", choices = FeatureChoices, selected = "Show All Samples")
         
-      }
-      else if (input$SampleTypeSelection != "All_Sample_Types") {
+      } else if (input$SampleTypeSelection != "All_Sample_Types") {
         
         FeatureChoices <- c(metacol_feature,"Show All Samples")
-        MetaClass <- sapply(as_tibble(meta), typeof)
-        MetaClass_num <- names(MetaClass[which(MetaClass %in% c("integer","double"))])
-        IntMetaCols <- apply(meta[,MetaClass_num],2,function(x) any(round(x) != x))
-        MaybeShow <- names(IntMetaCols[which(IntMetaCols == FALSE)])
-        ## Checks if integer columns might be categorical or continuous
-        MaybeShowCols <- apply(meta[,MaybeShow],2,function(x) any(length(levels(as.factor(x)))<(nrow(meta)*0.75)))
-        MaybeNotShow <- names(MaybeShowCols[which(MaybeShowCols == FALSE)])
-        DoNotShow <- c(MaybeNotShow,names(IntMetaCols[which(IntMetaCols == TRUE)]))
-        FeatureChoices <- FeatureChoices[!FeatureChoices %in% DoNotShow]
+        FeatureChoices <- c("Show All Samples",suppressWarnings(column_type_check(meta[,metacol_feature],"character")))
+        #MetaClass <- sapply(as_tibble(meta), typeof)
+        #MetaClass_num <- names(MetaClass[which(MetaClass %in% c("integer","double"))])
+        #IntMetaCols <- apply(meta[,MetaClass_num],2,function(x) any(round(x) != x))
+        #MaybeShow <- names(IntMetaCols[which(IntMetaCols == FALSE)])
+        ### Checks if integer columns might be categorical or continuous
+        #MaybeShowCols <- apply(meta[,MaybeShow],2,function(x) any(length(levels(as.factor(x)))<(nrow(meta)*0.75)))
+        #MaybeNotShow <- names(MaybeShowCols[which(MaybeShowCols == FALSE)])
+        #DoNotShow <- c(MaybeNotShow,names(IntMetaCols[which(IntMetaCols == TRUE)]))
+        #FeatureChoices <- FeatureChoices[!FeatureChoices %in% DoNotShow]
         selectInput("FeatureSelection","Select Feature to Subset Samples:", choices = FeatureChoices, selected = "Show All Samples")
         
       }
       
-    }
-    else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+    } else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       
       FeatureChoices <- c(metacol_feature,"Show All Samples")
-      MetaClass <- sapply(as_tibble(meta), typeof) #Get column type
-      MetaClass_num <- names(MetaClass[which(MetaClass %in% c("integer","double"))]) #subset column names that are types of numeric
-      IntMetaCols <- apply(meta[,MetaClass_num],2,function(x) any(round(x) != x)) #Find which column have decimals
-      MaybeShow <- names(IntMetaCols[which(IntMetaCols == FALSE)]) #subset column names that are not decimals
-      ## Checks if integer columns might be categorical or continuous
-      MaybeShowCols <- apply(meta[,MaybeShow],2,function(x) any(length(levels(as.factor(x)))<(nrow(meta)*0.75)))
-      MaybeNotShow <- names(MaybeShowCols[which(MaybeShowCols == FALSE)])
-      DoNotShow <- c(MaybeNotShow,names(IntMetaCols[which(IntMetaCols == TRUE)]))
-      FeatureChoices <- FeatureChoices[!FeatureChoices %in% DoNotShow]
+      FeatureChoices <- c("Show All Samples",metacol_sampletype,suppressWarnings(column_type_check(meta[,metacol_feature],"character")))
+      #MetaClass <- sapply(as_tibble(meta), typeof) #Get column type
+      #MetaClass_num <- names(MetaClass[which(MetaClass %in% c("integer","double"))]) #subset column names that are types of numeric
+      #IntMetaCols <- apply(meta[,MetaClass_num],2,function(x) any(round(x) != x)) #Find which column have decimals
+      #MaybeShow <- names(IntMetaCols[which(IntMetaCols == FALSE)]) #subset column names that are not decimals
+      ### Checks if integer columns might be categorical or continuous
+      #MaybeShowCols <- apply(meta[,MaybeShow],2,function(x) any(length(levels(as.factor(x)))<(nrow(meta)*0.75)))
+      #MaybeNotShow <- names(MaybeShowCols[which(MaybeShowCols == FALSE)])
+      #DoNotShow <- c(MaybeNotShow,names(IntMetaCols[which(IntMetaCols == TRUE)]))
+      #FeatureChoices <- FeatureChoices[!FeatureChoices %in% DoNotShow]
       selectInput("FeatureSelection","Select Feature to Subset Samples:", choices = FeatureChoices, selected = "Show All Samples")
       
     }
@@ -3402,6 +3437,7 @@ server <- function(input, output, session) {
     ## Remove rows with NA in survival column
     meta <- meta[!is.na(meta[,surv_time_col]),]
     meta <- meta[!is.na(meta[,surv_id_col]),]
+    meta[,surv_id_col] <- as.numeric(meta[,surv_id_col])
     
     ## Re-subset expression matrix
     samples <- meta[,1]
@@ -5421,7 +5457,7 @@ server <- function(input, output, session) {
         
         # Remove NA_unknown
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
-        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature] != "Inf"),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
         
       }
@@ -5815,14 +5851,14 @@ server <- function(input, output, session) {
         
         # Remove NA_unknown
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
-        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf"),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
       }
       if (input$BiVarAddNAcheck2 == TRUE) {
         
         # Remove NA_unknown
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
-        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf"),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
       }
       
@@ -6212,14 +6248,14 @@ server <- function(input, output, session) {
         
         # Remove NA_unknown
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
-        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf"),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
       }
       if (input$BiVarIntNAcheck2 == TRUE) {
         
         # Remove NA_unknown
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
-        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf"),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
       }
       
@@ -6568,7 +6604,7 @@ server <- function(input, output, session) {
         # Remove NA_unknown
         for (i in Feature) {
           meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,i]) == FALSE),]
-          meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,i] != "Inf"),]
+          meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,i] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
           meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,i],ignore.case = T, invert = T),]
         }
         #meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
