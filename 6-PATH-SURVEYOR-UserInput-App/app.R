@@ -19,7 +19,6 @@ ExampleParam_File <- "Example_Data/Clinical_Parameters.txt"
 
 
 
-
 ####----Install and load packages----####
 
 ## Check if Immune deconvolution package is installed
@@ -41,7 +40,7 @@ invisible(lapply(packages, library, character.only = TRUE))
 bioCpacks <- c("GSVA","clusterProfiler","AnnotationDbi")
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
 if (any(installed_packages_BIOC == FALSE)) {
-   BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
+  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
 }
 invisible(lapply(bioCpacks, library, character.only = TRUE))
 
@@ -204,7 +203,7 @@ ui <-
                             column(12, style = 'margin-top:-15px;',
                                    actionButton("UseExpData","Load Example Data"),
                                    tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/PATH_SURVEYOR_App/", "Download example data", target='_blank'),
-                                   )
+                            )
                           ),
                           shiny::hr(),
                           uiOutput("rendClinParamHeader"),
@@ -213,8 +212,8 @@ ui <-
                           fluidRow(
                             column(12, style = 'margin-top:-20px;',
                                    radioButtons("ParamChoice","", choices = c("Define Parameters","Upload Parameter File"), inline = T)
-                                   )
-                            ),
+                            )
+                          ),
                           fluidRow(
                             column(8,
                                    uiOutput("rendClinParamFileInput"),
@@ -1434,12 +1433,12 @@ server <- function(input, output, session) {
     
     req((isTruthy(input$ExprFileInput) && isTruthy(input$ClinFileInput)) | (isTruthy(input$UseExpData) & (!isTruthy(input$ExprFileInput) && !isTruthy(input$ClinFileInput))))
     #if (!is.null(exprIn_nonT_react()) && !is.null(clinIn_react())) {
-      expr <- exprIn_react()
-      clin <- clinIn_react()
-      
-      sampsame <- intersect(clin[,"SampleName"],colnames(expr))
-      expr <- expr[,which(colnames(expr) %in% sampsame)]
-      expr
+    expr <- exprIn_react()
+    clin <- clinIn_react()
+    
+    sampsame <- intersect(clin[,"SampleName"],colnames(expr))
+    expr <- expr[,which(colnames(expr) %in% sampsame)]
+    expr
     #}
     
   })
@@ -1450,13 +1449,13 @@ server <- function(input, output, session) {
     req((isTruthy(input$ExprFileInput) && isTruthy(input$ClinFileInput)) | (isTruthy(input$UseExpData) & (!isTruthy(input$ExprFileInput) && !isTruthy(input$ClinFileInput))))
     #if (!is.null(exprIn_nonT_react()) && !is.null(clinIn_react())) {
     #if (!is.null(exprIn_nonT_react()) && !is.null(clinIn_react())) {
-      expr <- exprIn_react()
-      clin <- clinIn_react()
-      
-      sampsame <- intersect(clin[,"SampleName"],colnames(expr))
-      clin <- clin[which(clin[,"SampleName"] %in% sampsame),]
-      
-      clin
+    expr <- exprIn_react()
+    clin <- clinIn_react()
+    
+    sampsame <- intersect(clin[,"SampleName"],colnames(expr))
+    clin <- clin[which(clin[,"SampleName"] %in% sampsame),]
+    
+    clin
     #}
     
   })
@@ -1465,35 +1464,35 @@ server <- function(input, output, session) {
     #req((isTruthy(input$ExprFileInput) && isTruthy(input$ClinFileInput)) | isTruthy(input$UseExpData))
     req((isTruthy(input$ExprFileInput) && isTruthy(input$ClinFileInput)) | (isTruthy(input$UseExpData) & (!isTruthy(input$ExprFileInput) && !isTruthy(input$ClinFileInput))))
     #if (!is.null(exprIn_nonT_react()) && !is.null(clinIn_react())) {
-      expr <- expr_react()
-      clin <- clin_PreID_react()
+    expr <- expr_react()
+    clin <- clin_PreID_react()
+    
+    if (nrow(clin) > 0 & ncol(expr) > 0) {
       
-      if (nrow(clin) > 0 & ncol(expr) > 0) {
-        
-        PreProcessed_meta_cols <- c(grep("_PreProcessedScore$",colnames(clin),value = T))
-        if (length(PreProcessed_meta_cols) == 0) {
-          if (immudecon_check == TRUE) {
-            mcp_counter_decon <- as.data.frame(deconvolute(expr, "mcp_counter"))
-            rownames(mcp_counter_decon) <- mcp_counter_decon[,1]
-            mcp_counter_decon <- mcp_counter_decon[,-1]
-            mcp_counter_decon <- as.data.frame(t(mcp_counter_decon))
-            colnames(mcp_counter_decon) <- paste(gsub(" ","_",colnames(mcp_counter_decon)),"mcp_counter_PreProcessedScore",sep = "_")
-            mcp_counter_decon$SampleName <- rownames(mcp_counter_decon)
-            clin <- merge(clin,mcp_counter_decon)
-            
-            estimate_decon <- as.data.frame(deconvolute(expr, "estimate"))
-            rownames(estimate_decon) <- estimate_decon[,1]
-            estimate_decon <- estimate_decon[,-1]
-            estimate_decon <- as.data.frame(t(estimate_decon))
-            colnames(estimate_decon) <- paste(gsub(" ","_",colnames(estimate_decon)),"estimate_PreProcessedScore",sep = "_")
-            estimate_decon$SampleName <- rownames(estimate_decon)
-            clin <- merge(clin,estimate_decon)
-          }
+      PreProcessed_meta_cols <- c(grep("_PreProcessedScore$",colnames(clin),value = T))
+      if (length(PreProcessed_meta_cols) == 0) {
+        if (immudecon_check == TRUE) {
+          mcp_counter_decon <- as.data.frame(deconvolute(expr, "mcp_counter"))
+          rownames(mcp_counter_decon) <- mcp_counter_decon[,1]
+          mcp_counter_decon <- mcp_counter_decon[,-1]
+          mcp_counter_decon <- as.data.frame(t(mcp_counter_decon))
+          colnames(mcp_counter_decon) <- paste(gsub(" ","_",colnames(mcp_counter_decon)),"mcp_counter_PreProcessedScore",sep = "_")
+          mcp_counter_decon$SampleName <- rownames(mcp_counter_decon)
+          clin <- merge(clin,mcp_counter_decon)
+          
+          estimate_decon <- as.data.frame(deconvolute(expr, "estimate"))
+          rownames(estimate_decon) <- estimate_decon[,1]
+          estimate_decon <- estimate_decon[,-1]
+          estimate_decon <- as.data.frame(t(estimate_decon))
+          colnames(estimate_decon) <- paste(gsub(" ","_",colnames(estimate_decon)),"estimate_PreProcessedScore",sep = "_")
+          estimate_decon$SampleName <- rownames(estimate_decon)
+          clin <- merge(clin,estimate_decon)
         }
-        clin
-        
       }
+      clin
       
+    }
+    
     #}
     
   })
@@ -1503,33 +1502,33 @@ server <- function(input, output, session) {
     #req((isTruthy(input$ExprFileInput) && isTruthy(input$ClinFileInput)) | isTruthy(input$UseExpData))
     req((isTruthy(input$ExprFileInput) && isTruthy(input$ClinFileInput)) | (isTruthy(input$UseExpData) & (!isTruthy(input$ExprFileInput) && !isTruthy(input$ClinFileInput))))
     #if (!is.null(exprIn_nonT_react()) && !is.null(clinIn_react())) {
+    
+    clin <- clin_PostID_react()
+    if (!is.null(clin)) {
       
-      clin <- clin_PostID_react()
-      if (!is.null(clin)) {
-        
-        clinp <- clinP_react()
-        colnames(clin) <- gsub("_PreProcessedScore","",colnames(clin))
-        TimeUnits <- input$SurvTimeUnits
-        TimCols <- clinp[which(clinp[,2] == "SurvivalTime"),1]
-        #metacol_survtime <- input$SurvTimeColSelect
-        
-        if (!is.null(TimeUnits)) {
-          if (TimeUnits == "Months") {
-            for (i in TimCols) {
-              clin[,i] <- clin[,i] * 30.4375
-            }
-          }
-          if (TimeUnits == "Years") {
-            for (i in TimCols) {
-              clin[,i] <- clin[,i] * 365.25
-            }
+      clinp <- clinP_react()
+      colnames(clin) <- gsub("_PreProcessedScore","",colnames(clin))
+      TimeUnits <- input$SurvTimeUnits
+      TimCols <- clinp[which(clinp[,2] == "SurvivalTime"),1]
+      #metacol_survtime <- input$SurvTimeColSelect
+      
+      if (!is.null(TimeUnits)) {
+        if (TimeUnits == "Months") {
+          for (i in TimCols) {
+            clin[,i] <- clin[,i] * 30.4375
           }
         }
-        clin
+        if (TimeUnits == "Years") {
+          for (i in TimCols) {
+            clin[,i] <- clin[,i] * 365.25
+          }
+        }
       }
-      
-      
-      #clin
+      clin
+    }
+    
+    
+    #clin
     #}
     
   })
@@ -2157,7 +2156,7 @@ server <- function(input, output, session) {
       if (input$UniVarNAcheck == TRUE) {
         
         Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-        Var_choices <- Var_choices[which(Var_choices != "Inf")]
+        Var_choices <- Var_choices[which(Var_choices != "Inf" & Var_choices != "N/A" & Var_choices != "n/a")]
         Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
         
       }
@@ -2170,13 +2169,13 @@ server <- function(input, output, session) {
       
       if (input$UniVarContHiLoCheck == TRUE) {
         
-        metaSub <- metaSub[which(metaSub[,Feature] != "Inf"),]
+        metaSub <- metaSub[which(metaSub[,Feature] != "Inf" & metaSub[,Feature] != "N/A" & metaSub[,Feature] != "n/a"),]
         metaSub[,Feature] <- highlow(as.numeric(metaSub[, which(colnames(metaSub) == Feature)]))
         Var_choices <- unique(metaSub[,Feature])
         if (input$UniVarNAcheck == TRUE) {
           
           Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-          Var_choices <- Var_choices[which(Var_choices != "Inf")]
+          Var_choices <- Var_choices[which(Var_choices != "Inf" & Var_choices != "N/A" & Var_choices != "n/a")]
           Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
           
         }
@@ -2301,7 +2300,7 @@ server <- function(input, output, session) {
       if (input$BiVarAddNAcheck1 == TRUE) {
         
         Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-        Var_choices <- Var_choices[which(Var_choices != "Inf")]
+        Var_choices <- Var_choices[which(Var_choices != "Inf"  & Var_choices != "N/A" & Var_choices != "n/a")]
         Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
         
       }
@@ -2314,13 +2313,13 @@ server <- function(input, output, session) {
       
       if (input$BiVarAddContHiLoCheck1 == TRUE) {
         
-        metaSub <- metaSub[which(metaSub[,Feature] != "Inf"),]
+        metaSub <- metaSub[which(metaSub[,Feature] != "Inf"  & metaSub[,Feature] != "N/A" & metaSub[,Feature] != "n/a"),]
         metaSub[,Feature] <- highlow(as.numeric(metaSub[, which(colnames(metaSub) == Feature)]))
         Var_choices <- unique(metaSub[,Feature])
         if (input$BiVarAddNAcheck1 == TRUE) {
           
           Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-          Var_choices <- Var_choices[which(Var_choices != "Inf")]
+          Var_choices <- Var_choices[which(Var_choices != "Inf"  & Var_choices != "N/A" & Var_choices != "n/a")]
           Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
           
         }
@@ -2345,7 +2344,7 @@ server <- function(input, output, session) {
       if (input$BiVarAddNAcheck2 == TRUE) {
         
         Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-        Var_choices <- Var_choices[which(Var_choices != "Inf")]
+        Var_choices <- Var_choices[which(Var_choices != "Inf"  & Var_choices != "N/A" & Var_choices != "n/a")]
         Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
         
       }
@@ -2358,13 +2357,13 @@ server <- function(input, output, session) {
       
       if (input$BiVarAddContHiLoCheck2 == TRUE) {
         
-        metaSub <- metaSub[which(metaSub[,Feature] != "Inf"),]
+        metaSub <- metaSub[which(metaSub[,Feature] != "Inf"  & metaSub[,Feature] != "N/A" & metaSub[,Feature] != "n/a"),]
         metaSub[,Feature] <- highlow(as.numeric(metaSub[, which(colnames(metaSub) == Feature)]))
         Var_choices <- unique(metaSub[,Feature])
         if (input$BiVarAddNAcheck2 == TRUE) {
           
           Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-          Var_choices <- Var_choices[which(Var_choices != "Inf")]
+          Var_choices <- Var_choices[which(Var_choices != "Inf"  & Var_choices != "N/A" & Var_choices != "n/a")]
           Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
           
         }
@@ -2487,7 +2486,7 @@ server <- function(input, output, session) {
       if (input$BiVarIntNAcheck1 == TRUE) {
         
         Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-        Var_choices <- Var_choices[which(Var_choices != "Inf")]
+        Var_choices <- Var_choices[which(Var_choices != "Inf"  & Var_choices != "N/A" & Var_choices != "n/a")]
         Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
         
       }
@@ -2500,13 +2499,13 @@ server <- function(input, output, session) {
       
       if (input$BiVarIntContHiLoCheck1 == TRUE) {
         
-        metaSub <- metaSub[which(metaSub[,Feature] != "Inf"),]
+        metaSub <- metaSub[which(metaSub[,Feature] != "Inf"  & metaSub[,Feature] != "N/A" & metaSub[,Feature] != "n/a"),]
         metaSub[,Feature] <- highlow(as.numeric(metaSub[, which(colnames(metaSub) == Feature)]))
         Var_choices <- unique(metaSub[,Feature])
         if (input$BiVarIntNAcheck1 == TRUE) {
           
           Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-          Var_choices <- Var_choices[which(Var_choices != "Inf")]
+          Var_choices <- Var_choices[which(Var_choices != "Inf"  & Var_choices != "N/A" & Var_choices != "n/a")]
           Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
           
         }
@@ -2531,7 +2530,7 @@ server <- function(input, output, session) {
       if (input$BiVarIntNAcheck2 == TRUE) {
         
         Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-        Var_choices <- Var_choices[which(Var_choices != "Inf")]
+        Var_choices <- Var_choices[which(Var_choices != "Inf"  & Var_choices != "N/A" & Var_choices != "n/a")]
         Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
         
       }
@@ -2544,13 +2543,13 @@ server <- function(input, output, session) {
       
       if (input$BiVarIntContHiLoCheck2 == TRUE) {
         
-        metaSub <- metaSub[which(metaSub[,Feature] != "Inf"),]
+        metaSub <- metaSub[which(metaSub[,Feature] != "Inf"  & metaSub[,Feature] != "N/A" & metaSub[,Feature] != "n/a"),]
         metaSub[,Feature] <- highlow(as.numeric(metaSub[, which(colnames(metaSub) == Feature)]))
         Var_choices <- unique(metaSub[,Feature])
         if (input$BiVarIntNAcheck2 == TRUE) {
           
           Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-          Var_choices <- Var_choices[which(Var_choices != "Inf")]
+          Var_choices <- Var_choices[which(Var_choices != "Inf"  & Var_choices != "N/A" & Var_choices != "n/a")]
           Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
           
         }
@@ -2612,7 +2611,7 @@ server <- function(input, output, session) {
     ## Only show if more than one option
     metacol_survtime <- metacol_survtime()
     #if (length(metacol_survtime) > 1) {
-      selectInput("SurvivalType_time","Survival Time Data:", choices = metacol_survtime)
+    selectInput("SurvivalType_time","Survival Time Data:", choices = metacol_survtime)
     #}
     
   })
@@ -2633,7 +2632,7 @@ server <- function(input, output, session) {
     ## Only show if more than one option
     metacol_survid <- metacol_survid()
     #if (length(metacol_survid) > 1) {
-      selectInput("SurvivalType_id","Survival ID Data:", choices = metacol_survid)
+    selectInput("SurvivalType_id","Survival ID Data:", choices = metacol_survid)
     #}
     
   })
@@ -2651,7 +2650,7 @@ server <- function(input, output, session) {
   ## Select ssGSEA function scoring method
   output$rendScoreMethodBox <- renderUI({
     
-      selectInput("ScoreMethod","Scoring Method",choices = c("ssgsea","gsva","zscore","plage"))
+    selectInput("ScoreMethod","Scoring Method",choices = c("ssgsea","gsva","zscore","plage"))
     
   })
   
@@ -3188,7 +3187,7 @@ server <- function(input, output, session) {
     if (input$BoxPRemoveNA == TRUE) {
       # Remove NA_unknown
       boxTab <- boxTab[which(is.na(boxTab[,FeatureSelec]) == FALSE),]
-      boxTab <- boxTab[which(boxTab[,FeatureSelec] != "Inf"),]
+      boxTab <- boxTab[which(boxTab[,FeatureSelec] != "Inf"  & boxTab[,FeatureSelec] != "N/A" & boxTab[,FeatureSelec] != "n/a"),]
       boxTab <- boxTab[grep("unknown",boxTab[,FeatureSelec],ignore.case = T, invert = T),]
     }
     DT::datatable(boxTab,
@@ -3450,7 +3449,7 @@ server <- function(input, output, session) {
       if (geneset_name %in% decon_score_cols()) {
         ssGSEA <- meta[,c("SampleName",geneset_name)]
         ssGSEA <- ssGSEA[!is.na(ssGSEA[,2]),]
-        ssGSEA <- ssGSEA[which(ssGSEA[,2] != "Inf"),]
+        ssGSEA <- ssGSEA[which(ssGSEA[,2] != "Inf"  & ssGSEA[,2] != "N/A" & ssGSEA[,2] != "n/a"),]
         ssGSEA[,2] <- as.numeric(ssGSEA[,2])
       }
       else {
@@ -3567,6 +3566,7 @@ server <- function(input, output, session) {
     tab_df <- tab_df %>%
       dplyr::select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
+    tab_df <- sapply(tab_df,function(x) { gsub("[<br />]", "", x) })
     
     tab_df
     
@@ -3947,6 +3947,7 @@ server <- function(input, output, session) {
     tab_df <- tab_df %>%
       dplyr::select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
+    tab_df <- sapply(tab_df,function(x) { gsub("[<br />]", "", x) })
     
     tab_df
     
@@ -4333,6 +4334,7 @@ server <- function(input, output, session) {
     tab_df <- tab_df %>%
       dplyr::select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
+    tab_df <- sapply(tab_df,function(x) { gsub("[<br />]", "", x) })
     
     tab_df
     
@@ -4729,6 +4731,7 @@ server <- function(input, output, session) {
     tab_df <- tab_df %>%
       dplyr::select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
+    tab_df <- sapply(tab_df,function(x) { gsub("[<br />]", "", x) })
     
     tab_df
     
@@ -5110,6 +5113,7 @@ server <- function(input, output, session) {
     tab_df <- tab_df %>%
       dplyr::select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
+    tab_df <- sapply(tab_df,function(x) { gsub("[<br />]", "", x) })
     
     tab_df
     
@@ -5530,6 +5534,7 @@ server <- function(input, output, session) {
       dplyr::select(label,n_obs,estimate,std.error,ci,p.value)
     tab_df[1,1] <- Feature
     colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
+    tab_df <- sapply(tab_df,function(x) { gsub("[<br />]", "", x) })
     
     tab_df
     
@@ -5851,14 +5856,14 @@ server <- function(input, output, session) {
         
         # Remove NA_unknown
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
-        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
       }
       if (input$BiVarAddNAcheck2 == TRUE) {
         
         # Remove NA_unknown
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
-        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
       }
       
@@ -5982,6 +5987,7 @@ server <- function(input, output, session) {
     tab_df <- tab_df %>%
       dplyr::select(label,n_obs,estimate,std.error,ci,p.value)
     colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
+    tab_df <- sapply(tab_df,function(x) { gsub("[<br />]", "", x) })
     
     tab_df
     
@@ -6248,14 +6254,14 @@ server <- function(input, output, session) {
         
         # Remove NA_unknown
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
-        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
       }
       if (input$BiVarIntNAcheck2 == TRUE) {
         
         # Remove NA_unknown
         meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
-        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
+        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
         meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
       }
       
@@ -6360,6 +6366,7 @@ server <- function(input, output, session) {
     tab_df <- tab_df %>%
       dplyr::select(label,n_obs,estimate,std.error,ci,p.value)
     colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
+    tab_df <- sapply(tab_df,function(x) { gsub("[<br />]", "", x) })
     
     tab_df
     
@@ -6604,7 +6611,7 @@ server <- function(input, output, session) {
         # Remove NA_unknown
         for (i in Feature) {
           meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,i]) == FALSE),]
-          meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,i] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
+          meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,i] != "Inf" & meta_ssgsea[,i] != "N/A" & meta_ssgsea[,i] != "n/a"),]
           meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,i],ignore.case = T, invert = T),]
         }
         #meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
@@ -6711,6 +6718,7 @@ server <- function(input, output, session) {
       tab_df <- tab_df %>%
         dplyr::select(label,n_obs,estimate,std.error,ci,p.value)
       colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
+      tab_df <- sapply(tab_df,function(x) { gsub("[<br />]", "", x) })
       
       tab_df
       
@@ -6741,6 +6749,7 @@ server <- function(input, output, session) {
       tab_df <- tab_df %>%
         dplyr::select(label,n_obs,estimate,std.error,ci,p.value)
       colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
+      tab_df <- sapply(tab_df,function(x) { gsub("[<br />]", "", x) })
       
       tab_df
       
@@ -7253,7 +7262,7 @@ server <- function(input, output, session) {
     if (input$BoxPRemoveNA == TRUE) {
       # Remove NA_unknown
       boxTab <- boxTab[which(is.na(boxTab[,FeatureSelec]) == FALSE),]
-      boxTab <- boxTab[which(boxTab[,FeatureSelec] != "Inf"),]
+      boxTab <- boxTab[which(boxTab[,FeatureSelec] != "Inf"  & boxTab[,FeatureSelec] != "N/A" & boxTab[,FeatureSelec] != "n/a"),]
       boxTab <- boxTab[grep("unknown",boxTab[,FeatureSelec],ignore.case = T, invert = T),]
     }
     boxTab[,FeatureSelec] <- as.factor(boxTab[,FeatureSelec])
@@ -7298,7 +7307,7 @@ server <- function(input, output, session) {
         theme_bw() +
         ggpubr::stat_compare_means(method = StatMethod) +
         theme(text = element_text(size = font),
-                legend.position = "none") +
+              legend.position = "none") +
         scale_x_discrete(guide = guide_axis(n.dodge = 2))
     }
     
@@ -7367,7 +7376,7 @@ server <- function(input, output, session) {
     if (input$HeatRemoveNA == TRUE) {
       # Remove NA_unknown
       meta <- meta[which(is.na(meta[,FeatureSelec]) == FALSE),]
-      meta <- meta[which(meta[,FeatureSelec] != "Inf"),]
+      meta <- meta[which(meta[,FeatureSelec] != "Inf"  & meta[,FeatureSelec] != "N/A" & meta[,FeatureSelec] != "n/a"),]
       meta <- meta[grep("unknown",meta[,FeatureSelec],ignore.case = T, invert = T),]
     }
     
@@ -10002,24 +10011,4 @@ server <- function(input, output, session) {
 
 
 shinyApp(ui,server)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
