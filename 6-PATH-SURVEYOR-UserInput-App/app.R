@@ -172,7 +172,7 @@ gsubCheck <- function(string) {
 ####----UI----####
 
 ui <-
-  navbarPage("{ DRPPM-PATH-SURVEYOR }",
+  navbarPage("{ PATH-SURVEYOR }",
              shinyjs::useShinyjs(),
              
              ####----Data Input----####
