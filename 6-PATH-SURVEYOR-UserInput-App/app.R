@@ -2109,6 +2109,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           metacol_feature <- metacol_feature[-which(metacol_feature == input$FeatureSelection)]
         }
+        metacol_feature <- metacol_feature[which(!metacol_feature %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         metacol_feature <- c(metacol_feature,geneset_name,"QuartileCutP","MedianCutP","OptimalCutP","TopBottomCutP","UserCutP")
         selectInput("SingleSurvivalFeature","Select Feature:",
                     choices = metacol_feature, selected = "MedianCutP")
@@ -2121,6 +2122,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
+        SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SingleSurvivalFeature","Select Feature:",
                     choices = SurvFeatChoices2, selected = "MedianCutP")
         
@@ -2131,6 +2133,7 @@ server <- function(input, output, session) {
       if (input$FeatureSelection != "Show All Samples") {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
+      SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
       selectInput("SingleSurvivalFeature","Select Feature:",
                   choices = SurvFeatChoices2, selected = "MedianCutP")
     }
@@ -2207,6 +2210,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
+        SurvFeatChoices <- SurvFeatChoices[which(!SurvFeatChoices %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SurvivalFeatureBi1","Select Feature 1:",
                     choices = SurvFeatChoices, selected = "MedianCutP")
         
@@ -2216,6 +2220,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
+        SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SurvivalFeatureBi1","Select Feature 1:",
                     choices = SurvFeatChoices2, selected = "MedianCutP")
         
@@ -2225,6 +2230,7 @@ server <- function(input, output, session) {
       if (input$FeatureSelection != "Show All Samples") {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
+      SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
       selectInput("SurvivalFeatureBi1","Select Feature 1:",
                   choices = SurvFeatChoices2, selected = "MedianCutP")
     }
@@ -2247,6 +2253,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
+        SurvFeatChoices <- SurvFeatChoices[which(!SurvFeatChoices %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SurvivalFeatureBi2","Select Feature 2:",
                     choices = SurvFeatChoices, selected = 1)
         
@@ -2256,6 +2263,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
+        SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SurvivalFeatureBi2","Select Feature 2:",
                     choices = SurvFeatChoices2, selected = 1)
         
@@ -2265,6 +2273,7 @@ server <- function(input, output, session) {
       if (input$FeatureSelection != "Show All Samples") {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
+      SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
       selectInput("SurvivalFeatureBi2","Select Feature 2:",
                   choices = SurvFeatChoices2, selected = 1)
     }
@@ -2395,6 +2404,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
+        SurvFeatChoices <- SurvFeatChoices[which(!SurvFeatChoices %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SurvivalFeatureBi1Inter","Select Feature 1:",
                     choices = SurvFeatChoices, selected = "MedianCutP")
         
@@ -2404,6 +2414,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
+        SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SurvivalFeatureBi1Inter","Select Feature 1:",
                     choices = SurvFeatChoices2, selected = "MedianCutP")
         
@@ -2413,6 +2424,7 @@ server <- function(input, output, session) {
       if (input$FeatureSelection != "Show All Samples") {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
+      SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
       selectInput("SurvivalFeatureBi1Inter","Select Feature 1:",
                   choices = SurvFeatChoices2, selected = "MedianCutP")
     }
@@ -2435,6 +2447,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
+        SurvFeatChoices <- SurvFeatChoices[which(!SurvFeatChoices %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
                     choices = SurvFeatChoices, selected = 1)
         
@@ -2444,6 +2457,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
+        SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
                     choices = SurvFeatChoices2, selected = 1)
         
@@ -2453,6 +2467,7 @@ server <- function(input, output, session) {
       if (input$FeatureSelection != "Show All Samples") {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
+      SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
       selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
                   choices = SurvFeatChoices2, selected = 1)
     }
@@ -2581,6 +2596,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
+        SurvFeatChoices <- SurvFeatChoices[which(!SurvFeatChoices %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SurvivalFeature","Select Feature(s):",
                     choices = SurvFeatChoices, multiple = T, selected = "MedianCutP")
         
@@ -2590,6 +2606,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "Show All Samples") {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
+        SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
         selectInput("SurvivalFeature","Select Feature(s):",
                     choices = SurvFeatChoices2, multiple = T, selected = "MedianCutP")
         
@@ -2597,8 +2614,9 @@ server <- function(input, output, session) {
     }
     else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       if (input$FeatureSelection != "Show All Samples") {
-        SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
+        SurvFeatChoices2 <- SurvFeatChoices2[which(!SurvFeatChoices2 %in% c("SampleName",metacol_survtime(),metacol_survid()))]
       }
+      SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == "SampleName")]
       selectInput("SurvivalFeature","Select Feature(s):",
                   choices = SurvFeatChoices2, multiple = T, selected = "MedianCutP")
     }
@@ -10011,4 +10029,6 @@ server <- function(input, output, session) {
 
 
 shinyApp(ui,server)
+
+
 
