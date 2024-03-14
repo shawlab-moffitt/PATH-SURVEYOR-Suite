@@ -1,5 +1,14 @@
 # PATH-SURVEYOR-Suite
 
+# Recent Updates:
+
+* The file input methods for the PATH SURVEYOR Shiny app now been updated. The app can accept file input in the backend before app startup, or if no file is provided, the user can input files via the user interface or the user may append onto the browser URL of the application and designate input file urls. The URL will be parsed and the file names and parameters will be extracted. Below are the query names and their definition.
+
+* **expr**: URL path to expression file
+* **meta**: URL path to meta/clinical file
+* **param**: (OPTIONAL) URL path to meta/clinical paramater file described below
+* **proj**: (OPTIONAL) Desired project name
+
 # Introduction
 
 The integration of patient genome expression data, phenotype data, and clinical data can serve as an integral resource for patient prognosis and treatment guidance. The PATH SURVEYOR Suite: **PATH**way level **SURV**ival **E**nquir**Y** for Immuno-**O**ncology and Drug **R**epurposing serves to do just that, by examining the interaction of gene or gene set pathway expression with clinical data to discover prominent features that play a role in patient outcome. This utility is comprised of R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards underlying features affective survival. Through a systematic Cox proportional regression pipeline the expression of individual genes or gene set pathways is linked with a hazard ratio and p.values to determine signifigance and patient risk, which can be followed by interactive visualization in the suite of R Shiny applications.
