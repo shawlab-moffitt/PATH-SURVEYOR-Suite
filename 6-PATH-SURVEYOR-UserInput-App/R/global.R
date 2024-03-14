@@ -1,0 +1,40 @@
+
+library(shiny)
+library(shinyjqui)
+library(gtsummary)
+library(tidyr)
+library(RColorBrewer)
+library(forcats)
+library(forestploter)
+library(gtable)
+library(dplyr)
+library(DT)
+library(ggplot2)
+library(ggpubr)
+library(tibble)
+library(survival)
+library(pheatmap)
+library(stringr)
+library(gt)
+library(grid)
+library(Hmisc)
+library(readr)
+library(shinycssloaders)
+library(survminer)
+library(gridExtra)
+library(viridis)
+library(plotly)
+library(ggrepel)
+library(data.table)
+
+library(GSVA)
+library(clusterProfiler)
+library(AnnotationDbi)
+library(ComplexHeatmap)
+
+immudecon_check <- "immunedeconv" %in% rownames(installed.packages())
+if (immudecon_check == TRUE) {
+  library(immunedeconv)
+}
+
+
