@@ -4,10 +4,12 @@
 
 * The file input methods for the PATH SURVEYOR Shiny app now been updated. The app can accept file input in the backend before app startup, or if no file is provided, the user can input files via the user interface or the user may append onto the browser URL of the application and designate input file urls. The URL will be parsed and the file names and parameters will be extracted. Below are the query names and their definition.
 
-* **expr**: URL path to expression file
-* **meta**: URL path to meta/clinical file
-* **param**: (OPTIONAL) URL path to meta/clinical paramater file described below
-* **proj**: (OPTIONAL) Desired project name
+* **expr=** URL path to expression file
+* **meta=** URL path to meta/clinical file
+* **param=** (OPTIONAL) URL path to meta/clinical paramater file described below
+* **proj=** (OPTIONAL) Desired project name
+
+* Example URL: https://shawlab-moffitt.shinyapps.io/path_surveyor/?proj=exprdata&expr=https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/raw/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/Expression_Data.zip&meta=https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/raw/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/Clinical_Data.txt
 
 # Introduction
 
