@@ -177,7 +177,30 @@ ui <-
                                                 numericInput("ConnFontSize","Font Size:",
                                                              value = 0.6, step = 0.1)
                                          )
+                                       ),
+                                       shiny::hr(),
+                                       h4("Download Parameters"),
+                                       conditionalPanel(condition = "input.pathconn == 'heat'",
+                                                        shiny::fluidRow(
+                                                          shiny::column(6,
+                                                                        numericInput("DendoHeightHeat","Height (in)",value = 10,min = 0,step = 1)
+                                                          ),
+                                                          shiny::column(6,
+                                                                        numericInput("DendoWidthHeat","Width (in)",value = 8,min = 0,step = 1)
+                                                          )
+                                                        )
+                                                        ),
+                                       conditionalPanel(condition = "input.pathconn == 'cluster'",
+                                                        shiny::fluidRow(
+                                                          shiny::column(6,
+                                                                        numericInput("DendoHeight","Height (px)",value = 500,min = 0,step = 1)
+                                                          ),
+                                                          shiny::column(6,
+                                                                        numericInput("DendoWidth","Width (px)",value = 700,min = 0,step = 1)
+                                                          )
+                                                        )
                                        )
+                                       
                               )
                             )
                           ),
@@ -185,18 +208,20 @@ ui <-
                           ####----Pathway Main Panel----####
                           
                           mainPanel(
-                            tabsetPanel(
+                            tabsetPanel(id = "pathconn",
                               
                               tabPanel("Jaccard Pathway Connectivity Table",
                                        p(),
                                        div(DT::dataTableOutput("JaccTableIntra"), style = "font-size:12px"),
-                                       uiOutput("renddnldJaccTabIntra")
+                                       uiOutput("renddnldJaccTabIntra"),
+                                       value = "table"
                               ),
                               
                               tabPanel("Heatmap",
                                        shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput('JaccHeatmapIntra', width = "100%", height = "800px")), type = 6),
                                        downloadButton("dnldJaccHeatmapIntraPDF","Download as PDF"),
-                                       downloadButton("dnldJaccHeatmapIntraSVG","Download as SVG")
+                                       downloadButton("dnldJaccHeatmapIntraSVG","Download as SVG"),
+                                       value = "heat"
                               ),
                               
                               tabPanel("Clustering",
@@ -204,7 +229,8 @@ ui <-
                                        conditionalPanel(condition = "input.ConnView == 'circular'",
                                                         downloadButton("dnldJaccDendoPDF","Download as PDF"),
                                                         downloadButton("dnldJaccDendoSVG","Download as SVG")
-                                                        )
+                                                        ),
+                                       value = "cluster"
                               ),
                               
                               tabPanel("Gene Clusters and Annoation",
@@ -220,7 +246,8 @@ ui <-
                                                 )
                                          ),
                                        div(DT::dataTableOutput("ClusterTabAnno"), style = "font-size:12px"),
-                                       uiOutput("renddnldClusterTabAnno")
+                                       uiOutput("renddnldClusterTabAnno"),
+                                       value = "anno"
                               )
                             )
                           )
@@ -665,11 +692,11 @@ server <- function(input, output, session) {
       
       ranked_file <- user_file_loaded()
       FileName <- fileInName()
-      gs.u <- input$UserPathwayFile
+      #gs.u <- input$UserPathwayFile
       #fileInName(gs.u$datapath)
-      ext <- tools::file_ext(gs.u$datapath)
+      #ext <- tools::file_ext(gs.u$datapath)
       #req(gs.u)
-      #ext <- tools::file_ext(FileName)
+      ext <- tools::file_ext(FileName)
       #if (ext == "gmt") {
       #  gmt <- clusterProfiler::read.gmt(gs.u$datapath)
       #  gmt <- gmt[which(gmt[,2] != "NA"),]
@@ -1137,6 +1164,8 @@ server <- function(input, output, session) {
       config(
         toImageButtonOptions = list(
           format = "svg",
+          height = input$DendoHeight,
+          width = input$DendoWidth,
           filename = paste(file_name,"_Top",TopFeat,"_JaccardCluster", sep = '')
         )
       )
@@ -1637,7 +1666,7 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       heat <- JaccHeatmapIntra_react()
-      ggsave(file,heat, width = 10, height = 12)
+      ggsave(file,heat, width = input$DendoWidthHeat, height = input$DendoHeightHeat, units = "in")
     }
   )
   output$dnldJaccHeatmapIntraSVG <- downloadHandler(
@@ -1650,7 +1679,7 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       heat <- JaccHeatmapIntra_react()
-      ggsave(file,heat, width = 10, height = 12)
+      ggsave(file,heat, width = input$DendoWidthHeat, height = input$DendoHeightHeat, units = "in")
     }
   )
   output$dnldJaccDendoPDF <- downloadHandler(
@@ -1892,4 +1921,20 @@ server <- function(input, output, session) {
 
 
 shinyApp(ui,server)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
