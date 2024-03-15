@@ -91,8 +91,7 @@ ui <-
                                        h4("Upload Pathways of Interest"),
                                        fluidRow(
                                          column(9,
-                                                fileInput("UserPathwayFile","Upload File (.gmt/.tsv/.txt)",
-                                                          accept = c(".gmt",".tsv",".txt"))
+                                                fileInput("UserPathwayFile","Upload File")
                                          ),
                                          column(3,
                                                 checkboxInput("HeaderCheckIntra","Header",value = T)
@@ -202,8 +201,10 @@ ui <-
                               
                               tabPanel("Clustering",
                                        uiOutput("rendJaccDendo"),
-                                       downloadButton("dnldJaccDendoPDF","Download as PDF"),
-                                       downloadButton("dnldJaccDendoSVG","Download as SVG")
+                                       conditionalPanel(condition = "input.ConnView == 'circular'",
+                                                        downloadButton("dnldJaccDendoPDF","Download as PDF"),
+                                                        downloadButton("dnldJaccDendoSVG","Download as SVG")
+                                                        )
                               ),
                               
                               tabPanel("Gene Clusters and Annoation",
@@ -340,8 +341,10 @@ ui <-
                               ),
                               tabPanel("Clustering",
                                        uiOutput("rendUserMatixCLustering"),
-                                       downloadButton("dnldUserMatixCLusteringPDF","Download as PDF"),
-                                       downloadButton("dnldUserMatixCLusteringSVG","Download as SVG")
+                                       conditionalPanel(condition = "input.ConnViewMat == 'circular'",
+                                                        downloadButton("dnldUserMatixCLusteringPDF","Download as PDF"),
+                                                        downloadButton("dnldUserMatixCLusteringSVG","Download as SVG")
+                                       )
                               )
                             )
                           )
@@ -476,7 +479,13 @@ server <- function(input, output, session) {
     ext <- tools::file_ext(FileName)
     if (length(ext) > 0) {
       if (ext == "txt" | ext == "tsv") {
-        if (ncol(ranked_file) > 2) {
+        if (nrow(ranked_file) > 2) {
+          numericInput("TopFeatureSelect","Number of Top Features for Clustering:",
+                       value = 50, min = 3, width = "300px")
+        }
+      }
+      else if (ext == "RData") {
+        if (length(ranked_file) > 2) {
           numericInput("TopFeatureSelect","Number of Top Features for Clustering:",
                        value = 50, min = 3, width = "300px")
         }
@@ -595,18 +604,26 @@ server <- function(input, output, session) {
       fileInName(gs.u$datapath)
       ext <- tools::file_ext(gs.u$datapath)
       req(gs.u)
-      validate(need(ext == c("tsv","txt","gmt"), "Please upload .tsv, .txt, or .gmt file"))
+      #validate(need(ext == c("tsv","txt","gmt"), "Please upload .tsv, .txt, or .gmt file"))
       
       if (ext == "gmt") {
-        gmt <- clusterProfiler::read.gmt(gs.u$datapath)
-        ranked_file <- data.frame(GeneSet = unique(gmt[,1]))
+        ranked_file <- clusterProfiler::read.gmt(gs.u$datapath)
+        #ranked_file <- data.frame(GeneSet = unique(gmt[,1]))
+        ranked_file[,1] <- gsub("[[:punct:]]",".",ranked_file[,1])
       }
-      else {
+      if (ext == "RData") {
+        loadRData <- function(fileName){
+          #loads an RData file, and returns it
+          load(fileName)
+          get(ls()[ls() != "fileName"])
+        }
+        ranked_file <- loadRData(gs.u$datapath)
+      }
+      if (ext == "tsv" | ext == "txt") {
         ranked_file <- as.data.frame(readr::read_delim(gs.u$datapath, delim = '\t', col_names = header_check, comment = "#"))
+        ranked_file[,1] <- gsub("[[:punct:]]",".",ranked_file[,1])
       }
-      
-      ranked_file[,1] <- gsub("[[:punct:]]",".",ranked_file[,1])
-      
+      print(head(ranked_file))
       user_file_loaded(ranked_file)
     }
     
@@ -635,56 +652,89 @@ server <- function(input, output, session) {
             paths <- as.vector(ranked_file[,1])
             paths <- gsub("[[:punct:]]",".",paths)
             gs_u <- gs[unique(paths)]
+            if (TopFeat > length(gs_u)) {
+              TopFeat <- length(gs_u)
+            }
             gs_u2 <- gs_u[c(1:TopFeat)]
             gs_u2 <- Filter(Negate(is.null), gs_u2)
             gs_u2
           }
         }
       }
-      #gs_u2
     } else {
-      header_check <- input$HeaderCheckIntra
-      gs.u <- input$UserPathwayFile
-      ext <- tools::file_ext(gs.u$datapath)
       
       ranked_file <- user_file_loaded()
       FileName <- fileInName()
-      ext <- tools::file_ext(FileName)
-      
-      if (ext == "gmt") {
-        gmt <- clusterProfiler::read.gmt(gs.u$datapath)
-        gmt <- gmt[which(gmt[,2] != "NA"),]
-        gs_u2 <- list()
-        for (i in unique(gmt[,1])){
-          gs_u2[[i]] <- gmt[gmt[,1] == i,]$gene
-        }
-        gs_u2
-      }
-      else if (ncol(ranked_file) == 2) {
-        ranked_file <- ranked_file[which(ranked_file[,2] != "NA"),]
-        gs_u2 <- list()
-        for (i in unique(ranked_file[,1])){
-          gs_u2[[i]] <- ranked_file[ranked_file[,1] == i,][,2]
-        }
-        gs_u2
-      }
-      else {
+      gs.u <- input$UserPathwayFile
+      #fileInName(gs.u$datapath)
+      ext <- tools::file_ext(gs.u$datapath)
+      #req(gs.u)
+      #ext <- tools::file_ext(FileName)
+      #if (ext == "gmt") {
+      #  gmt <- clusterProfiler::read.gmt(gs.u$datapath)
+      #  gmt <- gmt[which(gmt[,2] != "NA"),]
+      #  gs_u2 <- list()
+      #  for (i in unique(gmt[,1])){
+      #    gs_u2[[i]] <- gmt[gmt[,1] == i,]$gene
+      #  }
+      #  gs_u2
+      #} else
+      if (ext == "RData") {
+        gs_u2 <- ranked_file
         if (is.null(input$TopFeatureSelect)) {
           TopFeat <- 50
-          paths <- as.vector(ranked_file[,1])
-          paths <- gsub("[[:punct:]]",".",paths)
-          gs_u <- gs[unique(paths)]
-          gs_u2 <- gs_u[c(1:TopFeat)]
-          gs_u2 <- Filter(Negate(is.null), gs_u2)
+          gs_u2 <- gs_u2[1:TopFeat]
           gs_u2
         } else {
           TopFeat <- input$TopFeatureSelect
-          paths <- as.vector(ranked_file[,1])
-          paths <- gsub("[[:punct:]]",".",paths)
-          gs_u <- gs[unique(paths)]
-          gs_u2 <- gs_u[c(1:TopFeat)]
-          gs_u2 <- Filter(Negate(is.null), gs_u2)
+          if (TopFeat > length(gs_u2)) {
+            TopFeat <- length(gs_u2)
+          }
+          gs_u2 <- gs_u2[1:TopFeat]
           gs_u2
+        }
+      } else if (ext == "txt" | ext == "tsv" | ext == "gmt") {
+        if (ncol(ranked_file) == 2) {
+          ranked_file <- ranked_file[which(ranked_file[,2] != "NA"),]
+          genesets <- unique(ranked_file[,1])
+          if (is.null(input$TopFeatureSelect)) {
+            TopFeat <- 50
+            showGS <- genesets[1:TopFeat]
+            ranked_file <- ranked_file[which(ranked_file[,1] %in% showGS),]
+          } else {
+            TopFeat <- input$TopFeatureSelect
+            if (TopFeat > nrow(ranked_file)) {
+              TopFeat <- nrow(ranked_file)
+            }
+            showGS <- genesets[1:TopFeat]
+            ranked_file <- ranked_file[which(ranked_file[,1] %in% showGS),]
+          }
+          gs_u2 <- list()
+          for (i in unique(ranked_file[,1])){
+            gs_u2[[i]] <- ranked_file[ranked_file[,1] == i,][,2]
+          }
+          gs_u2
+        } else {
+          if (is.null(input$TopFeatureSelect)) {
+            TopFeat <- 50
+            paths <- as.vector(ranked_file[,1])
+            paths <- gsub("[[:punct:]]",".",paths)
+            gs_u <- gs[unique(paths)]
+            gs_u2 <- gs_u[c(1:TopFeat)]
+            gs_u2 <- Filter(Negate(is.null), gs_u2)
+            gs_u2
+          } else {
+            TopFeat <- input$TopFeatureSelect
+            paths <- as.vector(ranked_file[,1])
+            paths <- gsub("[[:punct:]]",".",paths)
+            gs_u <- gs[unique(paths)]
+            if (TopFeat > length(gs_u)) {
+              TopFeat <- length(gs_u)
+            }
+            gs_u2 <- gs_u[c(1:TopFeat)]
+            gs_u2 <- Filter(Negate(is.null), gs_u2)
+            gs_u2
+          }
         }
       }
       
@@ -1078,7 +1128,18 @@ server <- function(input, output, session) {
   
   output$JaccDendoIntra <- renderPlotly({
     
+    gs.u <- input$UserPathwayFile
+    TopFeat <- input$TopFeatureSelect
+    file_name <- gs.u$name
+    file_name <- tools::file_path_sans_ext(gs.u)
     gp <- JaccDendoIntra_react()
+    gp <- gp %>% 
+      config(
+        toImageButtonOptions = list(
+          format = "svg",
+          filename = paste(file_name,"_Top",TopFeat,"_JaccardCluster", sep = '')
+        )
+      )
     gp
     
   })
@@ -1510,7 +1571,17 @@ server <- function(input, output, session) {
   
   output$JaccDendoMat <- renderPlotly({
     
+    gs.u <- input$UserMatrixFile
+    file_name <- gs.u$name
+    file_name <- tools::file_path_sans_ext(gs.u)
     gp <- JaccDendoMat_react()
+    gp <- gp %>% 
+      config(
+        toImageButtonOptions = list(
+          format = "svg",
+          filename = paste(file_name,"_ClusterFigure", sep = '')
+        )
+      )
     gp
     
   })
@@ -1821,20 +1892,4 @@ server <- function(input, output, session) {
 
 
 shinyApp(ui,server)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
