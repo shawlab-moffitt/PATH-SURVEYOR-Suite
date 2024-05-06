@@ -399,3 +399,63 @@ biVarAnova <- function(obj,obj2) {
   text <- paste("Model Comparison:",line1,line2,line3,line4,line5,sep = "\n")
   return(cat(text))
 }
+
+dnld_ui <- function(id,label) {
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    shiny::downloadButton(ns("dnld"), label = label)
+  )
+}
+
+dnldPlot_server <- function(id, plot, file, height = 8, width = 8, units = "in", type = "gg") {
+  shiny::moduleServer(id, function(input, output, session) {
+    output$dnld <- shiny::downloadHandler(
+      filename = function() {
+        paste(file)
+      },
+      content = function(file) {
+        if (type == "gg") {
+          ggplot2::ggsave(filename = file, plot = plot,
+                          width = width, height = height,
+                          units = units)
+        } else if (type == "forest") {
+          dims <- get_wh(plot)
+          svg(file, width = unname(dims[1]+1), height = unname(dims[2]+1))
+          plot(plot)
+          dev.off()
+        } else if (type == "complex") {
+          svg(filename = file, height = height, width = width)
+          ComplexHeatmap::draw(plot)
+          dev.off()
+        }
+      }
+    )
+  })
+}
+
+dnldDF_server <- function(id, df, file) {
+  shiny::moduleServer(id, function(input, output, session) {
+    output$dnld <- shiny::downloadHandler(
+      filename = function() {
+        paste(file)
+      },
+      content = function(file) {
+        write.table(df,file,sep = '\t', row.names = F)
+      }
+    )
+  })
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
