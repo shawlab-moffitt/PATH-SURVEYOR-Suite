@@ -9,7 +9,7 @@
 * **param=** (OPTIONAL) URL path to meta/clinical paramater file described below
 * **proj=** (OPTIONAL) Desired project name
 
-* Example URL: https://shawlab-moffitt.shinyapps.io/path_surveyor/?proj=exprdata&expr=https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/raw/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/Expression_Data.zip&meta=https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/raw/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/Clinical_Data.txt
+* Example URL: https://shawlab-moffitt.shinyapps.io/path_surveyor/?proj=TCGA_CHOL&expr=https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/raw/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/TCGA_CHOL_Expression_PatientID.txt&meta=https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/raw/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/TCGA_CHOL_Clinical_PatientID.txt
 
 # Introduction
 
