@@ -1,0 +1,69 @@
+---
+title: "Purpose and Methods"
+author: "Alyssa Obermayer"
+date: '2022-08-25'
+output: html_document
+---
+
+
+# DRPPM - PATH SURVEIOR Shiny App
+
+## Purpose and Overview
+
+The integration of patient genome expression data, phenotypye data, and clinical data can serve as an integral resource for patient prognosis. DRPPM PATH SURVEIOR: **Path**way level **Surv**ival **E**xam**i**nat**or** serves to do just that, by examining the interaction of pathway analysis with patient expression and cilinical data to discover prominent features that take part in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards pathway analysis of patient survival. Gene Set pathways utilized in this workflow include the Molecular Signatures Database (MSigDB), LINCS L1000 Small-Molecule Perturbations, and Clue.io ER Stress signtatures, as well as user provided gene sets. 
+
+Here we focus on the Interactive mode of this workflow with the DRPPM-PATH-SURVEIOR R Shiny App. With the expression, phenotype, and clincial data provided by the user we can integrate single sample GSEA (ssGSEA) pathway analysis with the comprehensive list of gene set pathways provided (or user provided). Additionally, upon app start-up, if the "immunedeconv" package is installed, immune deconvolution using ESTIMATE and MCP Counter methods will be performed. The score data is able to be partitioned and viewed in the survival plots or as a feature using median cut-point. The user can view a variety of survival plots based on binning the score data into quartile, quantile, above/below median, and optimal cut-point, or look through the lense of univariate, bivariate, and multivariate analysis with the integration of additional phenotype and clincal patient data. Further data exploration is available within the app to observe ssGSEA score density across the cohort as well as box plots and heatmaps to examine risk and feature stratification. The Shiny app comes complete with the ability to subset your cohort of patients, upload your own gene set data, along with customization and download of plots and tables throughout the app.
+
+To facilitate identifying significant genes and pathways for further analysis, we have developed a Cox Proportional Hazard ranking script which ranks pathways or genes based on ssGSEA score or raw gene expression, respectively, above and below the median which returns a comprehensive table of pathways or genes ranked by Hazard Ratio which allows the user to find high-risk features with ease. When these are identified, the user can return to the interactive R Shiny App and visualize these features in real-time and perform additional bivariate or multivariate analyses to observe how the pathway survival interacts with covariates. More information on this pipeline can be found in our GitHub repository here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline.
+
+### The DRPPM-PATH-SURVEIOR Family
+
+* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR
+* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline
+* R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/DRPPM-Jaccard-Pathway-Connectivity
+* R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/DRPPM-PreRanked-GSEA
+
+
+# Methods
+
+## Pathway Survival Analysis
+
+Pathway survival analysis is performed using the `gsva()` function from the GSVA Bioconductor package in concordance with over 90k gene sets. The pathway chosen in the application is initially ran through the function using the single sample gene set enrichment method (ssGSEA) but has the ability to perform analysis with GSVA, plage, and zscore. The score that is derived is used as a continuous variable which is partioned into quartiles, median cut-point, optimal cut-point, top and bottom quantiles, and user designated cut-point. The immune deconvolution score and raw gene expression for a single gene can also take the place of the pathway score if chosen and will be partitioned into the same bins. Through the use of the `survfit()` and `Surv()` functions the partitions score variable can be applied with the patient survival data to generate Cox Proportional Hazard tables and Kaplan-Meier survival plots with the `ggsurvplot()` fuction.
+
+## Univariate and Multivariate Survival Analysis
+
+Additionally, univariate survival analysis can be performed using additional feature data provided by the user. The app reads the meta data parameter file to obtain which meta column names may be used as a feature for data analysis. The selected feature is run through a process similar to the pathway survival analysis using the `survfit()` and `Surv()` functions, though instead of partitioned pathway score, the formula uses a meta data feature. Furthermore, these features can be compared using bivariate survival analysis, where the user can choose two features or a feature and a partioned pathway score to analysis the interaction of those variables and their affect on patient outcome. The multivariate analysis is performed through additve (`survfit(Surv(OS.time,OS.ID) ~ Feature1 + Feature2)`) and multiplicative methods (`survfit(Surv(OS.time,OS.ID) ~ Feature1 * Feature2)`).
+
+Both the univariate and bivariate survival analysis can be viewed as Kaplan-Meier survival curves, Cox proportional hazard tables, Forest plots, and linearity plots. For bivariate survival analysis, model comparison through ANOVA is performed. Moreover, there is a option for multivariate survival analysis to observe the interaction of more than two features. This is performed as multiplicative and can be prone to errors depending on the results some interactions generate, so please use at your own discretion.
+
+
+## Immune Deconvolution
+
+Requires R Version 4.1 or greater
+
+Immune deconvolution allows the user the elucidate gene expression data and identify key cell populations identified across samples. The understanding of cell type composition allows for further clarification and additional infrances to be made on the data being examined which could be leveraged to find specific celltypes that may be used as therapeutic targets. When evaluating the cell type population scores, we can pair it with patient survival data to take a deeper look at how patients outcomes may be affected by the population levels of immune cell types.
+
+Many computational methodologies have been developed which produce a variety of cell type categories for the user to delineate their samples. We have provided an immune deconvolution script if the user would like to pre-process immune deconvolution scores from an array of methods. This script will append the calculated immune deconvolution scrore and median cut-point to the users meta data and meta parameters. If the immunedeconv package is install, upon app start up the script will check to see if MCP-counter or ESTIMATE immune deconvolution scores are included in the meta data, and if not the `deconvolute()` function will run generate these scores to be examined in the application. 
+
+More information on the immune deconvolution methods and pre-processing can be found here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/tree/main/Immune_Deconvolution
+
+
+## Data Exploration
+
+### Score Density
+
+The score density plot is derived with the ggplot2 `geom_density()` function from the pathway, immune deconvolution, or raw gene expression score that is selected in the sidebar. It will be displayed showing dashed quartile lines as well as a red dashed line placed based on the users input. The sample names and the scores are shown below.
+
+### Risk Stratification
+
+The risk stratification boxplot and heatmap allow the user to designate their own survival time cutoff (in days) and patient event status (0, 1, or 0/1) in the 'Risk Strat Parameters' sidebar panel to determine what may be High-Risk versus Low-Risk. This user input is used to partition samples into the High and Low risk groups and visualize the score distribution between the two groups in a boxplot. Additionally, a heatmap is also viewable showing the zscore normalized expression values of the genes within the chosen pathway across the stratified sample groups, seen as annotation at the top of the heatmap.
+
+### Feature Stratification
+
+Additional features provided in the meta data can be view to observe the score distribution within and between the groupings withing a chosen feature as a boxplot as well as a heatmap showing the zscore normalized expression values of the genes within the chosen pathway across the stratified groups of the chosen feature, seen as annotation at the top of the heatmap.
+
+
+
+
+
+

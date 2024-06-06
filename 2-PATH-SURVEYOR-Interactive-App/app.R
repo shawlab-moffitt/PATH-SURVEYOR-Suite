@@ -26,7 +26,7 @@ PreSelect_SecondaryFeature <- NULL
 ## User make sure paths are correct
 GeneSet_File <- "Genesets/GeneSet_List_HS_v6.RData"
 GeneSetTable_File <- "Genesets/GeneSet_CatTable_v6.txt"
-About_MD_File <- "App_Markdowns/PurposeAndMethods.Rmd"
+About_MD_File <- "PurposeAndMethods.Rmd"
 ExampleExpr_File <- "Example_Data/TCGA_CHOL_Expression_PatientID.txt"
 ExampleClin_File <- "Example_Data/TCGA_CHOL_Clinical_PatientID.txt"
 ExampleParam_File <- "Example_Data/TCGA_SurvivalApp_Global_Parameters.txt"
@@ -94,58 +94,58 @@ login_tab <- tabPanel(
 
 ## Data Input Tab --------------------------------------------------------------
 #if (!FileProvided) {
-  DataInput_tab <- tabPanel("Data Input",
-                            fluidPage(
-                              sidebarPanel(
-                                width = 3,
-                                id = "DataInputPanel",
-                                p(),
-                                textInput("UserProjectName","Project Name:", value = "Survival Analysis"),
-                                uiOutput("rendExprFileInput"),
-                                fluidRow(
-                                  column(5, style = 'padding-right:2px;margin-top:-30px;',
-                                         checkboxInput("LogExprFile","Log2 Expression", value = F)
-                                  ),
-                                  column(7, style = 'padding-left:2px;margin-top:-30px;',
-                                         checkboxInput("ScaleNormExprFile","Scale Normalize Expression", value = F)
-                                  )
+DataInput_tab <- tabPanel("Data Input",
+                          fluidPage(
+                            sidebarPanel(
+                              width = 3,
+                              id = "DataInputPanel",
+                              p(),
+                              textInput("UserProjectName","Project Name:", value = "Survival Analysis"),
+                              uiOutput("rendExprFileInput"),
+                              fluidRow(
+                                column(5, style = 'padding-right:2px;margin-top:-30px;',
+                                       checkboxInput("LogExprFile","Log2 Expression", value = F)
                                 ),
-                                uiOutput("rendClinFileInput"),
-                                fluidRow(
-                                  column(12, style = 'margin-top:-15px;',
-                                         actionButton("UseExpData","Load Example Data"),
-                                         tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/PATH_SURVEYOR_App/", "Download example data", target='_blank'),
-                                  )
-                                ),
-                                shiny::hr(),
-                                uiOutput("rendClinParamHeader"),
-                                h4("Clinical Parameters"),
-                                fluidRow(
-                                  column(12, style = 'margin-top:-20px;',
-                                         radioButtons("ParamChoice","", choices = c("Define Parameters","Upload Parameter File"), inline = T)
-                                  )
-                                ),
-                                fluidRow(
-                                  column(8,
-                                         uiOutput("rendClinParamFileInput"),
-                                         uiOutput("rendSurvTimeColSelect"),
-                                         uiOutput("rendSurvIDColSelect")
-                                  ),
-                                  column(4,
-                                         uiOutput("rendSurvTimeUnits")
-                                  )
-                                ),
+                                column(7, style = 'padding-left:2px;margin-top:-30px;',
+                                       checkboxInput("ScaleNormExprFile","Scale Normalize Expression", value = F)
+                                )
                               ),
-                              mainPanel(
-                                uiOutput("rendExprFilePrevHeader"),
-                                div(DT::dataTableOutput("ExprFile_Preview"), style = "font-size:10px"),
-                                uiOutput("rendClinFilePrevHeader"),
-                                div(DT::dataTableOutput("ClinFile_Preview"), style = "font-size:10px"),
-                                uiOutput("rendParamFilePrevHeader"),
-                                div(DT::dataTableOutput("ClinParamFile_Preview"), style = "font-size:10px")
-                              )
+                              uiOutput("rendClinFileInput"),
+                              fluidRow(
+                                column(12, style = 'margin-top:-15px;',
+                                       actionButton("UseExpData","Load Example Data"),
+                                       tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/PATH_SURVEYOR_App/", "Download example data", target='_blank'),
+                                )
+                              ),
+                              shiny::hr(),
+                              uiOutput("rendClinParamHeader"),
+                              h4("Clinical Parameters"),
+                              fluidRow(
+                                column(12, style = 'margin-top:-20px;',
+                                       radioButtons("ParamChoice","", choices = c("Define Parameters","Upload Parameter File"), inline = T)
+                                )
+                              ),
+                              fluidRow(
+                                column(8,
+                                       uiOutput("rendClinParamFileInput"),
+                                       uiOutput("rendSurvTimeColSelect"),
+                                       uiOutput("rendSurvIDColSelect")
+                                ),
+                                column(4,
+                                       uiOutput("rendSurvTimeUnits")
+                                )
+                              ),
+                            ),
+                            mainPanel(
+                              uiOutput("rendExprFilePrevHeader"),
+                              div(DT::dataTableOutput("ExprFile_Preview"), style = "font-size:10px"),
+                              uiOutput("rendClinFilePrevHeader"),
+                              div(DT::dataTableOutput("ClinFile_Preview"), style = "font-size:10px"),
+                              uiOutput("rendParamFilePrevHeader"),
+                              div(DT::dataTableOutput("ClinParamFile_Preview"), style = "font-size:10px")
                             )
-  )
+                          )
+)
 #}
 
 ## Survival Tab ----------------------------------------------------------------
@@ -195,11 +195,11 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                       conditionalPanel(condition = "input.UserGSoption == 'Gene Set Upload'",
                                                                                        fileInput("userGeneSet","Gene Set Upload", accept = c(".gmt",".tsv",".txt",".RData")),
                                                                                        div(DT::dataTableOutput("userGeneSetTable"), style = "font-size:10px")
-                                                                                       ),
+                                                                      ),
                                                                       conditionalPanel(condition = "input.UserGSoption == 'Text Box Input'",
                                                                                        textInput("userGeneSetTextName","Custom Gene Set Name", value = "Custom_Geneset"),
                                                                                        textInput("userGeneSetText","Gene Symbols", placeholder = "Comma, space, or tab delimited")
-                                                                                       ),
+                                                                      ),
                                                                       value = 3
                                                              )
                                                            ),
@@ -213,15 +213,17 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                             fluidRow(
                                                                               column(6,
                                                                                      uiOutput("rendSurvXaxis"),
+                                                                                     numericInput("SurvXaxisBreaks","Survival X-Axis Breaks (Years):",value = 1, min = 0, step = 0.25),
                                                                                      selectInput("SurvLegendPos","Legend Position",choices = c("right","left","top","bottom","none"))
-                                                                                     ),
+                                                                              ),
                                                                               column(6, style = "margin-top:15px",
+                                                                                     radioButtons("SurvYearOrMonth","Survival X-Axis Units:",choices = c("Years","Months"), inline = T),
                                                                                      checkboxInput("ShowPval","Show P.Value",value = T),
                                                                                      checkboxInput("ShowConfInt","Show Confidence Interval",value = F),
                                                                                      checkboxInput("ShowMedSurvLine","Show Median Survival Line",value = F)
-                                                                                     )
                                                                               )
-                                                                            ),
+                                                                            )
+                                                           ),
                                                            conditionalPanel(condition = "input.SurvPanels == '2' | input.SurvPanels == '3'",
                                                                             shiny::hr(),
                                                                             h3("Forest Plot Parameters"),
@@ -231,29 +233,29 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                             fluidRow(
                                                                               column(4,
                                                                                      numericInput("linAxisFont","X/Y Axis Font Size",value = 14, step = 1)
-                                                                                     ),
+                                                                              ),
                                                                               column(4,
                                                                                      numericInput("linTickFont","Axis Tick Font Size",value = 10, step = 1)
-                                                                                     ),
+                                                                              ),
                                                                               column(4,
                                                                                      numericInput("linMainFont","Title Font Size",value = 16, step = 1)
-                                                                                     )
                                                                               )
-                                                                            ),
+                                                                            )
+                                                           ),
                                                            conditionalPanel(condition = "input.SurvPanels == '4'",
                                                                             p(),
                                                                             h3("Boxplot Parameters"),
                                                                             fluidRow(
                                                                               column(4,
                                                                                      numericInput("boxplotFont","Font Size:", value = 15, step = 1)
-                                                                                     ),
+                                                                              ),
                                                                               column(4,
                                                                                      numericInput("boxplotDot", "Dot Size:", value = 0.75, step = 0.25)
-                                                                                     ),
+                                                                              ),
                                                                               column(4,
                                                                                      selectInput("boxplotTextAngle","X-Axis Text:",
                                                                                                  choices = c("Horizontal (0 degrees)" = 0,"Angled (45 degrees)" = 45,"Vertical (90 degrees)" = 90))
-                                                                                     )
+                                                                              )
                                                                             ),
                                                                             hr(),
                                                                             h3("Heatmap Parameters"),
@@ -265,13 +267,13 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                                      numericInput("heatmapFontC", "Column Font Size:", value = 10, step = 1)
                                                                               )
                                                                             )
-                                                                            ),
+                                                           ),
                                                            hr(),
                                                            h3("Plot Download Parameters"),
                                                            fluidRow(
                                                              column(4,
                                                                     numericInput("PlotDnldHight","Plot Height",value = 8, min = 0, step = 1)
-                                                                    ),
+                                                             ),
                                                              column(4,
                                                                     numericInput("PlotDnldWidth","Plot Width",value = 8, min = 0, step = 1)
                                                              ),
@@ -497,7 +499,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                           p(),
                                           fluidRow(
                                             column(6,
-                                                   selectizeInput("SingleSurvivalFeature","Select Feature:",choices = NULL, selected = 1),
+                                                   selectizeInput("SingleSurvivalFeature","Select Feature:",choices = NULL, selected = 1, width = "80%"),
                                                    # Allows all select inputs to be wide enough to read the contents
                                                    tags$head(
                                                      tags$style(HTML('
@@ -517,7 +519,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      column(3,
                                                             conditionalPanel(condition = "input.UniVarContCheck == true",
                                                                              checkboxInput("UniVarContHiLoCheck","Continuous Feature as Median Cut-Point",value = T)
-                                                                             )
+                                                            )
 
                                                      )
                                                    ),
@@ -604,7 +606,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      p(),
                                                      fluidRow(
                                                        column(6,
-                                                              selectizeInput("SurvivalFeatureBi1","Select Feature 1:",choices = NULL, selected = 1),
+                                                              selectizeInput("SurvivalFeatureBi1","Select Feature 1:",choices = NULL, selected = 1, width = "80%"),
                                                               #uiOutput("rendSurvivalFeatureBi1"),
                                                               fluidRow(
                                                                 column(4,
@@ -623,7 +625,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                               uiOutput("rendSurvFeatVariableBi1")
                                                        ),
                                                        column(6,
-                                                              selectizeInput("SurvivalFeatureBi2","Select Feature 2:",choices = NULL, selected = 1),
+                                                              selectizeInput("SurvivalFeatureBi2","Select Feature 2:",choices = NULL, selected = 1, width = "80%"),
                                                               #uiOutput("rendSurvivalFeatureBi2"),
                                                               fluidRow(
                                                                 column(4,
@@ -696,7 +698,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      p(),
                                                      fluidRow(
                                                        column(6,
-                                                              selectizeInput("SurvivalFeatureBi1Inter","Select Feature 1:",choices = NULL, selected = 1),
+                                                              selectizeInput("SurvivalFeatureBi1Inter","Select Feature 1:",choices = NULL, selected = 1, width = "80%"),
                                                               fluidRow(
                                                                 column(4,
                                                                        checkboxInput("BiVarIntNAcheck1","Remove NA/Unknown/Inf",value = T)
@@ -714,7 +716,7 @@ Survival_tab <- tabPanel("Survival Analysis",
 
                                                        ),
                                                        column(6,
-                                                              selectizeInput("SurvivalFeatureBi2Inter","Select Feature 1:",choices = NULL, selected = 1),
+                                                              selectizeInput("SurvivalFeatureBi2Inter","Select Feature 1:",choices = NULL, selected = 1, width = "80%"),
                                                               fluidRow(
                                                                 column(4,
                                                                        checkboxInput("BiVarIntNAcheck2","Remove NA/Unknown/Inf",value = T)
@@ -896,11 +898,11 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      selectizeInput("MetaTableCols","Select Meta Columns to View:",multiple = T, choices = NULL, selected = ""),
                                                      div(DT::dataTableOutput("MetaTable"), style = "font-size:12px"),
                                                      fluidRow(
-                                                       column(6,
-                                                              uiOutput("DnldMetaButon")
+                                                       column(2,
+                                                              dnld_ui("DnldClin","Download Clinical Data")
                                                        ),
-                                                       column(6,
-                                                              uiOutput("DnldExprButon")
+                                                       column(2,
+                                                              dnld_ui("DnldExpr","Download Expression Data")
                                                        )
                                                      ),
                                                      value = 5),
@@ -930,7 +932,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        column(3,
                                                               conditionalPanel(condition = "input.ColorScatterChoice == 'Feature'",
                                                                                selectizeInput("ScatterColor","Color By:",multiple = F, choices = NULL, selected = 1)
-                                                                               ),
+                                                              ),
                                                               conditionalPanel(condition = "input.ColorScatterChoice == 'Single Color'",
                                                                                selectInput("ScatterColor2","Color:",choices = colors(), selected = "cadetblue"))
                                                        ),
@@ -962,35 +964,35 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                               conditionalPanel(condition = "input.riskstrat == 'box'",
                                                                                selectInput("boxoptselecRisk","Stat Compare Method:", choices = c("none","wilcox.test","t.test")),
                                                                                checkboxInput("SBoxLog", "Log Transform Score", value = T)
-                                                                               ),
+                                                              ),
                                                               conditionalPanel(condition = "input.riskstrat == 'heat'",
                                                                                selectizeInput("riskHeatAnno","Add Annotation:", choices = NULL, selected = 1, multiple = T),
                                                                                selectInput("ClusterMethod", "Select Cluster Method:",
                                                                                            choices = c("ward.D", "ward.D2", "complete", "single", "average", "mcquitty", "median", "centroid"))
-                                                                               )
+                                                              )
 
                                                        )
                                                      ),
                                                      tabsetPanel(id = "riskstrat",
-                                                       tabPanel("Risk Straification Boxplot",
-                                                                p(),
-                                                                shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Sboxplot", width = "100%", height = "400px")), type = 6),
-                                                                dnld_ui("dnldSboxplot_SVG","SVG"),
-                                                                div(DT::dataTableOutput("SboxplotTable"), style = "font-size:12px; height:450px; overflow-Y: scroll"),
-                                                                p(),
-                                                                dnld_ui("dnldSBoxplotTab","Download Table"),
-                                                                value = "box"
-                                                       ),
-                                                       tabPanel("Risk Straification Heatmap",
-                                                                p(),
-                                                                uiOutput("heatmap_error_message"),
-                                                                shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Sheatmap", width = "100%", height = "2000px")), type = 6),
-                                                                fluidRow(
-                                                                  dnld_ui("dnldSheatmap_SVG","SVG"),
-                                                                  dnld_ui("dnldSheatmapexpr","Download Expression Matrix From Heatmap")
-                                                                ),
-                                                                value = "heat"
-                                                       )
+                                                                 tabPanel("Risk Straification Boxplot",
+                                                                          p(),
+                                                                          shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Sboxplot", width = "100%", height = "400px")), type = 6),
+                                                                          dnld_ui("dnldSboxplot_SVG","SVG"),
+                                                                          div(DT::dataTableOutput("SboxplotTable"), style = "font-size:12px; height:450px; overflow-Y: scroll"),
+                                                                          p(),
+                                                                          dnld_ui("dnldSBoxplotTab","Download Table"),
+                                                                          value = "box"
+                                                                 ),
+                                                                 tabPanel("Risk Straification Heatmap",
+                                                                          p(),
+                                                                          uiOutput("heatmap_error_message"),
+                                                                          shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Sheatmap", width = "100%", height = "2000px")), type = 6),
+                                                                          fluidRow(
+                                                                            dnld_ui("dnldSheatmap_SVG","SVG"),
+                                                                            dnld_ui("dnldSheatmapexpr","Download Expression Matrix From Heatmap")
+                                                                          ),
+                                                                          value = "heat"
+                                                                 )
                                                      )
                                             ),
                                             ##### Feat Strat ---------------------------------
@@ -1006,10 +1008,10 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        column(3,
                                                               conditionalPanel(condition = "input.featstrat == 'box'",
                                                                                selectInput("boxoptselec","Boxplot Stat Compare Method:", choices = c("none","wilcox.test","t.test","kruskal.test","anova"))
-                                                                               ),
+                                                              ),
                                                               conditionalPanel(condition = "input.featstrat == 'heat'",
                                                                                selectizeInput("stratHeatAnno","Add Annotation:", choices = NULL, selected = 1, multiple = T)
-                                                                               )
+                                                              )
 
                                                        ),
                                                        column(3,
@@ -1017,28 +1019,28 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                                selectInput("ClusterMethod2", "Select Cluster Method:",
                                                                                            choices = c("ward.D", "ward.D2", "complete", "single", "average", "mcquitty", "median", "centroid"))
                                                               )
-                                                              )
+                                                       )
                                                      ),
                                                      tabsetPanel(id = "featstrat",
-                                                       tabPanel("Feature Boxplot",
-                                                                p(),
-                                                                shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Featureboxplot", width = "100%", height = "500px")), type = 6),
-                                                                dnld_ui("dnldFboxplot_SVG","SVG"),
-                                                                div(DT::dataTableOutput("FeatureboxplotTable"), style = "font-size:12px; height:450px; overflow-Y: scroll"),
-                                                                p(),
-                                                                dnld_ui("dnldFeatureboxplotTab","Download Table"),
-                                                                value = "box"
-                                                       ),
-                                                       tabPanel("Feature Heatmap",
-                                                                p(),
-                                                                uiOutput("heatmap_error_message2"),
-                                                                shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("FeatureHeatmap", width = "100%", height = "2000px")), type = 6),
-                                                                fluidRow(
-                                                                  dnld_ui("dnldFheatmap_SVG","SVG"),
-                                                                  dnld_ui("dnldFheatmapexpr","Download Expression Matrix From Heatmap")
-                                                                ),
-                                                                value = "heat"
-                                                       )
+                                                                 tabPanel("Feature Boxplot",
+                                                                          p(),
+                                                                          shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Featureboxplot", width = "100%", height = "500px")), type = 6),
+                                                                          dnld_ui("dnldFboxplot_SVG","SVG"),
+                                                                          div(DT::dataTableOutput("FeatureboxplotTable"), style = "font-size:12px; height:450px; overflow-Y: scroll"),
+                                                                          p(),
+                                                                          dnld_ui("dnldFeatureboxplotTab","Download Table"),
+                                                                          value = "box"
+                                                                 ),
+                                                                 tabPanel("Feature Heatmap",
+                                                                          p(),
+                                                                          uiOutput("heatmap_error_message2"),
+                                                                          shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("FeatureHeatmap", width = "100%", height = "2000px")), type = 6),
+                                                                          fluidRow(
+                                                                            dnld_ui("dnldFheatmap_SVG","SVG"),
+                                                                            dnld_ui("dnldFheatmapexpr","Download Expression Matrix From Heatmap")
+                                                                          ),
+                                                                          value = "heat"
+                                                                 )
                                                      )
                                             )
                                           ),
@@ -1074,12 +1076,12 @@ if (Password_Protected) {
   #                   Survival_tab,
   #                   About_tab)
   #} else {
-    ui <- navbarPage(paste(ProjectName),
-                     id = "tabs",
-                     collapsible = TRUE,
-                     DataInput_tab,
-                     Survival_tab,
-                     About_tab)
+  ui <- navbarPage(paste(ProjectName),
+                   id = "tabs",
+                   collapsible = TRUE,
+                   DataInput_tab,
+                   Survival_tab,
+                   About_tab)
   #}
 }
 
@@ -1452,12 +1454,15 @@ server <- function(input, output, session) {
           }
           colnames(expr)[1] <- "Gene"
           # Remove Duplicate genes
-          if (TRUE %in% duplicated(expr[,1])) {
-            expr <- expr %>%
+          expr_dup <- expr[which(expr[,1] %in% expr[,1][duplicated(expr[,1])]),]
+          expr_nondup <- expr[which(!expr[,1] %in% expr[,1][duplicated(expr[,1])]),]
+          if (nrow(expr_dup) > 0) {
+            expr_dup <- expr_dup %>%
               group_by(Gene) %>%
               summarise_all(max) %>%
               as.data.frame()
           }
+          expr <- rbind(expr_dup,expr_nondup)
           row.names(expr) <- expr[,1]
           expr <- expr[,-1]
 
@@ -1671,7 +1676,8 @@ server <- function(input, output, session) {
           metacol_feature <- metacol_feature[-which(metacol_feature == input$FeatureSelection)]
           metacol_feature <- ifelse(!is.null(input$SampleTypeSelection),metacol_feature[-which(metacol_feature == input$SampleTypeSelection)],metacol_feature)
         }
-        metacol_feature <- c(metacol_feature,geneset_name,"QuartileCutP","MedianCutP","OptimalCutP","TopBottomCutP","UserCutP")
+        metacol_feature <- c(metacol_feature,geneset_name,paste0(geneset_name,"_QuartileCutP"),paste0(geneset_name,"_MedianCutP"),
+                             paste0(geneset_name,"_OptimalCutP"),paste0(geneset_name,"_TopBottomCutP"),paste0(geneset_name,"_UserCutP"))
         metacol_feature
 
       })
@@ -1783,10 +1789,21 @@ server <- function(input, output, session) {
 
       output$rendSurvXaxis <- renderUI({
         meta_ssgsea <- ssGSEAmeta()
+        yOm <- input$SurvYearOrMonth
         surv_time_col <- input$SurvivalType_time
         surv_id_col <- input$SurvivalType_id
         max_time <- ceiling(max(meta_ssgsea[,surv_time_col])/365.25)
-        numericInput("SurvXaxis","X-Axis Limit (years)", value = max_time)
+        if (yOm == "Years") {
+          numericInput("SurvXaxis","X-Axis Limit (years)", value = max_time)
+        } else if (yOm == "Months") {
+          numericInput("SurvXaxis","X-Axis Limit (months)", value = max_time*12)
+        }
+      })
+
+      observe({
+        if (input$SurvYearOrMonth == "Months") {
+          updateNumericInput(session,"SurvXaxisBreaks",label = "Survival X-Axis Breaks (Months):", value = 12, step = 1)
+        }
       })
 
       ### Genesets -------------------------------------------------------------
@@ -1987,7 +2004,7 @@ server <- function(input, output, session) {
 
       ### ssGSEA Reactive ------------------------------------------------------
       ## Perform ssGSEA and functions on new meta table
-      ssGSEAmeta <- reactive({C
+      ssGSEAmeta <- reactive({
         req(metaSub())
         req(exprSub())
         req(gs_react())
@@ -1995,8 +2012,10 @@ server <- function(input, output, session) {
         expr <- exprSub()
         geneset <- gs_react()
         geneset_name <- names(geneset)
+        print(geneset)
+        print(geneset_name)
         if (length(unname(unlist(geneset))) > 0) {
-          if (any(unname(unlist(geneset)) %in% rownames(expr))) {
+          if ((any(unname(unlist(geneset)) %in% rownames(expr))) | (geneset_name %in% decon_score_cols())) {
             if (isTruthy(input$SurvivalType_time) & isTruthy(input$SurvivalType_id) & isTruthy(geneset_name)) {
               SampleNameCol <- metacol_samplename_react()
               quantCutoff <- input$QuantPercent/100
@@ -2059,16 +2078,24 @@ server <- function(input, output, session) {
                       res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
                       cutp <- res.cut$cutpoint[["cutpoint"]]
                       res.cat <- surv_categorize(res.cut)
-                      ssGSEA$OptimalCutP <- res.cat[,3]
+                      #ssGSEA$OptimalCutP <- res.cat[,3]
+                      ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- res.cat[,3]
                     }
                   }
 
                   ## Perform further functions
-                  ssGSEA$VAR_Q <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
-                  ssGSEA$QuartileCutP <- paste("", ssGSEA$VAR_Q, sep="")
-                  ssGSEA$MedianCutP <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
-                  ssGSEA$TopBottomCutP <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
-                  ssGSEA$UserCutP <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
+                  #ssGSEA$VAR_Q <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
+                  #ssGSEA$QuartileCutP <- paste("", ssGSEA$VAR_Q, sep="")
+                  #ssGSEA$MedianCutP <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
+                  #ssGSEA$TopBottomCutP <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
+                  #ssGSEA$UserCutP <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
+
+
+                  ssGSEA[,paste0(geneset_name,"_VAR_Q")] <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
+                  ssGSEA[,paste0(geneset_name,"_QuartileCutP")] <- paste("", ssGSEA[,paste0(geneset_name,"_VAR_Q")], sep="")
+                  ssGSEA[,paste0(geneset_name,"_MedianCutP")] <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
+                  ssGSEA[,paste0(geneset_name,"_TopBottomCutP")] <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
+                  ssGSEA[,paste0(geneset_name,"_UserCutP")] <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
 
                   meta_ssGSEA <- merge(meta,ssGSEA)
                   meta_ssGSEA
@@ -2089,12 +2116,16 @@ server <- function(input, output, session) {
 
       MedianCutP_react <- reactive({
         req(ssGSEAmeta())
-        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,"MedianCutP")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_MedianCutP"))
       })
 
       MedianCutPTab_react <- reactive({
         req(MedianCutP_react())
-        CoxPHobj(MedianCutP_react(),"MedianCutP","Low")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        CoxPHobj(MedianCutP_react(),paste0(geneset_name,"_MedianCutP"),"Low")
       })
 
       SBinaryHRtab_react <- reactive({
@@ -2129,7 +2160,7 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- MedianCutP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        SurvFeature <- "MedianCutP"
+        SurvFeature <- paste0(geneset_name,"_MedianCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         SampleTypeSelected <- input$SampleTypeChoices
@@ -2137,9 +2168,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -2163,11 +2201,13 @@ server <- function(input, output, session) {
 
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Median Cut-Point")
 
+        SurvFeature <- sprintf(ifelse(grepl(" |/|-", SurvFeature), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
 
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       output$SplotBIN <- renderPlot({
         plot <- SplotBIN_react()
@@ -2226,22 +2266,6 @@ server <- function(input, output, session) {
 
       })
 
-      #CoxPHsumm <- function(CoxPHobj,bivarAdd = FALSE,bivarInt = FALSE) {
-      #  out <- capture.output(summary(CoxPHobj))
-      #  xph <- capture.output(cox.zph(CoxPHobj))
-      #  con_line <- grep("^Concordance=",out,value = T)
-      #  lik_line <- grep("^Likelihood ratio test=",out,value = T)
-      #  wal_line <- grep("^Wald test",out,value = T)
-      #  sco_line <- grep("^Score ",out,value = T)
-      #  text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
-      #  if (bivarAdd) {
-      #    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],xph[4],sep = "\n")
-      #  }
-      #  if (bivarInt) {
-      #    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],xph[4],xph[5], sep = "\n")
-      #  }
-      #  return(cat(text))
-      #}
       output$MedianCutPSumm <- renderPrint({
         req(MedianCutPTab_react())
         CoxPHsumm(MedianCutPTab_react())
@@ -2255,12 +2279,16 @@ server <- function(input, output, session) {
 
       QuartileCutP_react <- reactive({
         req(ssGSEAmeta())
-        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,"QuartileCutP")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_QuartileCutP"))
       })
 
       QuartileCutPTab_react <- reactive({
         req(QuartileCutP_react())
-        CoxPHobj(QuartileCutP_react(),"QuartileCutP","Q1_Low")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        CoxPHobj(QuartileCutP_react(),paste0(geneset_name,"_QuartileCutP"),"Q1_Low")
       })
 
       SQuartileHRtab_react <- reactive({
@@ -2295,7 +2323,7 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- QuartileCutP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        SurvFeature <- "QuartileCutP"
+        SurvFeature <- paste0(geneset_name,"_QuartileCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         SampleTypeSelected <- input$SampleTypeChoices
@@ -2303,9 +2331,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -2329,11 +2364,13 @@ server <- function(input, output, session) {
 
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Quartile Cut-Point")
 
+        SurvFeature <- sprintf(ifelse(grepl(" |/|-", SurvFeature), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
 
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       output$Splot <- renderPlot({
         Splot_react()
@@ -2403,12 +2440,16 @@ server <- function(input, output, session) {
 
       OptimalCutP_react <- reactive({
         req(ssGSEAmeta())
-        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,"OptimalCutP")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_OptimalCutP"))
       })
 
       OptimalCutPTab_react <- reactive({
         req(OptimalCutP_react())
-        CoxPHobj(OptimalCutP_react(),"OptimalCutP","low")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        CoxPHobj(OptimalCutP_react(),paste0(geneset_name,"_OptimalCutP"),"low")
       })
 
       CutPointHRtab_react <- reactive({
@@ -2443,7 +2484,7 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- OptimalCutP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        SurvFeature <- "OptimalCutP"
+        SurvFeature <- paste0(geneset_name,"_OptimalCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         SampleTypeSelected <- input$SampleTypeChoices
@@ -2451,9 +2492,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -2476,11 +2524,14 @@ server <- function(input, output, session) {
         }
 
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Optimal Cut-Point")
+
+        SurvFeature <- sprintf(ifelse(grepl(" |/|-", SurvFeature), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
 
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       output$ScutPointPlot <- renderPlot({
         ScutPointPlot_react()
@@ -2554,14 +2605,18 @@ server <- function(input, output, session) {
 
       TopBottomCutP_react <- reactive({
         req(ssGSEAmeta())
-        meta_ssgsea_sdf <- SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,"TopBottomCutP")
-        meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,"TopBottomCutP"] != "BetweenCutoff"),]
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        meta_ssgsea_sdf <- SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_TopBottomCutP"))
+        meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,paste0(geneset_name,"_TopBottomCutP")] != "BetweenCutoff"),]
         meta_ssgsea_sdf
       })
 
       TopBottomCutPTab_react <- reactive({
         req(TopBottomCutP_react())
-        CoxPHobj(TopBottomCutP_react(),"TopBottomCutP","Low")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        CoxPHobj(TopBottomCutP_react(),paste0(geneset_name,"_TopBottomCutP"),"Low")
       })
 
       SQuantileHRtab_react <- reactive({
@@ -2596,7 +2651,7 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- TopBottomCutP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        SurvFeature <- "TopBottomCutP"
+        SurvFeature <- paste0(geneset_name,"_TopBottomCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         SampleTypeSelected <- input$SampleTypeChoices
@@ -2604,9 +2659,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -2630,11 +2692,13 @@ server <- function(input, output, session) {
 
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"top/bottom quantile cut-points")
 
+        SurvFeature <- sprintf(ifelse(grepl(" |/|-", SurvFeature), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
 
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       output$SquantPlot <- renderPlot({
         SquantPlot_react()
@@ -2707,13 +2771,17 @@ server <- function(input, output, session) {
 
       UserCutP_react <- reactive({
         req(ssGSEAmeta())
-        meta_ssgsea_sdf <- SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,"UserCutP")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        meta_ssgsea_sdf <- SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_UserCutP"))
         meta_ssgsea_sdf
       })
 
       UserCutPTab_react <- reactive({
         req(UserCutP_react())
-        CoxPHobj(UserCutP_react(),"UserCutP","Low")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        CoxPHobj(UserCutP_react(),paste0(geneset_name,"_UserCutP"),"Low")
       })
 
       SQuantileHR2tab_react <- reactive({
@@ -2748,7 +2816,7 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- UserCutP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        SurvFeature <- "UserCutP"
+        SurvFeature <- paste0(geneset_name,"_UserCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         SampleTypeSelected <- input$SampleTypeChoices
@@ -2756,9 +2824,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -2781,11 +2856,14 @@ server <- function(input, output, session) {
         }
 
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"user cut-point")
+
+        SurvFeature <- sprintf(ifelse(grepl(" |/|-", SurvFeature), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
 
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       output$SquantPlot2 <- renderPlot({
         SquantPlot2_react()
@@ -2853,7 +2931,9 @@ server <- function(input, output, session) {
       ## Univariate ----------------------------------------------------------------
 
       observe({
-        updateSelectizeInput(session = session,inputId = "SingleSurvivalFeature", choices = metacol_feature(), selected = "MedianCutP", server = T)
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        updateSelectizeInput(session = session,inputId = "SingleSurvivalFeature", choices = metacol_feature(), selected = paste0(geneset_name,"_MedianCutP"), server = T)
       })
 
       output$rendSurvFeatVariableUni <- renderUI({
@@ -2862,7 +2942,7 @@ server <- function(input, output, session) {
         Feature <- input$SingleSurvivalFeature
         meta <- ssGSEAmeta()
         Var_choices <- survFeatRefSelect(meta,Feature,input$UniVarNAcheck,input$UniVarContCheck,input$UniVarContCheck)
-        selectInput("SurvFeatVariableUni","Select Coxh Feature Reference:", choices = Var_choices)
+        selectInput("SurvFeatVariableUni","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
 
       UniVarFeat_react <- reactive({
@@ -2878,7 +2958,13 @@ server <- function(input, output, session) {
             meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
           }
         }
-        SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature)
+        meta_ssgsea_sdf <- SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature)
+        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- "Feature"
+        #meta_ssgsea_sdf$Feature <- as.factor(meta_ssgsea_sdf$Feature)
+        #labelled::var_label(meta_ssgsea_sdf) <- list(
+        #  Feature = Feature #this variable is a numeric -> label works
+        #)
+        meta_ssgsea_sdf
 
       })
 
@@ -2887,11 +2973,18 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- UniVarFeat_react()
         Feature <- input$SingleSurvivalFeature
         ref_Feature <- input$SurvFeatVariableUni
+        #Feature <- sprintf(ifelse(grepl(" ", Feature), "`%s`", "%s"), Feature)
+        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- "Feature"
         if ((input$UniVarContCheck == FALSE) | (input$UniVarContCheck == TRUE & input$UniVarContHiLoCheck == TRUE)) {
           tab <- CoxPHobj(meta_ssgsea_sdf,Feature,ref_Feature)
+          #tab <- CoxPHobj(meta_ssgsea_sdf,"Feature",ref_Feature)
         } else {
+          Feature <- sprintf(ifelse(grepl(" |/|-", Feature), "`%s`", "%s"), Feature)
           tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature)),data = meta_ssgsea_sdf)
+          #tab <- coxph(as.formula(paste0("Surv(time,ID) ~ Feature")),data = meta_ssgsea_sdf)
         }
+        #names(tab[["assign"]]) <- gsub("^Feature",Feature,names(tab[["assign"]]))
+        #names(tab[["coefficients"]]) <- gsub("^Feature",Feature,names(tab[["coefficients"]]))
         tab
 
       })
@@ -2899,9 +2992,14 @@ server <- function(input, output, session) {
       SSingleFeatureHRtab_react <- reactive({
 
         #Feature <- input$SingleSurvivalFeature
-        tab <- UniVarFeatTab_react()
-        CoxPHtabUni(tab)
+        #meta_ssgsea_sdf <- UniVarFeat_react()
+        Feature <- input$SingleSurvivalFeature
+        #ref_Feature <- input$SurvFeatVariableUni
 
+        tab <- UniVarFeatTab_react()
+        #names(tab[["assign"]]) <- gsub("^Feature",Feature,names(tab[["assign"]]))
+        tabOut <- CoxPHtabUni(tab,Feature)
+        tabOut
       })
 
       featSplot_react <- reactive({
@@ -2916,9 +3014,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -2951,13 +3056,17 @@ server <- function(input, output, session) {
         }
 
         PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature, univar = Feature)
-
-        form <- as.formula(paste0("Surv(time,ID) ~ ",Feature))
-        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- "Feature"
+        form <- paste0("Surv(time,ID) ~ Feature")
+        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
+        names(fit[["strata"]]) <- gsub("^Feature=",paste0(Feature,"="),names(fit[["strata"]]))
 
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
+
       })
+
 
       output$featSplot <- renderPlot({
         plot <- featSplot_react()
@@ -2974,12 +3083,17 @@ server <- function(input, output, session) {
       output$UnivarSummary <- renderPrint({
 
         tab <- UniVarFeatTab_react()
+        Feature <- input$SingleSurvivalFeature
         CoxPHsumm(tab)
 
       })
 
       SinglevarForestPlot_react <- reactive({
-        forestPlot_Simple(UniVarFeatTab_react(),UniVarFeat_react(),input$SingleSurvivalFeature,input$ForestFontSize)
+        obj <- UniVarFeatTab_react()
+        Feature <- input$SingleSurvivalFeature
+        meta_ssgsea_sdf <- UniVarFeat_react()
+        forest <- forestPlot_Simple(obj,meta_ssgsea_sdf,input$SingleSurvivalFeature,input$ForestFontSize)
+        forest
       })
       output$SinglevarForestPlot <- renderPlot({
         forest <- SinglevarForestPlot_react()
@@ -3184,11 +3298,13 @@ server <- function(input, output, session) {
       observe({
         req(ssGSEAmeta())
         meta <- ssGSEAmeta()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
         FeatureChoices <- meta %>%
           dplyr::select(where(~ n_distinct(.x[nzchar(.x)], na.rm = TRUE) > 1)) %>%
           names
         #metacol_feature()
-        updateSelectizeInput(session = session,inputId = "SurvivalFeatureBi1", choices = FeatureChoices, selected = "MedianCutP", server = T)
+        updateSelectizeInput(session = session,inputId = "SurvivalFeatureBi1", choices = FeatureChoices, selected = paste0(geneset_name,"_MedianCutP"), server = T)
       })
       observe({
         req(ssGSEAmeta())
@@ -3207,13 +3323,13 @@ server <- function(input, output, session) {
         Feature <- input$SurvivalFeatureBi1
         meta <- ssGSEAmeta()
         Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarAddNAcheck1,input$BiVarAddContCheck1,input$BiVarAddContHiLoCheck1)
-        selectInput("SurvFeatVariableBi1","Select Coxh Feature Reference:", choices = Var_choices)
+        selectInput("SurvFeatVariableBi1","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
       output$rendSurvFeatVariableBi2 <- renderUI({
         Feature <- input$SurvivalFeatureBi2
         meta <- ssGSEAmeta()
         Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarAddNAcheck2,input$BiVarAddContCheck2,input$BiVarAddContHiLoCheck2)
-        selectInput("SurvFeatVariableBi2","Select Coxh Feature Reference:", choices = Var_choices)
+        selectInput("SurvFeatVariableBi2","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
 
       BiVarAddFeature_react <- reactive({
@@ -3258,16 +3374,20 @@ server <- function(input, output, session) {
       BiVarAddTab_react <- reactive({
         Feature1 <- input$SurvivalFeatureBi1
         Feature2 <- input$SurvivalFeatureBi2
+        Feature1 <- sprintf(ifelse(grepl(" |/|-", Feature1), "`%s`", "%s"), Feature1)
+        Feature2 <- sprintf(ifelse(grepl(" |/|-", Feature2), "`%s`", "%s"), Feature2)
         tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2))),data = BiVarAddFeature_react())
         tab
       })
       BiVarAddTabFeat1_react <- reactive({
         Feature1 <- input$SurvivalFeatureBi1
+        Feature1 <- sprintf(ifelse(grepl(" |/|-", Feature1), "`%s`", "%s"), Feature1)
         tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature1)),data = BiVarAddFeature_react())
         tab
       })
       BiVarAddTabFeat2_react <- reactive({
         Feature2 <- input$SurvivalFeatureBi2
+        Feature2 <- sprintf(ifelse(grepl(" |/|-", Feature2), "`%s`", "%s"), Feature2)
         tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature2)),data = BiVarAddFeature_react())
         tab
       })
@@ -3323,10 +3443,12 @@ server <- function(input, output, session) {
       observe({
         req(ssGSEAmeta())
         meta <- ssGSEAmeta()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
         FeatureChoices <- meta %>%
           dplyr::select(where(~ n_distinct(.x[nzchar(.x)], na.rm = TRUE) > 1)) %>%
           names
-        updateSelectizeInput(session = session,inputId = "SurvivalFeatureBi1Inter", choices = FeatureChoices, selected = "MedianCutP", server = T)
+        updateSelectizeInput(session = session,inputId = "SurvivalFeatureBi1Inter", choices = FeatureChoices, selected = paste0(geneset_name,"_MedianCutP"), server = T)
       })
       observe({
         req(ssGSEAmeta())
@@ -3345,13 +3467,13 @@ server <- function(input, output, session) {
         Feature <- input$SurvivalFeatureBi1Inter
         meta <- ssGSEAmeta()
         Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarIntNAcheck1,input$BiVarIntContCheck1,input$BiVarIntContHiLoCheck1)
-        selectInput("SurvFeatVariableBi1Inter","Select Coxh Feature Reference:", choices = Var_choices)
+        selectInput("SurvFeatVariableBi1Inter","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
       output$rendSurvFeatVariableBi2Inter <- renderUI({
         Feature <- input$SurvivalFeatureBi2Inter
         meta <- ssGSEAmeta()
         Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarIntNAcheck2,input$BiVarIntContCheck2,input$BiVarIntContHiLoCheck2)
-        selectInput("SurvFeatVariableBi2Inter","Select Coxh Feature Reference:", choices = Var_choices)
+        selectInput("SurvFeatVariableBi2Inter","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
 
       BiVarIntFeature_react <- reactive({
@@ -3397,6 +3519,8 @@ server <- function(input, output, session) {
       BiVarIntTab_react <- reactive({
         Feature1 <- input$SurvivalFeatureBi1Inter
         Feature2 <- input$SurvivalFeatureBi2Inter
+        Feature1 <- sprintf(ifelse(grepl(" |/|-", Feature1), "`%s`", "%s"), Feature1)
+        Feature2 <- sprintf(ifelse(grepl(" |/|-", Feature2), "`%s`", "%s"), Feature2)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"*",Feature2)))
         tab <- eval(substitute(coxph(form,data = BiVarIntFeature_react())))
         tab
@@ -3404,6 +3528,8 @@ server <- function(input, output, session) {
       BiVarIntTab4Annova_react <- reactive({
         Feature1 <- input$SurvivalFeatureBi1Inter
         Feature2 <- input$SurvivalFeatureBi2Inter
+        Feature1 <- sprintf(ifelse(grepl(" |/|-", Feature1), "`%s`", "%s"), Feature1)
+        Feature2 <- sprintf(ifelse(grepl(" |/|-", Feature2), "`%s`", "%s"), Feature2)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
         tab <- eval(substitute(coxph(form,data = BiVarIntFeature_react())))
         tab
@@ -3441,9 +3567,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -3459,11 +3592,25 @@ server <- function(input, output, session) {
         PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature,
                                    multivar = paste0(Feature1," + ",Feature2))
 
-        form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
-        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+
+        #Feature1 <- sprintf(ifelse(grepl(" ", Feature1), "`%s`", "%s"), Feature1)
+        #Feature2 <- sprintf(ifelse(grepl(" ", Feature2), "`%s`", "%s"), Feature2)
+
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature1)] <- "Feature1"
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature2)] <- "Feature2"
+        form <- paste0("Surv(time,ID) ~ Feature1 + Feature2")
+
+        #save(list = ls(), file = "shiny_env_mutliInt.Rdata", envir = environment())
+        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
+        names(fit[["strata"]]) <- gsub("^Feature1=",paste0(Feature1,"="),names(fit[["strata"]]))
+        names(fit[["strata"]]) <- gsub(", Feature2=",paste0(Feature2,"="),names(fit[["strata"]]))
+
+        #form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
+        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
 
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
 
       output$featSplotBi <- renderPlot({
@@ -3489,10 +3636,12 @@ server <- function(input, output, session) {
       observe({
         req(ssGSEAmeta())
         meta <- ssGSEAmeta()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
         FeatureChoices <- meta %>%
           dplyr::select(where(~ n_distinct(.x[nzchar(.x)], na.rm = TRUE) > 1)) %>%
           names
-        updateSelectizeInput(session = session,inputId = "SurvivalFeature", choices = FeatureChoices, selected = "MedianCutP", server = T)
+        updateSelectizeInput(session = session,inputId = "SurvivalFeature", choices = FeatureChoices, selected = paste0(geneset_name,"_MedianCutP"), server = T)
       })
 
       MultiVarFeat_react <- reactive({
@@ -3534,6 +3683,7 @@ server <- function(input, output, session) {
       MultiVarTabCat_react <- reactive({
         meta_ssgsea_sdf <- MultiVarFeatCat_react()
         Feature <- input$SurvivalFeature
+        Feature <- sprintf(ifelse(grepl(" |/|-", Feature), "`%s`", "%s"), Feature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste(Feature,collapse = "+")))
         tab <- eval(substitute(coxph(form,data = meta_ssgsea_sdf)))
         tab
@@ -3542,6 +3692,7 @@ server <- function(input, output, session) {
       MultiVarTabCont_react <- reactive({
         meta_ssgsea_sdf <- MultiVarFeatCont_react()
         Feature <- input$SurvivalFeature
+        Feature <- sprintf(ifelse(grepl(" |/|-", Feature), "`%s`", "%s"), Feature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste(Feature,collapse = "+")))
         tab <- eval(substitute(coxph(form,data = meta_ssgsea_sdf)))
         tab
@@ -4071,7 +4222,7 @@ server <- function(input, output, session) {
       #  survData_train <- survData_train %>% as.data.frame() %>% select(time,status) %>% as.matrix()
       #  survData_train_save <- survData_train_save %>% as.data.frame() %>% select(status,time) %>% as.matrix()
       #  survData_train_save <- apply(survData_train_save,2,as.numeric)
-#
+      #
       #  survData_train <- with(survData_train_save, Surv(time, status))
       #
       #
@@ -4121,7 +4272,7 @@ server <- function(input, output, session) {
       #  AlphaIn <- input$LassoAlpha
       #
       #  model2 <- glmnet(score_train, survData_train, family = "cox", type.measure = "C", alpha=AlphaIn)
-#
+      #
       #  model2
       #
       #})
@@ -5573,6 +5724,19 @@ server <- function(input, output, session) {
       dnldDF_server("dnldmultiForestPlotTable",MultiFeat_InterForestMeta(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_Multivariate_MultiFeatureForestData_",Sys.Date(),".txt")))
 
       ## Data Exploration Plots ------------------------------------------------------
+
+      dnldDF_server("DnldClin",ssGSEAmeta(),
+                    gsub("[[:space:]]","",paste0(ProjectName_react(),"_Clinical_",Sys.Date(),".txt")))
+      exprDnld <- reactive({
+        req(exprSub())
+        expr <- as.data.frame(exprSub())
+        expr$Gene <- rownames(expr)
+        expr <- expr %>%
+          relocate(Gene)
+        expr
+      })
+      dnldDF_server("DnldExpr",exprDnld(),
+                    gsub("[[:space:]]","",paste0(ProjectName_react(),"_Expression_",Sys.Date(),".txt")))
 
       dnldPlot_server("dnldssgseaDensity_SVG",ssgseaDensity_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_",names(gs_react()),"_Density_",Sys.Date(),".svg")),
                       input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)

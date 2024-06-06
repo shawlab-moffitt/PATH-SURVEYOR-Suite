@@ -45,16 +45,16 @@ quantile_conversion2 = function(mat,cutoff) {
 }
 
 add_x_intercepts <- function(p) {
-  
+
   p2 <- ggplot_build(p)
   breaks <- p2$layout$panel_params[[1]]$x$breaks
   breaks <- breaks[!is.na(breaks)]
-  
+
   vals <- unlist(lapply(seq_along(p$layers), function(x) {
     d <- layer_data(p, x)
     if('xintercept' %in% names(d)) d$xintercept else numeric()
   }))
-  
+
   p + scale_x_continuous(breaks = sort(c(vals, breaks)))
 }
 
@@ -75,7 +75,7 @@ gsubCheck <- function(string) {
 
 lm_eqn <- function(df){
   m <- lm(y ~ x, df);
-  eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
+  eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,
                    list(a = format(unname(coef(m)[1]), digits = 2),
                         b = format(unname(coef(m)[2]), digits = 2),
                         r2 = format(summary(m)$r.squared, digits = 3)))
@@ -99,7 +99,7 @@ get_tabData <- function(tab) {
 GetColsOfType <- function(meta,type = c("discrete","continuous"), threshold = 0.75) {
   require(dplyr)
   MetaClass_num <- meta %>%
-    type.convert(as.is = TRUE) %>% 
+    type.convert(as.is = TRUE) %>%
     dplyr::select(where(is.numeric)) %>%
     names()
   IntMetaCols <- apply(meta[,MetaClass_num, drop = F],2,function(x) any(round(as.numeric(x)) != as.numeric(x)))
@@ -141,15 +141,23 @@ SubsetSurvData <- function(df,time,id,feat,feat2 = NULL) {
 CoxPHobj <- function(df,feat,ref) {
   df[,feat] <- as.factor(df[,feat])
   df[,feat] <- relevel(df[,feat], ref = ref)
+  feat <- sprintf(ifelse(grepl(" ", feat), "`%s`", "%s"), feat)
   tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",feat)),data = df)
   #tab <- coxph(Surv(time,ID) ~ Feature, data = df)
   return(tab)
 }
 
-CoxPHtabUni <- function(obj) {
-  obj <- obj %>% 
-    gtsummary::tbl_regression(exp = TRUE) %>%
-    as_gt()
+CoxPHtabUni <- function(obj,Feature = NULL) {
+  if (!is.null(Feature)) {
+    obj <- obj %>%
+      gtsummary::tbl_regression(exp = TRUE,
+                                label = list(Feature ~ Feature)) %>%
+      as_gt()
+  } else {
+    obj <- obj %>%
+      gtsummary::tbl_regression(exp = TRUE) %>%
+      as_gt()
+  }
   tab_df <- as.data.frame(obj)
   tab_df <- tab_df %>%
     dplyr::select(label,estimate,ci,p.value)
@@ -211,16 +219,23 @@ SurvPlotExpl <- function(CutPlabel,surv_time_col,geneset_name,scoreMethod,metaco
   } else if (!is.null(line2)) {
     return(HTML(paste0("<ul>",line1,line2,line3,line4,"</ul>")))
   }
-  
+
 }
 
-SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim) {
-  breakTime <- ifelse(max(df[,"time"]) < 365.25,NULL,365.25)
+SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Years",xBreaks = 365.25) {
+  if (toupper(xScale) == "MONTHS") {
+    xScale <- "d_m"
+    xLabel <- "Months"
+  } else {
+    #breakTime <- ifelse(max(df[,"time"]) < 365.25,NULL,365.25)
+    xScale <- "d_y"
+    xLabel <- "Years"
+  }
   ggsurv <- survminer::ggsurvplot(fit, data = df, risk.table = TRUE,
                                   title = title,
-                                  xscale = c("d_y"),
-                                  break.time.by=breakTime,
-                                  xlab = "Years", 
+                                  xscale = c(xScale),
+                                  break.time.by=xBreaks,
+                                  xlab = xLabel,
                                   ylab = ylab,
                                   submain = "Based on Kaplan-Meier estimates",
                                   caption = "created with survminer",
@@ -295,7 +310,7 @@ densPlot <- function(score,quant,xlab,ylab,title,CutPlabel,ShowQuartile = TRUE,u
   dens_data <- density(score[,1],na.rm = T)
   y_max <- max(dens_data$y)
   y_max_int <- y_max/6
-  p <- ggplot(score, aes(x=score[,1])) + 
+  p <- ggplot(score, aes(x=score[,1])) +
     geom_density(color="darkblue", fill="lightblue", alpha = 0.4) +
     xlab(xlab) +
     ylab(ylab) +
@@ -323,7 +338,7 @@ densPlot <- function(score,quant,xlab,ylab,title,CutPlabel,ShowQuartile = TRUE,u
       p <- p + geom_vline(xintercept = user_vline, linetype = "dashed", color = "darkred", linewidth = 1)
     }
   }
-  
+
   return(p)
 }
 
@@ -361,6 +376,13 @@ survFeatRefSelect <- function(meta,Feature,na.rm = TRUE,cont = FALSE,hilo = TRUE
   }
   return(Var_choices)
 }
+
+#df <- meta_ssgsea_sdf
+#colnames(df)[which(colnames(df) == Feature)] <- "Feature"
+#labelled::var_label(df) <- list(
+#  Feature = Feature #this variable is a numeric -> label works
+#)
+#forest_model(obj)
 
 forestPlot_Simple <- function(obj,df,Feature,Font) {
   forest <- survminer::ggforest(obj,
