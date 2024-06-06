@@ -9,8 +9,6 @@
 * **param=** (OPTIONAL) URL path to meta/clinical paramater file described below
 * **proj=** (OPTIONAL) Desired project name
 
-* Example URL: https://shawlab-moffitt.shinyapps.io/path_surveyor/?proj=exprdata&expr=https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/raw/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/Expression_Data.zip&meta=https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/raw/main/2-PATH-SURVEYOR-Interactive-App/Example_Data/Clinical_Data.txt
-
 # Introduction
 
 The integration of patient genome expression data, phenotype data, and clinical data can serve as an integral resource for patient prognosis and treatment guidance. The PATH SURVEYOR Suite: **PATH**way level **SURV**ival **E**nquir**Y** for Immuno-**O**ncology and Drug **R**epurposing serves to do just that, by examining the interaction of gene or gene set pathway expression with clinical data to discover prominent features that play a role in patient outcome. This utility is comprised of R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards underlying features affective survival. Through a systematic Cox proportional regression pipeline the expression of individual genes or gene set pathways is linked with a hazard ratio and p.values to determine signifigance and patient risk, which can be followed by interactive visualization in the suite of R Shiny applications.
