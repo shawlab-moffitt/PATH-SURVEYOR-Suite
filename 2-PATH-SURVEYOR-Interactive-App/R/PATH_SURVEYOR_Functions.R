@@ -1,3 +1,17 @@
+date_to_gene <- function(vec,mouse = FALSE) {
+  if (is.null(vec)) exit("Please provide vector argument")
+  if (!mouse) {
+    vec <- gsub('(\\d+)-(Mar)','MARCH\\1',vec)
+    vec <- gsub('(\\d+)-(Sep)','SEPT\\1',vec)
+    vec <- gsub('(\\d+)-(Dec)','DEC\\1',vec)
+  } else {
+    vec <- gsub('(\\d+)-(Mar)','March\\1',vec)
+    vec <- gsub('(\\d+)-(Sep)','Sept\\1',vec)
+    vec <- gsub('(\\d+)-(Dec)','Dec\\1',vec)
+  }
+  return(vec)
+}
+
 loadRData <- function(fileName){
   #loads an RData file, and returns it
   load(fileName)
@@ -45,16 +59,16 @@ quantile_conversion2 = function(mat,cutoff) {
 }
 
 add_x_intercepts <- function(p) {
-
+  
   p2 <- ggplot_build(p)
   breaks <- p2$layout$panel_params[[1]]$x$breaks
   breaks <- breaks[!is.na(breaks)]
-
+  
   vals <- unlist(lapply(seq_along(p$layers), function(x) {
     d <- layer_data(p, x)
     if('xintercept' %in% names(d)) d$xintercept else numeric()
   }))
-
+  
   p + scale_x_continuous(breaks = sort(c(vals, breaks)))
 }
 
@@ -219,7 +233,7 @@ SurvPlotExpl <- function(CutPlabel,surv_time_col,geneset_name,scoreMethod,metaco
   } else if (!is.null(line2)) {
     return(HTML(paste0("<ul>",line1,line2,line3,line4,"</ul>")))
   }
-
+  
 }
 
 SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Years",xBreaks = 365.25) {
@@ -338,7 +352,7 @@ densPlot <- function(score,quant,xlab,ylab,title,CutPlabel,ShowQuartile = TRUE,u
       p <- p + geom_vline(xintercept = user_vline, linetype = "dashed", color = "darkred", linewidth = 1)
     }
   }
-
+  
   return(p)
 }
 

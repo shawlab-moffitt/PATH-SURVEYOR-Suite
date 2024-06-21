@@ -1,3 +1,4 @@
+version_id <- paste0("v2.0.20240614")
 
 # User Input -------------------------------------------------------------------
 
@@ -24,9 +25,9 @@ PreSelect_SecondaryFeature <- NULL
 
 ## Provided Input --------------------------------------------------------------
 ## User make sure paths are correct
-GeneSet_File <- "GeneSet_Data/GeneSet_List.RData"
-GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable.zip"
-About_MD_File <- "App_Markdowns/PurposeAndMethods.Rmd"
+GeneSet_File <- "Genesets/GeneSet_List_HS_v6.RData"
+GeneSetTable_File <- "Genesets/GeneSet_CatTable_v6.txt"
+About_MD_File <- "PurposeAndMethods.Rmd"
 ExampleExpr_File <- "Example_Data/TCGA_CHOL_Expression_PatientID.txt"
 ExampleClin_File <- "Example_Data/TCGA_CHOL_Clinical_PatientID.txt"
 ExampleParam_File <- "Example_Data/TCGA_SurvivalApp_Global_Parameters.txt"
@@ -42,6 +43,10 @@ if (!file.exists(ExpressionMatrix_file)) {
   FileProvided <- FALSE
 } else { FileProvided <- TRUE }
 
+if (!file.exists(MetaParam_File)) {
+  ParamFileProvided <- FALSE
+} else { ParamFileProvided <- TRUE }
+
 if (!isTruthy(ProjectName)) {
   ProjectName <- paste("{ Survival Analysis }")
 } else {
@@ -53,16 +58,8 @@ if (isTruthy(PreSelect_Feature)) {
   }
 }
 
-# Load Geneset Data
-# R Data list load function for naming
-#loadRData <- function(fileName){
-#  #loads an RData file, and returns it
-#  load(fileName)
-#  get(ls()[ls() != "fileName"])
-#}
 gs <- loadRData(GeneSet_File)
 # Gene Set Table
-#GeneSetTable <- as.data.frame(read_delim(GeneSetTable_File, delim = '\t', col_names = T))
 GeneSetTable <- as.data.frame(fread(GeneSetTable_File, sep = '\t', header = T))
 GeneSetCats <- unique(GeneSetTable[,1])
 
@@ -75,121 +72,6 @@ SurvPlot_Height <- "550px"
 SurvPlot_Width <- "850px"
 
 StatCols <- c("MedianCutP","QuartileCutP","OptimalCutP","TopBottomCutP","UserCutP")
-
-## Quartile Conversion
-#quartile_conversion = function(mat) {
-#  new_mat = mat;
-#  new_mat[mat <=  quantile(as.numeric(mat), na.rm = T)[2]] = "Q1_Low";
-#  new_mat[mat > quantile(as.numeric(mat), na.rm = T)[2] & mat <= quantile(mat)[3]] = "Q2_MedLow";
-#  new_mat[mat > quantile(as.numeric(mat), na.rm = T)[3] & mat <= quantile(mat)[4]] = "Q3_MedHigh";
-#  new_mat[mat > quantile(as.numeric(mat), na.rm = T)[4]] = "Q4_High";
-#  return (new_mat)
-#}
-#
-### High-Low
-#highlow = function(mat) {
-#  new_mat = mat;
-#  new_mat[mat > quantile(as.numeric(mat), na.rm = T)[3]] = "High";
-#  new_mat[mat <= quantile(as.numeric(mat), na.rm = T)[3]] = "Low";
-#  return (new_mat)
-#}
-#
-#highlow2 = function(mat) {
-#  new_mat = mat;
-#  new_mat[mat > quantile(as.numeric(mat), na.rm = T)[3]] = "Above_Median";
-#  new_mat[mat <= quantile(as.numeric(mat), na.rm = T)[3]] = "Below_Median";
-#  return (new_mat)
-#}
-#
-#quantile_conversion = function(mat,cutoff) {
-#  new_mat = mat;
-#  new_mat[mat >= quantile(as.numeric(mat),1-cutoff, na.rm = T)] = "High";
-#  new_mat[mat <= quantile(as.numeric(mat),cutoff, na.rm = T)] = "Low";
-#  new_mat[mat > quantile(as.numeric(mat),cutoff, na.rm = T) & mat < quantile(mat,1-cutoff, na.rm = T)] = "BetweenCutoff";
-#  return (new_mat)
-#}
-#
-#quantile_conversion2 = function(mat,cutoff) {
-#  new_mat = mat;
-#  new_mat[mat > quantile(as.numeric(mat),cutoff, na.rm = T)] = "High";
-#  new_mat[mat <= quantile(as.numeric(mat),cutoff, na.rm = T)] = "Low";
-#  return (new_mat)
-#}
-#
-#add_x_intercepts <- function(p) {
-#  
-#  p2 <- ggplot_build(p)
-#  breaks <- p2$layout$panel_params[[1]]$x$breaks
-#  breaks <- breaks[!is.na(breaks)]
-#  
-#  vals <- unlist(lapply(seq_along(p$layers), function(x) {
-#    d <- layer_data(p, x)
-#    if('xintercept' %in% names(d)) d$xintercept else numeric()
-#  }))
-#  
-#  p + scale_x_continuous(breaks = sort(c(vals, breaks)))
-#}
-#
-#get_lik_pval <- function(x_tab) {
-#  tab <- x_tab
-#  out <- capture.output(summary(tab))
-#  lik_line <- grep("^Likelihood ratio test=",out,value = T)
-#  lik_line_P <- as.numeric(str_split(str_split(lik_line,", ")[[1]][2],"=")[[1]][2])
-#  return(lik_line_P)
-#}
-#
-#gsubCheck <- function(string) {
-#  string2 <- gsub("\\+","POS",string)
-#  string3 <- gsub("[[:punct:]]","_",string2)
-#  string3 <- gsub(" ","_",string3)
-#  return(string3)
-#}
-#
-#lm_eqn <- function(df){
-#  m <- lm(y ~ x, df);
-#  eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
-#                   list(a = format(unname(coef(m)[1]), digits = 2),
-#                        b = format(unname(coef(m)[2]), digits = 2),
-#                        r2 = format(summary(m)$r.squared, digits = 3)))
-#  as.character(as.expression(eq));
-#}
-#
-#get_tabData <- function(tab) {
-#  ## Developed on package "suvival v3.4-0 and survminder v0.4.9
-#  Variable <- as.character(tab[["terms"]][[3]])
-#  N <- tab[["n"]]
-#  out <- capture.output(summary(tab))
-#  coef_line1 <- strsplit(grep(paste0("^",Variable),out, value = T)[1], "\\s+")[[1]]
-#  coef_line2 <- strsplit(grep(paste0("^",Variable),out, value = T)[2], "\\s+")[[1]]
-#  lik_line <- grep("^Likelihood ratio test=",out,value = T)
-#  lik_line_P <- as.numeric(str_split(str_split(lik_line,", ")[[1]][2],"=")[[1]][2])
-#  tabData <- c(Variable = Variable, N = as.numeric(N), `Hazard Ratio` = as.numeric(coef_line1[3]), `Standard Error` = as.numeric(coef_line1[4]),
-#               Low = as.numeric(coef_line2[4]), High = as.numeric(coef_line2[5]), `P.Value` = as.numeric(lik_line_P))
-#  return(tabData)
-#}
-#
-#GetColsOfType <- function(meta,type = c("discrete","continuous"), threshold = 0.75) {
-#  require(dplyr)
-#  MetaClass_num <- meta %>%
-#    type.convert(as.is = TRUE) %>% 
-#    dplyr::select(where(is.numeric)) %>%
-#    names()
-#  IntMetaCols <- apply(meta[,MetaClass_num, drop = F],2,function(x) any(round(as.numeric(x)) != as.numeric(x)))
-#  IntMetaCols <- names(IntMetaCols)[which(IntMetaCols == T)]
-#  MetaClass_NonNum <- colnames(meta)[which(!colnames(meta) %in% MetaClass_num)]
-#  ShowOrNot <- apply(meta[,MetaClass_num,drop = F],2,function(x) any(length(levels(as.factor(x)))<(nrow(meta)*threshold)))
-#  discreteCols <- c(MetaClass_NonNum,names(ShowOrNot)[which(ShowOrNot == T)])
-#  discreteCols <- discreteCols[which(!discreteCols %in% IntMetaCols)]
-#  continuousCols <- colnames(meta)[which(!colnames(meta) %in% discreteCols)]
-#  if (toupper(type) == "DISCRETE") {
-#    return(discreteCols)
-#  } else if (toupper(type) == "CONTINUOUS") {
-#    return(continuousCols)
-#  } else {
-#    print("ERROR: Argument 'type' must be 'discrete' or 'continuous'")
-#  }
-#}
-
 
 
 # Password Table ---------------------------------------------------------------
@@ -206,66 +88,89 @@ if (Password_Protected) {
 # UI Tabs ----------------------------------------------------------------------
 ## Login Tab -------------------------------------------------------------------
 login_tab <- tabPanel(
-  title = icon("lock"), 
-  value = "login", 
+  title = icon("lock"),
+  value = "login",
   loginUI("login")
 )
 
 ## Data Input Tab --------------------------------------------------------------
-if (!FileProvided) {
-  DataInput_tab <- tabPanel("Data Input",
-                            fluidPage(
-                              sidebarPanel(
-                                width = 3,
-                                id = "DataInputPanel",
-                                p(),
-                                textInput("UserProjectName","Project Name:", value = "Survival Analysis"),
-                                uiOutput("rendExprFileInput"),
-                                fluidRow(
-                                  column(5, style = 'padding-right:2px;margin-top:-30px;',
-                                         checkboxInput("LogExprFile","Log2 Expression", value = F)
-                                  ),
-                                  column(7, style = 'padding-left:2px;margin-top:-30px;',
-                                         checkboxInput("ScaleNormExprFile","Scale Normalize Expression", value = F)
-                                  )
+#if (!FileProvided) {
+DataInput_tab <- tabPanel("Data Input",
+                          fluidPage(
+                            sidebarPanel(
+                              width = 3,
+                              id = "DataInputPanel",
+                              p(),
+                              textInput("UserProjectName","Project Name:", value = "Survival Analysis"),
+                              uiOutput("rendExprFileInput"),
+                              fluidRow(
+                                column(5, style = 'padding-right:2px;margin-top:-30px;',
+                                       checkboxInput("LogExprFile","Log2 Expression", value = F)
                                 ),
-                                uiOutput("rendClinFileInput"),
-                                fluidRow(
-                                  column(12, style = 'margin-top:-15px;',
-                                         actionButton("UseExpData","Load Example Data"),
-                                         tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/PATH_SURVEYOR_App/", "Download example data", target='_blank'),
-                                  )
-                                ),
-                                shiny::hr(),
-                                uiOutput("rendClinParamHeader"),
-                                h4("Clinical Parameters"),
-                                fluidRow(
-                                  column(12, style = 'margin-top:-20px;',
-                                         radioButtons("ParamChoice","", choices = c("Define Parameters","Upload Parameter File"), inline = T)
-                                  )
-                                ),
-                                fluidRow(
-                                  column(8,
-                                         uiOutput("rendClinParamFileInput"),
-                                         uiOutput("rendSurvTimeColSelect"),
-                                         uiOutput("rendSurvIDColSelect")
-                                  ),
-                                  column(4,
-                                         uiOutput("rendSurvTimeUnits")
-                                  )
-                                ),
+                                column(7, style = 'padding-left:2px;margin-top:-30px;',
+                                       checkboxInput("ScaleNormExprFile","Scale Normalize Expression", value = F)
+                                )
                               ),
-                              mainPanel(
-                                uiOutput("rendExprFilePrevHeader"),
-                                div(DT::dataTableOutput("ExprFile_Preview"), style = "font-size:10px"),
-                                uiOutput("rendClinFilePrevHeader"),
-                                div(DT::dataTableOutput("ClinFile_Preview"), style = "font-size:10px"),
-                                uiOutput("rendParamFilePrevHeader"),
-                                div(DT::dataTableOutput("ClinParamFile_Preview"), style = "font-size:10px")
+                              uiOutput("rendClinFileInput"),
+                              fluidRow(
+                                column(12, style = 'margin-top:-15px;',
+                                       actionButton("UseExpData","Load Example Data"),
+                                       tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/PATH_SURVEYOR_App/", "Download example data", target='_blank'),
+                                )
+                              ),
+                              shiny::hr(),
+                              uiOutput("rendClinParamHeader"),
+                              h4("Clinical Parameters"),
+                              fluidRow(
+                                column(12, style = 'margin-top:-20px;',
+                                       radioButtons("ParamChoice","", choices = c("Define Parameters","Upload Parameter File"), inline = T)
+                                )
+                              ),
+                              fluidRow(
+                                column(8,
+                                       uiOutput("rendClinParamFileInput"),
+                                       uiOutput("rendSurvTimeColSelect"),
+                                       uiOutput("rendSurvIDColSelect")
+                                ),
+                                column(4,
+                                       uiOutput("rendSurvTimeUnits")
+                                )
                               )
+                            ),
+                            mainPanel(
+                              uiOutput("rendExprFilePrevHeader"),
+                              div(DT::dataTableOutput("ExprFile_Preview"), style = "font-size:10px"),
+                              uiOutput("rendClinFilePrevHeader"),
+                              div(DT::dataTableOutput("ClinFile_Preview"), style = "font-size:10px"),
+                              uiOutput("rendParamFilePrevHeader"),
+                              div(DT::dataTableOutput("ClinParamFile_Preview"), style = "font-size:10px")
+                            ),
+                            tagList(
+                              tags$head(
+                                tags$style(
+                                  HTML("
+                                     .info_box {
+                                     width: auto;
+                                     height: auto;
+                                     color: #000000;
+                                     background-color: #f5f5f5;
+                                     padding: 3px 8px;
+                                     font-size: 12px;
+                                     z-index : 9999;
+                                     }",
+                                     glue::glue("#{'AppVersion'} {{
+                                                position: {'fixed'};
+                                                top: 0;
+                                                right: 0;
+                                                }}")
+                                  )
+                                )
+                              ),
+                              div(id = "AppVersion", class = "info_box", version_id)
                             )
-  )
-}
+                          )
+)
+#}
 
 ## Survival Tab ----------------------------------------------------------------
 
@@ -314,11 +219,11 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                       conditionalPanel(condition = "input.UserGSoption == 'Gene Set Upload'",
                                                                                        fileInput("userGeneSet","Gene Set Upload", accept = c(".gmt",".tsv",".txt",".RData")),
                                                                                        div(DT::dataTableOutput("userGeneSetTable"), style = "font-size:10px")
-                                                                                       ),
+                                                                      ),
                                                                       conditionalPanel(condition = "input.UserGSoption == 'Text Box Input'",
                                                                                        textInput("userGeneSetTextName","Custom Gene Set Name", value = "Custom_Geneset"),
                                                                                        textInput("userGeneSetText","Gene Symbols", placeholder = "Comma, space, or tab delimited")
-                                                                                       ),
+                                                                      ),
                                                                       value = 3
                                                              )
                                                            ),
@@ -327,80 +232,80 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                   ),
                                                   tabPanel("Figure Parameters",
                                                            p(),
-                                                           h4("Survival Plot Parameters"),
+                                                           conditionalPanel(condition = "input.SurvPanels == '1' | input.SurvPanels == '2' | input.SurvPanels == '3'",
+                                                                            h3("Survival Plot Parameters"),
+                                                                            fluidRow(
+                                                                              column(6,
+                                                                                     uiOutput("rendSurvXaxis"),
+                                                                                     numericInput("SurvXaxisBreaks","Survival X-Axis Breaks (Years):",value = 1, min = 0, step = 0.25),
+                                                                                     selectInput("SurvLegendPos","Legend Position",choices = c("right","left","top","bottom","none"))
+                                                                              ),
+                                                                              column(6, style = "margin-top:15px",
+                                                                                     radioButtons("SurvYearOrMonth","Survival X-Axis Units:",choices = c("Years","Months"), inline = T),
+                                                                                     checkboxInput("ShowPval","Show P.Value",value = T),
+                                                                                     checkboxInput("ShowConfInt","Show Confidence Interval",value = F),
+                                                                                     checkboxInput("ShowMedSurvLine","Show Median Survival Line",value = F)
+                                                                              )
+                                                                            )
+                                                           ),
+                                                           conditionalPanel(condition = "input.SurvPanels == '2' | input.SurvPanels == '3'",
+                                                                            shiny::hr(),
+                                                                            h3("Forest Plot Parameters"),
+                                                                            numericInput("ForestFontSize","Font Size",value = 1),
+                                                                            shiny::hr(),
+                                                                            h3("Linearity Plot Parameters"),
+                                                                            fluidRow(
+                                                                              column(4,
+                                                                                     numericInput("linAxisFont","X/Y Axis Font Size",value = 14, step = 1)
+                                                                              ),
+                                                                              column(4,
+                                                                                     numericInput("linTickFont","Axis Tick Font Size",value = 10, step = 1)
+                                                                              ),
+                                                                              column(4,
+                                                                                     numericInput("linMainFont","Title Font Size",value = 16, step = 1)
+                                                                              )
+                                                                            )
+                                                           ),
+                                                           conditionalPanel(condition = "input.SurvPanels == '4'",
+                                                                            p(),
+                                                                            h3("Boxplot Parameters"),
+                                                                            fluidRow(
+                                                                              column(4,
+                                                                                     numericInput("boxplotFont","Font Size:", value = 15, step = 1)
+                                                                              ),
+                                                                              column(4,
+                                                                                     numericInput("boxplotDot", "Dot Size:", value = 0.75, step = 0.25)
+                                                                              ),
+                                                                              column(4,
+                                                                                     selectInput("boxplotTextAngle","X-Axis Text:",
+                                                                                                 choices = c("Horizontal (0 degrees)" = 0,"Angled (45 degrees)" = 45,"Vertical (90 degrees)" = 90))
+                                                                              )
+                                                                            ),
+                                                                            hr(),
+                                                                            h3("Heatmap Parameters"),
+                                                                            fluidRow(
+                                                                              column(6,
+                                                                                     numericInput("heatmapFontR", "Row Font Size:", value = 9, step = 1)
+                                                                              ),
+                                                                              column(6,
+                                                                                     numericInput("heatmapFontC", "Column Font Size:", value = 10, step = 1)
+                                                                              )
+                                                                            )
+                                                           ),
+                                                           hr(),
+                                                           h3("Plot Download Parameters"),
                                                            fluidRow(
                                                              column(4,
-                                                                    uiOutput("rendSurvXaxis")
-                                                             ),
-                                                             column(8,
-                                                                    uiOutput("rendSurvPlotTitle")
-                                                             )
-                                                           ),
-                                                           fluidRow(
-                                                             column(3,
-                                                                    selectInput("SurvLegendPos","Legend Position",choices = c("right","left","top","bottom","none"))
-                                                             ),
-                                                             column(3,
-                                                                    checkboxInput("ShowPval","Show P.Value",value = T)
-                                                             ),
-                                                             column(3,
-                                                                    checkboxInput("ShowConfInt","Show Confidence Interval",value = F)
-                                                             ),
-                                                             column(3,
-                                                                    checkboxInput("ShowMedSurvLine","Show Median Survival Line",value = F)
-                                                             )
-                                                           ),
-                                                           shiny::hr(),
-                                                           h4("Boxplot Parameters"),
-                                                           fluidRow(
-                                                             column(6,
-                                                                    numericInput("boxplotFont","Boxplot Font Size:", value = 15, step = 1)
-                                                                     
-                                                             ),
-                                                             column(6,
-                                                                    numericInput("boxplotDot", "Boxplot Dot Size:", value = 0.75, step = 0.25),
-                                                                    selectInput("boxplotTextAngle","X-Axis Text Orientation",
-                                                                                choices = c("Horizontal (0 degrees)" = 0,"Angled (45 degrees)" = 45,"Vertical (90 degrees)" = 90))
-                                                             )
-                                                           ),
-                                                           shiny::hr(),
-                                                           h4("Heatmap Parameters"),
-                                                           fluidRow(
-                                                             column(6,
-                                                                    numericInput("heatmapFontR", "Heatmap Row Font Size:", value = 9, step = 1)
-                                                             ),
-                                                             column(6,
-                                                                    numericInput("heatmapFontC", "Heatmap Column Font Size:", value = 10, step = 1)
-                                                             )
-                                                           ),
-                                                           #selectInput("ColorPaletteHeat", "Select Color Palette:",
-                                                           #            choices = c("Red/Blue" = "original",
-                                                           #                        "OmniBlueRed" = "OmniBlueRed",
-                                                           #                        "LightBlue/BlackRed" = "LightBlueBlackRed",
-                                                           #                        "Green/Black/Red" = "GreenBlackRed",
-                                                           #                        "Yellow/Green/Blue" = "YlGnBu","Inferno" = "Inferno",
-                                                           #                        "Viridis" = "Viridis","Plasma" = "Plasma",
-                                                           #                        "Reds" = "OrRd","Blues" = "PuBu","Greens" = "Greens")
-                                                           #),
-                                                           shiny::hr(),
-                                                           h4("Forest Plot Parameters"),
-                                                           numericInput("ForestFontSize","Font Size",value = 1),
-                                                           shiny::hr(),
-                                                           h4("Linearity Plot Parameters"),
-                                                           fluidRow(
-                                                             column(4,
-                                                                    numericInput("linAxisFont","X/Y Axis Font Size",
-                                                                                 value = 14, step = 1)
+                                                                    numericInput("PlotDnldHight","Plot Height",value = 8, min = 0, step = 1)
                                                              ),
                                                              column(4,
-                                                                    numericInput("linTickFont","Axis Tick Font Size",
-                                                                                 value = 10, step = 1)
+                                                                    numericInput("PlotDnldWidth","Plot Width",value = 8, min = 0, step = 1)
                                                              ),
                                                              column(4,
-                                                                    numericInput("linMainFont","Title Font Size",
-                                                                                 value = 16, step = 1)
+                                                                    selectInput("PlotDnldUnits","Units",choices = c("in","cm","mm","px"))
                                                              )
                                                            )
+                                                           
                                                   )
                                                 )
                                )
@@ -410,18 +315,18 @@ Survival_tab <- tabPanel("Survival Analysis",
                                #                            p(),
                                #                            h4("Sample Selection"),
                                #                            uiOutput("rendSampleTypeSelection_lasso"),
-                               #                            uiOutput("rendFeatureSelection_lasso"),
+                               #                            selectizeInput("FeatureSelection_lasso","Select Feature:", choices = NULL, selected = 1),
                                #                            uiOutput("rendSubFeatureSelection_lasso"),
                                #                            h4("Feature Selection"),
                                #                            textInput("LassoModelName","Lasso Model Name:",value = "Custom_Lasso_Model"),
-                               #                            uiOutput("rendLassoFeatureSelection_lasso"),
+                               #                            selectizeInput("LassoFeatureSelection_lasso","Select or Paste Features to Generate Lasso Model:", choices = NULL, selected = 1, multiple = T),
                                #                            h4("Lasso Parameters"),
                                #                            fluidRow(
                                #                              column(6,
-                               #                                     uiOutput("rendSurvTimeSelec_lasso")
+                               #                                     selectizeInput("SurvTimeSelec_lasso","Survival Time Data:", choices = NULL, selected = 1),
                                #                              ),
                                #                              column(6,
-                               #                                     uiOutput("rendSurvIDSelect_lasso")
+                               #                                     selectizeInput("SurvIDSelect_lasso","Survival ID Data:", choices = NULL, selected = 1),
                                #                              )
                                #                            ),
                                #                            fluidRow(
@@ -448,10 +353,10 @@ Survival_tab <- tabPanel("Survival Analysis",
                                #                            #,
                                #                            fluidRow(
                                #                              column(6,
-                               #                                     downloadButton("dnldLassoModel","Download Lasso Model")
+                               #                                     dnld_ui("dnldLassoModel","Download Lasso Model")
                                #                              ),
                                #                              column(6,
-                               #                                     downloadButton("dnldLassoRunData","Download Lasso Run Data")
+                               #                                     dnld_ui("dnldLassoRunData","Download Lasso Run Data")
                                #                              )
                                #                            )
                                #                   ),
@@ -505,16 +410,10 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      htmlOutput("BINSurvDescrip", style = "font-size:14px;"),
                                                      shiny::hr(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("SplotBIN", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldSplotBIN_SVG","Download as SVG"),
-                                                       downloadButton("dnldSplotBIN_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldSplotBIN_SVG","SVG"),
                                                      shiny::hr(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaBINDensity", width = "650px", height = "400px")), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldssgseaBINDensity_SVG","Download as SVG"),
-                                                       downloadButton("dnldssgseaBINDensity_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldssgseaBINDensity_SVG","SVG"),
                                                      shiny::hr(),
                                                      h4("Cox Hazard Regression Analysis Summary"),
                                                      fluidRow(
@@ -532,16 +431,10 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      htmlOutput("QuartSurvDescrip", style = "font-size:14px;"),
                                                      shiny::hr(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Splot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldSplot_SVG","Download as SVG"),
-                                                       downloadButton("dnldSplot_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldSplot_SVG","SVG"),
                                                      shiny::hr(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaQuartDensity", width = "650px", height = "400px")), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldssgseaQuartDensity_SVG","Download as SVG"),
-                                                       downloadButton("dnldssgseaQuartDensity_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldssgseaQuartDensity_SVG","SVG"),
                                                      shiny::hr(),
                                                      h4("Cox Hazard Regression Analysis Summary"),
                                                      fluidRow(
@@ -559,16 +452,10 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      htmlOutput("CutPSurvDescrip", style = "font-size:14px;"),
                                                      shiny::hr(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ScutPointPlot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldScutPointPlot_SVG","Download as SVG"),
-                                                       downloadButton("dnldScutPointPlot_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldScutPointPlot_SVG","SVG"),
                                                      shiny::hr(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaCutPDensity", width = "650px", height = "400px")), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldssgseaCutPDensity_SVG","Download as SVG"),
-                                                       downloadButton("dnldssgseaCutPDensity_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldssgseaCutPDensity_SVG","SVG"),
                                                      shiny::hr(),
                                                      h4("Cox Hazard Regression Analysis Summary"),
                                                      fluidRow(
@@ -588,16 +475,10 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      shiny::hr(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("SquantPlot", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                      numericInput("QuantPercent","Top/Bottom Cut-Point Quantile Cutoff (%)", value = 25, min = 0, max = 100),
-                                                     fluidRow(
-                                                       downloadButton("dnldSquantPlot_SVG","Download as SVG"),
-                                                       downloadButton("dnldSquantPlot_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldSquantPlot_SVG","SVG"),
                                                      shiny::hr(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaQuantDensity", width = "650px", height = "400px")), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldssgseaQuantDensity_SVG","Download as SVG"),
-                                                       downloadButton("dnldssgseaQuantDensity_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldssgseaQuantDensity_SVG","SVG"),
                                                      shiny::hr(),
                                                      h4("Cox Hazard Regression Analysis Summary"),
                                                      fluidRow(
@@ -617,22 +498,15 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      shiny::hr(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("SquantPlot2", height = SurvPlot_Height, width = SurvPlot_Width)), type = 6),
                                                      numericInput("QuantPercent2","Above/Below User Quantile Cut-Point (%)", value = 25, min = 0, max = 100),
-                                                     fluidRow(
-                                                       downloadButton("dnldSquantPlot2_SVG","Download as SVG"),
-                                                       downloadButton("dnldSquantPlot2_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldSquantPlot2_SVG","SVG"),
                                                      shiny::hr(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaQuant2Density", width = "650px", height = "400px")), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldssgseaQuant2Density_SVG","Download as SVG"),
-                                                       downloadButton("dnldssgseaQuant2Density_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldssgseaQuant2Density_SVG","SVG"),
                                                      shiny::hr(),
                                                      h4("Cox Hazard Regression Analysis Summary"),
                                                      fluidRow(
                                                        column(6,
                                                               div(shinycssloaders::withSpinner(tableOutput("SQuantileHR2tab"), type = 7, size = 0.5), style = "font-size:12px"),
-                                                              #uiOutput("rendQuantHRtab2"),
                                                               style = 'border-right: 0.5px solid lightgray',
                                                        ),
                                                        column(6,
@@ -649,7 +523,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                           p(),
                                           fluidRow(
                                             column(6,
-                                                   selectizeInput("SingleSurvivalFeature","Select Feature:",choices = NULL, selected = 1),
+                                                   selectizeInput("SingleSurvivalFeature","Select Feature:",choices = NULL, selected = 1, width = "80%"),
                                                    # Allows all select inputs to be wide enough to read the contents
                                                    tags$head(
                                                      tags$style(HTML('
@@ -669,7 +543,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      column(3,
                                                             conditionalPanel(condition = "input.UniVarContCheck == true",
                                                                              checkboxInput("UniVarContHiLoCheck","Continuous Feature as Median Cut-Point",value = T)
-                                                                             )
+                                                            )
                                                             
                                                      )
                                                    ),
@@ -681,11 +555,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                             tabPanel("Survival Plot",
                                                      p(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("featSplot", width = SurvPlot_Width, height = SurvPlot_Height)), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldfeatSplot_SVG","Download as SVG"),
-                                                       downloadButton("dnldfeatSplot_PDF","Download as PDF")
-                                                     )
-                                                     
+                                                     dnld_ui("dnldfeatSplot_SVG","SVG")
                                             ),
                                             tabPanel("Coxh Table",
                                                      p(),
@@ -701,10 +571,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                             tabPanel("Forest Plot",
                                                      p(),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("SinglevarForestPlot", width = "100%", height = "800px")), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldUniVarForestplot_SVG","Download as SVG"),
-                                                       downloadButton("dnldUniVarForestplot_PDF","Download as PDF")
-                                                     )
+                                                     dnld_ui("dnldUniVarForestplot_SVG","SVG")
                                             ),
                                             tabPanel("Multi-Feature Forest Plot",
                                                      p(),
@@ -712,7 +579,6 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        column(6,
                                                               selectizeInput("MultiFeatUnivarSelect","Select Features for Forest Plot",
                                                                              choices = NULL, multiple = T, selected = 1, width = "100%")
-                                                              #uiOutput("rendMultiFeatUnivarSelect")
                                                        ),
                                                        column(2,
                                                               textInput("UnivarForestPlotXlim","X-Limits (Low,High)",value = "0,5",
@@ -725,12 +591,12 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      ),
                                                      uiOutput("rendMultiFeatUnivarForestPlot"),
                                                      fluidRow(
-                                                       downloadButton("dnldMultiFeatUnivarForestPlot_table","Download as Table"),
-                                                       downloadButton("dnldMultiFeatUnivarForestPlot_SVG","Download as SVG")
+                                                       dnld_ui("dnldMultiFeatUnivarForestPlot_SVG","SVG"),
+                                                       dnld_ui("dnldMultiFeatUnivarForestPlot_table","Download as Table")
                                                      ),
                                                      p(),
                                                      div(DT::dataTableOutput("univarForestPlotTable"), style = "font-size:12px"),
-                                                     downloadButton("dnldunivarForestPlotTable","Download Table")
+                                                     dnld_ui("dnldunivarForestPlotTable","Download Table")
                                                      
                                             ),
                                             tabPanel("Linearity Check",
@@ -747,10 +613,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      ),
                                                      uiOutput("timewarnmessage1"),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("UnivarLinearityPlot", width = "100%", height = "500px")), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldUniVarLinplot_SVG","Download as SVG"),
-                                                       downloadButton("dnldUniVarLinplot_PDF`","Download as PDF")
-                                                     )
+                                                     dnld_ui("dnldUniVarLinplot_SVG","SVG")
                                             )
                                           ),
                                           value = 2),
@@ -767,7 +630,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      p(),
                                                      fluidRow(
                                                        column(6,
-                                                              selectizeInput("SurvivalFeatureBi1","Select Feature 1:",choices = NULL, selected = 1),
+                                                              selectizeInput("SurvivalFeatureBi1","Select Feature 1:",choices = NULL, selected = 1, width = "80%"),
                                                               #uiOutput("rendSurvivalFeatureBi1"),
                                                               fluidRow(
                                                                 column(4,
@@ -786,7 +649,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                               uiOutput("rendSurvFeatVariableBi1")
                                                        ),
                                                        column(6,
-                                                              selectizeInput("SurvivalFeatureBi2","Select Feature 2:",choices = NULL, selected = 1),
+                                                              selectizeInput("SurvivalFeatureBi2","Select Feature 2:",choices = NULL, selected = 1, width = "80%"),
                                                               #uiOutput("rendSurvivalFeatureBi2"),
                                                               fluidRow(
                                                                 column(4,
@@ -832,10 +695,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        tabPanel("Forest Plot",
                                                                 p(),
                                                                 shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("BivarForestPlot", width = "100%", height = "800px")), type = 6),
-                                                                fluidRow(
-                                                                  downloadButton("dnldBiVarAddForest_SVG","Download as SVG"),
-                                                                  downloadButton("dnldBiVarAddForest_PDF","Download as PDF")
-                                                                )
+                                                                dnld_ui("dnldBiVarAddForest_SVG","SVG")
                                                        ),
                                                        tabPanel("Linearity Check",
                                                                 p(),
@@ -851,10 +711,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                 ),
                                                                 uiOutput("timewarnmessage2"),
                                                                 shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("BivarLinearityPlot", width = "100%", height = "500px")), type = 6),
-                                                                fluidRow(
-                                                                  downloadButton("dnldBiVarAddLinplot_SVG","Download as SVG"),
-                                                                  downloadButton("dnldBiVarAddLinplot_PDF","Download as PDF")
-                                                                )
+                                                                dnld_ui("dnldBiVarAddLinplot_SVG","SVG")
                                                        )
                                                      )
                                             ),
@@ -865,8 +722,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      p(),
                                                      fluidRow(
                                                        column(6,
-                                                              selectizeInput("SurvivalFeatureBi1Inter","Select Feature 1:",choices = NULL, selected = 1),
-                                                              #uiOutput("rendSurvivalFeatureBi1Inter"),
+                                                              selectizeInput("SurvivalFeatureBi1Inter","Select Feature 1:",choices = NULL, selected = 1, width = "80%"),
                                                               fluidRow(
                                                                 column(4,
                                                                        checkboxInput("BiVarIntNAcheck1","Remove NA/Unknown/Inf",value = T)
@@ -878,15 +734,13 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                        conditionalPanel(condition = "input.BiVarIntContCheck1 == true",
                                                                                         checkboxInput("BiVarIntContHiLoCheck1","Continuous Feature as Median Cut-Point",value = T)
                                                                        )
-                                                                       #uiOutput("rendBiVarIntContHiLoCheck1")
                                                                 )
                                                               ),
                                                               uiOutput("rendSurvFeatVariableBi1Inter")
                                                               
                                                        ),
                                                        column(6,
-                                                              selectizeInput("SurvivalFeatureBi2Inter","Select Feature 1:",choices = NULL, selected = 1),
-                                                              #uiOutput("rendSurvivalFeatureBi2Inter"),
+                                                              selectizeInput("SurvivalFeatureBi2Inter","Select Feature 1:",choices = NULL, selected = 1, width = "80%"),
                                                               fluidRow(
                                                                 column(4,
                                                                        checkboxInput("BiVarIntNAcheck2","Remove NA/Unknown/Inf",value = T)
@@ -898,7 +752,6 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                        conditionalPanel(condition = "input.BiVarIntContCheck2 == true",
                                                                                         checkboxInput("BiVarIntContHiLoCheck2","Continuous Feature as Median Cut-Point",value = T)
                                                                        )
-                                                                       #uiOutput("rendBiVarIntContHiLoCheck2")
                                                                 )
                                                               ),
                                                               uiOutput("rendSurvFeatVariableBi2Inter")
@@ -912,10 +765,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        tabPanel("Survival Plot",
                                                                 p(),
                                                                 shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("featSplotBi", width = SurvPlot_Width, height = SurvPlot_Height)), type = 6),
-                                                                fluidRow(
-                                                                  downloadButton("dnldfeatSplotBi_SVG","Download as SVG"),
-                                                                  downloadButton("dnldfeatSplotBi_PDF","Download as PDF")
-                                                                )
+                                                                dnld_ui("dnldfeatSplotBi_SVG","SVG")
                                                        ),
                                                        tabPanel("Cox HR Table",
                                                                 p(),
@@ -943,10 +793,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                 ),
                                                                 uiOutput("timewarnmessage3"),
                                                                 shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("BivarLinearityPlotInter", width = "100%", height = "500px")), type = 6),
-                                                                fluidRow(
-                                                                  downloadButton("dnldBiVarIntLinplot_SVG","Download as SVG"),
-                                                                  downloadButton("dnldBiVarIntLinplot_PDF","Download as PDF")
-                                                                )
+                                                                dnld_ui("dnldBiVarIntLinplot_SVG","SVG")
                                                        )
                                                        
                                                      )
@@ -982,10 +829,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        tabPanel("Forest Plot",
                                                                 p(),
                                                                 shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("MultivarForestPlot", width = "100%", height = "800px")), type = 6),
-                                                                fluidRow(
-                                                                  downloadButton("dnldMultiVarForest_SVG","Download as SVG"),
-                                                                  downloadButton("dnldMultiVarForest_PDF","Download as PDF")
-                                                                )
+                                                                dnld_ui("dnldMultiVarForest_SVG","SVG")
                                                        )
                                                      )
                                             ),
@@ -1002,11 +846,10 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        column(4,
                                                               selectizeInput("MultiFeatMultivarSubSelect","Select and Add Features to Forest Plot:",
                                                                              choices = NULL, multiple = T, selected = 1, width = "100%")
-                                                              #uiOutput("rendMultiFeatMultivarSubSelect")
                                                        ),
                                                        column(2,
                                                               textInput("MultivarForestPlotXlim","X-Limits (Low,High)",value = "0,5",
-                                                                        placeholder = "Low,High") #, width = "150px"
+                                                                        placeholder = "Low,High")
                                                        ),
                                                        column(2,
                                                               selectInput("MultivarForestPlotXtrans","X-Axis Transform",
@@ -1015,23 +858,23 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      ),
                                                      uiOutput("rendMultiFeatMultivarForestPlot"),
                                                      fluidRow(
-                                                       downloadButton("dnldMultiFeatMultivarForestPlot_table","Download as Table"),
-                                                       downloadButton("dnldMultiFeatMultivarForestPlot_SVG","Download as SVG")
+                                                       dnld_ui("dnldMultiFeatMultivarForestPlot_SVG","SVG"),
+                                                       dnld_ui("dnldMultiFeatMultivarForestPlot_table","Download as Table")
                                                      ),
                                                      p(),
                                                      div(DT::dataTableOutput("multiForestPlotTable"), style = "font-size:12px"),
-                                                     downloadButton("dnldmultiForestPlotTable","Download Table")
+                                                     dnld_ui("dnldmultiForestPlotTable","Download Table")
                                                      
                                             )
                                           ),
                                           value = 3),
                                  
-                                 #### Lasso ----------------------------       
+                                 #### Lasso
                                  
                                  #tabPanel("Lasso Cox Model",
                                  #         p(),
                                  #         fluidRow(
-                                 #           column(2, 
+                                 #           column(2,
                                  #                  br(),
                                  #                  actionButton("RunLassoModelGen","Generate Lasso Model")
                                  #                  ),
@@ -1045,7 +888,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                  #         fluidRow(
                                  #           column(6,
                                  #                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Lasso_Train_Splot", width = "100%", height = "500px")),type = 6),
-                                 #                  downloadButton("dnldSplotLassoTrain_SVG","Download as SVG"),
+                                 #                  dnld_ui("dnldSplotLassoTrain_SVG","SVG"),
                                  #                  shiny::hr(),
                                  #                  h4("Path of Coefficients"),
                                  #                  shinyjqui::jqui_resizable(plotOutput("Lasso_CoeffPlot", width = "100%", height = "400px")),
@@ -1056,7 +899,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                  #           ),
                                  #           column(6,
                                  #                  shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Lasso_Test_Splot", width = "100%", height = "500px")),type = 6),
-                                 #                  downloadButton("dnldSplotLassoTest_SVG","Download as SVG"),
+                                 #                  dnld_ui("dnldSplotLassoTest_SVG","SVG"),
                                  #                  shiny::hr(),
                                  #                  h4("Lambda Cross-Validation"),
                                  #                  shinyjqui::jqui_resizable(plotOutput("Lasso_LambdaPlot", width = "100%", height = "400px")),
@@ -1079,11 +922,11 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                      selectizeInput("MetaTableCols","Select Meta Columns to View:",multiple = T, choices = NULL, selected = ""),
                                                      div(DT::dataTableOutput("MetaTable"), style = "font-size:12px"),
                                                      fluidRow(
-                                                       column(6,
-                                                              uiOutput("DnldMetaButon")
+                                                       column(2,
+                                                              dnld_ui("DnldClin","Download Clinical Data")
                                                        ),
-                                                       column(6,
-                                                              uiOutput("DnldExprButon")
+                                                       column(2,
+                                                              dnld_ui("DnldExpr","Download Expression Data")
                                                        )
                                                      ),
                                                      value = 5),
@@ -1095,12 +938,10 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        checkboxInput("QuartileLinesCheck","Show Quartile Lines (Blue)",value = T)
                                                      ),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("ssgseaDensity", width = "100%", height = "500px")), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldssgseaDensity_SVG","Download as SVG"),
-                                                       downloadButton("dnldssgseaDensity_PDF","Download as PDF")
-                                                     ),
+                                                     dnld_ui("dnldssgseaDensity_SVG","SVG"),
+                                                     p(),
                                                      div(DT::dataTableOutput("ssgseaDensityTable"), style = "font-size:12px"),
-                                                     downloadButton("dnldssgseaDensityTable","Download Table"),
+                                                     dnld_ui("dnldssgseaDensityTable","Download Table"),
                                                      value = 6),
                                             ##### Feat Comp ---------------------------------
                                             tabPanel("Feature Comparison",
@@ -1115,7 +956,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        column(3,
                                                               conditionalPanel(condition = "input.ColorScatterChoice == 'Feature'",
                                                                                selectizeInput("ScatterColor","Color By:",multiple = F, choices = NULL, selected = 1)
-                                                                               ),
+                                                              ),
                                                               conditionalPanel(condition = "input.ColorScatterChoice == 'Single Color'",
                                                                                selectInput("ScatterColor2","Color:",choices = colors(), selected = "cadetblue"))
                                                        ),
@@ -1127,13 +968,9 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        )
                                                      ),
                                                      shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotlyOutput("FeatCompScatterPlot", width = "100%", height = "500px")), type = 6),
-                                                     fluidRow(
-                                                       downloadButton("dnldFeatCompScatter_SVG","Download as SVG"),
-                                                       downloadButton("dnldFeatCompScatter_PDF","Download as PDF")
-                                                     ),
                                                      p(),
                                                      div(DT::dataTableOutput("FeatCompScatterTable"), style = "font-size:12px"),
-                                                     downloadButton("dnldFeatCompScatterTable","Download Table"),
+                                                     dnld_ui("dnldFeatCompScatterTable","Download Table"),
                                                      value = 7),
                                             ##### Risk Strat ---------------------------------
                                             tabPanel("Risk Stratification",
@@ -1151,39 +988,35 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                               conditionalPanel(condition = "input.riskstrat == 'box'",
                                                                                selectInput("boxoptselecRisk","Stat Compare Method:", choices = c("none","wilcox.test","t.test")),
                                                                                checkboxInput("SBoxLog", "Log Transform Score", value = T)
-                                                                               ),
+                                                              ),
                                                               conditionalPanel(condition = "input.riskstrat == 'heat'",
                                                                                selectizeInput("riskHeatAnno","Add Annotation:", choices = NULL, selected = 1, multiple = T),
                                                                                selectInput("ClusterMethod", "Select Cluster Method:",
                                                                                            choices = c("ward.D", "ward.D2", "complete", "single", "average", "mcquitty", "median", "centroid"))
-                                                                               )
+                                                              )
                                                               
                                                        )
                                                      ),
                                                      tabsetPanel(id = "riskstrat",
-                                                       tabPanel("Risk Straification Boxplot",
-                                                                p(),
-                                                                shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Sboxplot", width = "100%", height = "400px")), type = 6),
-                                                                fluidRow(
-                                                                  downloadButton("dnldSboxplot_SVG","Download as SVG"),
-                                                                  downloadButton("dnldSboxplot_PDF","Download as PDF")
-                                                                ),
-                                                                div(DT::dataTableOutput("SboxplotTable"), style = "font-size:12px; height:450px; overflow-Y: scroll"),
-                                                                p(),
-                                                                downloadButton("dnldSBoxplotTab","Download Table"),
-                                                                value = "box"
-                                                       ),
-                                                       tabPanel("Risk Straification Heatmap",
-                                                                p(),
-                                                                uiOutput("heatmap_error_message"),
-                                                                shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Sheatmap", width = "100%", height = "2000px")), type = 6),
-                                                                fluidRow(
-                                                                  downloadButton("dnldSheatmap_SVG","Download as SVG"),
-                                                                  downloadButton("dnldSheatmap_PDF","Download as PDF"),
-                                                                  downloadButton("dnldSheatmapexpr","Download Expression Matrix From Heatmap")
-                                                                ),
-                                                                value = "heat"
-                                                       )
+                                                                 tabPanel("Risk Straification Boxplot",
+                                                                          p(),
+                                                                          shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Sboxplot", width = "100%", height = "400px")), type = 6),
+                                                                          dnld_ui("dnldSboxplot_SVG","SVG"),
+                                                                          div(DT::dataTableOutput("SboxplotTable"), style = "font-size:12px; height:450px; overflow-Y: scroll"),
+                                                                          p(),
+                                                                          dnld_ui("dnldSBoxplotTab","Download Table"),
+                                                                          value = "box"
+                                                                 ),
+                                                                 tabPanel("Risk Straification Heatmap",
+                                                                          p(),
+                                                                          uiOutput("heatmap_error_message"),
+                                                                          shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Sheatmap", width = "100%", height = "2000px")), type = 6),
+                                                                          fluidRow(
+                                                                            dnld_ui("dnldSheatmap_SVG","SVG"),
+                                                                            dnld_ui("dnldSheatmapexpr","Download Expression Matrix From Heatmap")
+                                                                          ),
+                                                                          value = "heat"
+                                                                 )
                                                      )
                                             ),
                                             ##### Feat Strat ---------------------------------
@@ -1199,10 +1032,10 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                        column(3,
                                                               conditionalPanel(condition = "input.featstrat == 'box'",
                                                                                selectInput("boxoptselec","Boxplot Stat Compare Method:", choices = c("none","wilcox.test","t.test","kruskal.test","anova"))
-                                                                               ),
+                                                              ),
                                                               conditionalPanel(condition = "input.featstrat == 'heat'",
                                                                                selectizeInput("stratHeatAnno","Add Annotation:", choices = NULL, selected = 1, multiple = T)
-                                                                               )
+                                                              )
                                                               
                                                        ),
                                                        column(3,
@@ -1210,32 +1043,28 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                                selectInput("ClusterMethod2", "Select Cluster Method:",
                                                                                            choices = c("ward.D", "ward.D2", "complete", "single", "average", "mcquitty", "median", "centroid"))
                                                               )
-                                                              )
+                                                       )
                                                      ),
                                                      tabsetPanel(id = "featstrat",
-                                                       tabPanel("Feature Boxplot",
-                                                                p(),
-                                                                shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Featureboxplot", width = "100%", height = "500px")), type = 6),
-                                                                fluidRow(
-                                                                  downloadButton("dnldFboxplot_SVG","Download as SVG"),
-                                                                  downloadButton("dnldFboxplot_PDF","Download as PDF")
-                                                                ),
-                                                                div(DT::dataTableOutput("FeatureboxplotTable"), style = "font-size:12px; height:450px; overflow-Y: scroll"),
-                                                                p(),
-                                                                downloadButton("dnldFeatureboxplotTab","Download Table"),
-                                                                value = "box"
-                                                       ),
-                                                       tabPanel("Feature Heatmap",
-                                                                p(),
-                                                                uiOutput("heatmap_error_message2"),
-                                                                shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("FeatureHeatmap", width = "100%", height = "2000px")), type = 6),
-                                                                fluidRow(
-                                                                  downloadButton("dnldFheatmap_SVG","Download as SVG"),
-                                                                  downloadButton("dnldFheatmap_PDF","Download as PDF"),
-                                                                  downloadButton("dnldFheatmapexpr","Download Expression Matrix From Heatmap")
-                                                                ),
-                                                                value = "heat"
-                                                       )
+                                                                 tabPanel("Feature Boxplot",
+                                                                          p(),
+                                                                          shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("Featureboxplot", width = "100%", height = "500px")), type = 6),
+                                                                          dnld_ui("dnldFboxplot_SVG","SVG"),
+                                                                          div(DT::dataTableOutput("FeatureboxplotTable"), style = "font-size:12px; height:450px; overflow-Y: scroll"),
+                                                                          p(),
+                                                                          dnld_ui("dnldFeatureboxplotTab","Download Table"),
+                                                                          value = "box"
+                                                                 ),
+                                                                 tabPanel("Feature Heatmap",
+                                                                          p(),
+                                                                          uiOutput("heatmap_error_message2"),
+                                                                          shinycssloaders::withSpinner(shinyjqui::jqui_resizable(plotOutput("FeatureHeatmap", width = "100%", height = "2000px")), type = 6),
+                                                                          fluidRow(
+                                                                            dnld_ui("dnldFheatmap_SVG","SVG"),
+                                                                            dnld_ui("dnldFheatmapexpr","Download Expression Matrix From Heatmap")
+                                                                          ),
+                                                                          value = "heat"
+                                                                 )
                                                      )
                                             )
                                           ),
@@ -1264,20 +1093,20 @@ if (Password_Protected) {
                    collapsible = TRUE,
                    login_tab)
 } else {
-  if (FileProvided) {
-    ui <- navbarPage(paste(ProjectName),
-                     id = "tabs",
-                     collapsible = TRUE,
-                     Survival_tab,
-                     About_tab)
-  } else {
-    ui <- navbarPage(paste(ProjectName),
-                     id = "tabs",
-                     collapsible = TRUE,
-                     DataInput_tab,
-                     Survival_tab,
-                     About_tab)
-  }
+  #if (FileProvided) {
+  #  ui <- navbarPage(paste(ProjectName),
+  #                   id = "tabs",
+  #                   collapsible = TRUE,
+  #                   Survival_tab,
+  #                   About_tab)
+  #} else {
+  ui <- navbarPage(paste(ProjectName),
+                   id = "tabs",
+                   collapsible = TRUE,
+                   DataInput_tab,
+                   Survival_tab,
+                   About_tab)
+  #}
 }
 
 
@@ -1286,7 +1115,7 @@ if (Password_Protected) {
 
 server <- function(input, output, session) {
   
-  # hack to add the logout button to the navbar on app launch 
+  # hack to add the logout button to the navbar on app launch
   if (Password_Protected) {
     insertUI(
       selector = ".navbar .container-fluid .navbar-collapse",
@@ -1333,7 +1162,7 @@ server <- function(input, output, session) {
       if (credentials()$user_auth) {
         # remove the login tab
         removeTab("tabs", "login")
-        # add home tab 
+        # add home tab
         if (!FileProvided) {
           appendTab("tabs", DataInput_tab, select = TRUE)
           appendTab("tabs", Survival_tab, select = FALSE)
@@ -1458,6 +1287,12 @@ server <- function(input, output, session) {
       })
       
       observe({
+        if (ParamFileProvided) {
+          updateRadioButtons(session,"ParamChoice",selected = "Upload Parameter File")
+        }
+      })
+      
+      observe({
         query <- parseQueryString(session$clientData$url_search)
         print(query)
         if (isTruthy(query[['expr']]) && isTruthy(query[['meta']])) {
@@ -1497,7 +1332,7 @@ server <- function(input, output, session) {
         PreSelect_SubFeature_react(NULL)
         PreSelect_SecondaryFeature_react("ajcc_pathologic_tumor_stage")
         updateRadioButtons(session,"ParamChoice",selected = "Upload Parameter File")
-        
+        updateTextInput(session,"UserProjectName",value = "TCGA_CHOL")
       })
       
       # If user uploads data
@@ -1546,10 +1381,8 @@ server <- function(input, output, session) {
             req(MetaParam_File_react())
             if (file.exists(MetaParam_File_react())) {
               if (tools::file_ext(MetaParam_File_react()) %in% c("txt","tsv","zip","gz","TXT","TSV","ZIP","GZ")) {
-                #metaP <- as.data.frame(read_delim(MetaParam_File_react(), delim = '\t', col_names = F))
                 metaP <- as.data.frame(fread(MetaParam_File_react(), sep = '\t', header = F))
               } else if (tools::file_ext(MetaParam_File_react()) %in% c("csv","CSV")) {
-                #metaP <- as.data.frame(read_delim(MetaParam_File_react(), delim = ',', col_names = F))
                 metaP <- as.data.frame(fread(MetaParam_File_react(), sep = ',', header = F))
               } else if (tools::file_ext(MetaParam_File_react()) %in% c("RData","rdata")) {
                 metaP <- loadRData(MetaParam_File_react())
@@ -1563,14 +1396,11 @@ server <- function(input, output, session) {
               # If expression is URL
             } else {
               if (tools::file_ext(MetaParam_File_react()) %in% c("txt","tsv","TXT","TSV")) {
-                #metaP <- as.data.frame(read_delim(url(MetaParam_File_react()), delim = '\t', col_names = F))
-                metaP <- as.data.frame(fread(url(MetaParam_File_react()), sep = '\t', header = F))
+                metaP <- as.data.frame(read_delim(url(MetaParam_File_react()), delim = '\t', col_names = F))
               } else if (tools::file_ext(MetaParam_File_react()) %in% c("zip","gz","ZIP","GZ")) {
-                #metaP <- as.data.frame(read_delim(getZip(MetaParam_File_react()), delim = '\t', col_names = F))
-                metaP <- as.data.frame(fread(getZip(MetaParam_File_react()), sep = '\t', header = F))
+                metaP <- as.data.frame(read_delim(getZip(MetaParam_File_react()), delim = '\t', col_names = F))
               } else if (tools::file_ext(MetaParam_File_react()) %in% c("csv","CSV")) {
-                #metaP <- as.data.frame(read_delim(url(MetaParam_File_react()), delim = ',', col_names = F))
-                metaP <- as.data.frame(fread(url(MetaParam_File_react()), sep = ',', header = F))
+                metaP <- as.data.frame(read_delim(url(MetaParam_File_react()), delim = ',', col_names = F))
               } else if (tools::file_ext(MetaParam_File_react()) %in% c("RData","rdata")) {
                 metaP <- loadRData(url(MetaParam_File_react()))
               } else if (tools::file_ext(MetaParam_File_react()) %in% c("rds","RDS")) {
@@ -1586,10 +1416,8 @@ server <- function(input, output, session) {
           req(MetaParam_File_react())
           if (file.exists(MetaParam_File_react())) {
             if (tools::file_ext(MetaParam_File_react()) %in% c("txt","tsv","zip","gz","TXT","TSV","ZIP","GZ")) {
-              #metaP <- as.data.frame(read_delim(MetaParam_File_react(), delim = '\t', col_names = F))
               metaP <- as.data.frame(fread(MetaParam_File_react(), sep = '\t', header = F))
             } else if (tools::file_ext(MetaParam_File_react()) %in% c("csv","CSV")) {
-              #metaP <- as.data.frame(read_delim(MetaParam_File_react(), delim = ',', col_names = F))
               metaP <- as.data.frame(fread(MetaParam_File_react(), sep = ',', header = F))
             } else if (tools::file_ext(MetaParam_File_react()) %in% c("RData","rdata")) {
               metaP <- loadRData(MetaParam_File_react())
@@ -1615,10 +1443,8 @@ server <- function(input, output, session) {
           if (file.exists(ExpressionMatrix_file_react())) {
             print(paste0("Loading in local file: ",ExpressionMatrix_file_react()))
             if (tools::file_ext(ExpressionMatrix_file_react()) %in% c("txt","tsv","zip","gz","TXT","TSV","ZIP","GZ")) {
-              #expr <- as.data.frame(read_delim(ExpressionMatrix_file_react(), delim = '\t', col_names = T))
               expr <- as.data.frame(fread(ExpressionMatrix_file_react(), sep = '\t', header = T))
             } else if (tools::file_ext(ExpressionMatrix_file_react()) %in% c("csv","CSV")) {
-              #expr <- as.data.frame(read_delim(ExpressionMatrix_file_react(), delim = ',', col_names = T))
               expr <- as.data.frame(fread(ExpressionMatrix_file_react(), sep = ',', header = T))
             } else if (tools::file_ext(ExpressionMatrix_file_react()) %in% c("RData","rdata")) {
               expr <- loadRData(ExpressionMatrix_file_react())
@@ -1630,13 +1456,10 @@ server <- function(input, output, session) {
             print(paste0("Loading in url file: ",ExpressionMatrix_file_react()))
             if (tools::file_ext(ExpressionMatrix_file_react()) %in% c("txt","tsv","TXT","TSV")) {
               expr <- as.data.frame(read_delim(url(ExpressionMatrix_file_react()), delim = '\t', col_names = T))
-              #expr <- as.data.frame(fread(url(ExpressionMatrix_file_react()), sep = '\t', header = T))
             } else if (tools::file_ext(ExpressionMatrix_file_react()) %in% c("zip","gz","ZIP","GZ")) {
               expr <- as.data.frame(read_delim(getZip(ExpressionMatrix_file_react()), delim = '\t', col_names = T))
-              #expr <- as.data.frame(fread(getZip(ExpressionMatrix_file_react()), sep = '\t', header = T))
             } else if (tools::file_ext(ExpressionMatrix_file_react()) %in% c("csv","CSV")) {
               expr <- as.data.frame(read_delim(url(ExpressionMatrix_file_react()), delim = ',', col_names = T))
-              #expr <- as.data.frame(fread(url(ExpressionMatrix_file_react()), sep = ',', header = T))
             } else if (tools::file_ext(ExpressionMatrix_file_react()) %in% c("RData","rdata")) {
               expr <- loadRData(url(ExpressionMatrix_file_react()))
             } else if (tools::file_ext(ExpressionMatrix_file_react()) %in% c("rds","RDS")) {
@@ -1644,6 +1467,7 @@ server <- function(input, output, session) {
             }
           }
           # Remove Expression with NA
+          expr[,1] <- date_to_gene(expr[,1])
           expr <- expr %>%
             drop_na() %>%
             as.data.frame()
@@ -1655,12 +1479,15 @@ server <- function(input, output, session) {
           }
           colnames(expr)[1] <- "Gene"
           # Remove Duplicate genes
-          if (TRUE %in% duplicated(expr[,1])) {
-            expr <- expr %>%
+          expr_dup <- expr[which(expr[,1] %in% expr[,1][duplicated(expr[,1])]),]
+          expr_nondup <- expr[which(!expr[,1] %in% expr[,1][duplicated(expr[,1])]),]
+          if (nrow(expr_dup) > 0) {
+            expr_dup <- expr_dup %>%
               group_by(Gene) %>%
               summarise_all(max) %>%
               as.data.frame()
           }
+          expr <- rbind(expr_dup,expr_nondup)
           row.names(expr) <- expr[,1]
           expr <- expr[,-1]
           
@@ -1671,10 +1498,8 @@ server <- function(input, output, session) {
           if (file.exists(MetaData_file_react())) {
             print(paste0("Loading in local file: ",MetaData_file_react()))
             if (tools::file_ext(MetaData_file_react()) %in% c("txt","tsv","zip","gz","TXT","TSV","ZIP","GZ")) {
-              #meta <- as.data.frame(read_delim(MetaData_file_react(), delim = '\t', col_names = T))
               meta <- as.data.frame(fread(MetaData_file_react(), sep = '\t', header = T))
             } else if (tools::file_ext(MetaData_file_react()) %in% c("csv","CSV")) {
-              #meta <- as.data.frame(read_delim(MetaData_file_react(), delim = ',', col_names = T))
               meta <- as.data.frame(fread(MetaData_file_react(), sep = ',', header = T))
             } else if (tools::file_ext(MetaData_file_react()) %in% c("RData","rdata")) {
               meta <- loadRData(MetaData_file_react())
@@ -1686,13 +1511,10 @@ server <- function(input, output, session) {
             print(paste0("Loading in url file: ",MetaData_file_react()))
             if (tools::file_ext(MetaData_file_react()) %in% c("txt","tsv","TXT","TSV")) {
               meta <- as.data.frame(read_delim(url(MetaData_file_react()), delim = '\t', col_names = T))
-              #meta <- as.data.frame(fread(url(MetaData_file_react()), sep = '\t', header = T))
             } else if (tools::file_ext(MetaData_file_react()) %in% c("zip","gz","ZIP","GZ")) {
               meta <- as.data.frame(read_delim(getZip(MetaData_file_react()), delim = '\t', col_names = T))
-              #meta <- as.data.frame(fread(getZip(MetaData_file_react()), sep = '\t', header = T))
             } else if (tools::file_ext(MetaData_file_react()) %in% c("csv","CSV")) {
               meta <- as.data.frame(read_delim(url(MetaData_file_react()), delim = ',', col_names = T))
-              #meta <- as.data.frame(fread(url(MetaData_file_react()), sep = ',', header = T))
             } else if (tools::file_ext(MetaData_file_react()) %in% c("RData","rdata")) {
               meta <- loadRData(url(MetaData_file_react()))
             } else if (tools::file_ext(MetaData_file_react()) %in% c("rds","RDS")) {
@@ -1724,7 +1546,6 @@ server <- function(input, output, session) {
             meta <- meta[which(meta[,metacol_samplename] %in% sampsames),]
             meta <- meta %>% relocate(any_of(metacol_samplename))
             
-            #metacol_samplename <- metaP[which(metaP[,2] == "SampleName"),1]
             PreProcessed_meta_cols <- c(grep("_PreProcessedScore$",colnames(meta),value = T))
             if (length(PreProcessed_meta_cols) == 0) {
               if (immudecon_check == TRUE) {
@@ -1800,60 +1621,42 @@ server <- function(input, output, session) {
       })
       
       observeEvent(input$LogExprFile | input$ScaleNormExprFile,{
-        if (isTruthy(input$LogExprFile) | isTruthy(input$ScaleNormExprFile)) {
-          if (input$LogExprFile & input$ScaleNormExprFile) {
-            meta <- meta_react()
-            metaP <- metaP_react()
-            meta <- meta[,grep("_InApp_PreProcessedScore$",colnames(meta), invert = T)]
-            metaP <- metaP[which(metaP[,1] %in% grep("_InApp_PreProcessedScore$",metaP[,1], invert = T, value = T)),]
-            meta_react(meta)
-            metaP_react(metaP)
-            expr <- expr_raw()
-            expr <- log2(expr+1)
-            expr_col <- colnames(expr)
-            expr <- apply(expr, 1, scale)
-            expr <- apply(expr, 1, rev)
-            colnames(expr) <- expr_col
-            expr <- as.matrix(expr[order(rownames(expr)),])
-            expr_react(expr)
-          } else if (input$LogExprFile & !input$ScaleNormExprFile) {
-            meta <- meta_react()
-            metaP <- metaP_react()
-            meta <- meta[,grep("_InApp_PreProcessedScore$",colnames(meta), invert = T)]
-            metaP <- metaP[which(metaP[,1] %in% grep("_InApp_PreProcessedScore$",metaP[,1], invert = T, value = T)),]
-            meta_react(meta)
-            metaP_react(metaP)
-            expr <- expr_raw()
-            expr <- log2(expr+1)
-            expr <- as.matrix(expr[order(rownames(expr)),])
-            expr_react(expr)
-          } else if (!input$LogExprFile & input$ScaleNormExprFile) {
-            meta <- meta_react()
-            metaP <- metaP_react()
-            meta <- meta[,grep("_InApp_PreProcessedScore$",colnames(meta), invert = T)]
-            metaP <- metaP[which(metaP[,1] %in% grep("_InApp_PreProcessedScore$",metaP[,1], invert = T, value = T)),]
-            meta_react(meta)
-            metaP_react(metaP)
-            expr <- expr_raw()
-            expr_col <- colnames(expr)
-            expr <- apply(expr, 1, scale)
-            expr <- apply(expr, 1, rev)
-            colnames(expr) <- expr_col
-            expr <- as.matrix(expr[order(rownames(expr)),])
-            expr_react(expr)
-          } else {
-            meta <- meta_react()
-            metaP <- metaP_react()
-            meta <- meta[,grep("_InApp_PreProcessedScore$",colnames(meta), invert = T)]
-            metaP <- metaP[which(metaP[,1] %in% grep("_InApp_PreProcessedScore$",metaP[,1], invert = T, value = T)),]
-            meta_react(meta)
-            metaP_react(metaP)
-            expr <- expr_raw()
-            expr_react(expr)
-          }
+        req(meta_react())
+        req(metaP_react())
+        req(expr_raw())
+        meta <- meta_react()
+        metaP <- metaP_react()
+        expr <- expr_raw()
+        
+        if (input$LogExprFile == T) {
+          expr <- log2(expr + 0.00001)
+          meta <- meta[,grep("_InApp_PreProcessedScore$",colnames(meta), invert = T)]
+          metaP <- metaP[which(metaP[,1] %in% grep("_InApp_PreProcessedScore$",metaP[,1], invert = T, value = T)),]
+          meta_react(meta)
+          metaP_react(metaP)
+          expr <- as.matrix(expr[sort(rownames(expr)),])
+          expr_react(expr)
+        } else {
+          meta_react(meta)
+          metaP_react(metaP)
+          expr_react(expr)
         }
-        
-        
+        if (input$ScaleNormExprFile == T) {
+          expr_col <- colnames(expr)
+          expr = apply(expr, 1, scale)
+          expr = apply(expr, 1, rev)
+          colnames(expr) <- expr_col
+          meta <- meta[,grep("_InApp_PreProcessedScore$",colnames(meta), invert = T)]
+          metaP <- metaP[which(metaP[,1] %in% grep("_InApp_PreProcessedScore$",metaP[,1], invert = T, value = T)),]
+          meta_react(meta)
+          metaP_react(metaP)
+          expr <- as.matrix(expr[sort(rownames(expr)),])
+          expr_react(expr)
+        } else {
+          meta_react(meta)
+          metaP_react(metaP)
+          expr_react(expr)
+        }
       })
       
       metacol_sampletype <- reactive({
@@ -1898,7 +1701,8 @@ server <- function(input, output, session) {
           metacol_feature <- metacol_feature[-which(metacol_feature == input$FeatureSelection)]
           metacol_feature <- ifelse(!is.null(input$SampleTypeSelection),metacol_feature[-which(metacol_feature == input$SampleTypeSelection)],metacol_feature)
         }
-        metacol_feature <- c(metacol_feature,geneset_name,"QuartileCutP","MedianCutP","OptimalCutP","TopBottomCutP","UserCutP")
+        metacol_feature <- c(metacol_feature,geneset_name,paste0(geneset_name,"_QuartileCutP"),paste0(geneset_name,"_MedianCutP"),
+                             paste0(geneset_name,"_OptimalCutP"),paste0(geneset_name,"_TopBottomCutP"),paste0(geneset_name,"_UserCutP"))
         metacol_feature
         
       })
@@ -1947,9 +1751,14 @@ server <- function(input, output, session) {
         meta <- meta_react()
         if (length(unique(meta[,metacol_sampletype])) > 1) {
           SampleTypeChoices <- unique(meta[,metacol_sampletype])
-          SampleTypeChoices <- c(SampleTypeChoices,"All Sample Types")
+          SampleTypeChoices <- c("All Sample Types",SampleTypeChoices)
+          if (toupper(PreSelect_SamplyType_react()) == "ALL") {
+            preselect <- "All Sample Types"
+          } else {
+            preselect <- PreSelect_SamplyType_react()
+          }
           selectInput("SampleTypeSelection",paste("Select Sample Type (",metacol_sampletype,"):",sep = ""),
-                      choices = SampleTypeChoices, selected = PreSelect_SamplyType_react())
+                      choices = SampleTypeChoices, selected = preselect)
         }
       })
       
@@ -2001,6 +1810,25 @@ server <- function(input, output, session) {
         req(metacol_survid())
         SurIDChoices <- metacol_survid()
         updateSelectizeInput(session = session, inputId = "SurvivalType_id",choices = SurIDChoices, server = T)
+      })
+      
+      output$rendSurvXaxis <- renderUI({
+        meta_ssgsea <- ssGSEAmeta()
+        yOm <- input$SurvYearOrMonth
+        surv_time_col <- input$SurvivalType_time
+        surv_id_col <- input$SurvivalType_id
+        max_time <- ceiling(max(meta_ssgsea[,surv_time_col])/365.25)
+        if (yOm == "Years") {
+          numericInput("SurvXaxis","X-Axis Limit (years)", value = max_time)
+        } else if (yOm == "Months") {
+          numericInput("SurvXaxis","X-Axis Limit (months)", value = max_time*12)
+        }
+      })
+      
+      observe({
+        if (input$SurvYearOrMonth == "Months") {
+          updateNumericInput(session,"SurvXaxisBreaks",label = "Survival X-Axis Breaks (Months):", value = 12, step = 1)
+        }
       })
       
       ### Genesets -------------------------------------------------------------
@@ -2209,202 +2037,124 @@ server <- function(input, output, session) {
         expr <- exprSub()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        if (isTruthy(input$SurvivalType_time) & isTruthy(input$SurvivalType_id) & isTruthy(geneset_name)) {
-          SampleNameCol <- metacol_samplename_react()
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          quantCutoff <- input$QuantPercent/100
-          quantCutoff2 <- input$QuantPercent2/100
-          surv_time_col <- input$SurvivalType_time
-          surv_id_col <- input$SurvivalType_id
-          scoreMethod <- input$ScoreMethod
-          ## Remove rows with NA in survival column
-          meta <- meta[!is.na(meta[,surv_time_col]),]
-          meta <- meta[!is.na(meta[,surv_id_col]),]
-          meta[,surv_id_col] <- as.numeric(meta[,surv_id_col])
-          meta[,surv_time_col] <- as.numeric(meta[,surv_time_col])
-          
-          ## Re-subset expression matrix
-          if (any(colnames(expr) %in% meta[,1])) {
-            expr_sub <- expr[,colnames(expr) %in% meta[,1], drop = F]
-            expr_mat <- as.matrix(expr_sub)
-            rownames(expr_mat) <- rownames(expr_sub)
-            colnames(expr_mat) <- colnames(expr_sub)
-            if (input$GeneSetTabs == 1 | input$GeneSetTabs == 3) {
-              if (geneset_name %in% decon_score_cols()) {
-                ssGSEA <- meta[,c(SampleNameCol,geneset_name)]
-                ssGSEA <- ssGSEA[!is.na(ssGSEA[,2]),]
-                ssGSEA <- ssGSEA[which(ssGSEA[,2] != "Inf"  & ssGSEA[,2] != "N/A" & ssGSEA[,2] != "n/a"),]
-                ssGSEA[,2] <- as.numeric(ssGSEA[,2])
-              }
-              else {
-                if (as.numeric(tools::file_path_sans_ext(packageVersion("GSVA"))) >= 1.5) {
-                  if (scoreMethod == "ssgsea") {
-                    ssGSEA_param <- GSVA::ssgseaParam(expr_mat,geneset)
-                  } else if (scoreMethod == "gsva") {
-                    ssGSEA_param <- GSVA::gsvaParam(expr_mat,geneset)
-                  } else if (scoreMethod == "plage") {
-                    ssGSEA_param <- GSVA::plageParam(expr_mat,geneset)
-                  } else if (scoreMethod == "zscore") {
-                    ssGSEA_param <- GSVA::zscoreParam(expr_mat,geneset)
+        if (length(unname(unlist(geneset))) > 0) {
+          if (any(unname(unlist(geneset)) %in% rownames(expr))) {
+            if (isTruthy(input$SurvivalType_time) & isTruthy(input$SurvivalType_id) & isTruthy(geneset_name)) {
+              SampleNameCol <- metacol_samplename_react()
+              quantCutoff <- input$QuantPercent/100
+              quantCutoff2 <- input$QuantPercent2/100
+              surv_time_col <- input$SurvivalType_time
+              surv_id_col <- input$SurvivalType_id
+              scoreMethod <- input$ScoreMethod
+              ## Remove rows with NA in survival column
+              meta <- meta[!is.na(meta[,surv_time_col]),]
+              meta <- meta[!is.na(meta[,surv_id_col]),]
+              meta[,surv_id_col] <- as.numeric(meta[,surv_id_col])
+              meta[,surv_time_col] <- as.numeric(meta[,surv_time_col])
+              
+              ## Re-subset expression matrix
+              if (length(!is.na(meta[,surv_id_col])) > 0) {
+                if (any(colnames(expr) %in% meta[,1])) {
+                  expr_sub <- expr[,colnames(expr) %in% meta[,1], drop = F]
+                  expr_mat <- as.matrix(expr_sub)
+                  rownames(expr_mat) <- rownames(expr_sub)
+                  colnames(expr_mat) <- colnames(expr_sub)
+                  if (input$GeneSetTabs == 1 | input$GeneSetTabs == 3) {
+                    if (geneset_name %in% decon_score_cols()) {
+                      ssGSEA <- meta[,c(SampleNameCol,geneset_name)]
+                      ssGSEA <- ssGSEA[!is.na(ssGSEA[,2]),]
+                      ssGSEA <- ssGSEA[which(ssGSEA[,2] != "Inf"  & ssGSEA[,2] != "N/A" & ssGSEA[,2] != "n/a"),]
+                      ssGSEA[,2] <- as.numeric(ssGSEA[,2])
+                    }
+                    else {
+                      if (as.numeric(tools::file_path_sans_ext(packageVersion("GSVA"))) >= 1.5) {
+                        if (scoreMethod == "ssgsea") {
+                          ssGSEA_param <- GSVA::ssgseaParam(expr_mat,geneset)
+                        } else if (scoreMethod == "gsva") {
+                          ssGSEA_param <- GSVA::gsvaParam(expr_mat,geneset)
+                        } else if (scoreMethod == "plage") {
+                          ssGSEA_param <- GSVA::plageParam(expr_mat,geneset)
+                        } else if (scoreMethod == "zscore") {
+                          ssGSEA_param <- GSVA::zscoreParam(expr_mat,geneset)
+                        }
+                        ssGSEA <- GSVA::gsva(ssGSEA_param)
+                        ssGSEA <- as.data.frame(t(ssGSEA))
+                        ssGSEA[,SampleNameCol] <- rownames(ssGSEA)
+                      } else {
+                        ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod, verbose = FALSE)
+                        ssGSEA <- as.data.frame(t(ssGSEA))
+                        ssGSEA[,SampleNameCol] <- rownames(ssGSEA)
+                      }
+                    }
+                  } else if (input$GeneSetTabs == 2) {
+                    expr_sub <- as.data.frame(expr_sub[geneset_name,])
+                    colnames(expr_sub)[1] <- geneset_name
+                    expr_sub[,SampleNameCol] <- rownames(expr_sub)
+                    ssGSEA <- expr_sub
                   }
-                  ssGSEA <- GSVA::gsva(ssGSEA_param)
-                  ssGSEA <- as.data.frame(t(ssGSEA))
-                  ssGSEA[,SampleNameCol] <- rownames(ssGSEA)
-                } else {
-                  ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod, verbose = FALSE)
-                  ssGSEA <- as.data.frame(t(ssGSEA))
-                  ssGSEA[,SampleNameCol] <- rownames(ssGSEA)
+                  
+                  ## Subset columns needed for plot and rename for surv function
+                  meta_ssgsea_sdf <- merge(meta[,c(SampleNameCol,surv_time_col,surv_id_col)],ssGSEA[,c(SampleNameCol,geneset_name)])
+                  
+                  if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
+                    if (length(meta_ssgsea_sdf[,4]) > 1) {
+                      res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
+                      cutp <- res.cut$cutpoint[["cutpoint"]]
+                      res.cat <- surv_categorize(res.cut)
+                      #ssGSEA$OptimalCutP <- res.cat[,3]
+                      ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- res.cat[,3]
+                    }
+                  }
+                  
+                  ## Perform further functions
+                  #ssGSEA$VAR_Q <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
+                  #ssGSEA$QuartileCutP <- paste("", ssGSEA$VAR_Q, sep="")
+                  #ssGSEA$MedianCutP <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
+                  #ssGSEA$TopBottomCutP <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
+                  #ssGSEA$UserCutP <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
+                  
+                  
+                  ssGSEA[,paste0(geneset_name,"_VAR_Q")] <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
+                  ssGSEA[,paste0(geneset_name,"_QuartileCutP")] <- paste("", ssGSEA[,paste0(geneset_name,"_VAR_Q")], sep="")
+                  ssGSEA[,paste0(geneset_name,"_MedianCutP")] <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
+                  ssGSEA[,paste0(geneset_name,"_TopBottomCutP")] <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
+                  ssGSEA[,paste0(geneset_name,"_UserCutP")] <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
+                  
+                  meta_ssGSEA <- merge(meta,ssGSEA)
+                  meta_ssGSEA
                 }
               }
-            } else if (input$GeneSetTabs == 2) {
-              expr_sub <- as.data.frame(expr_sub[geneset_name,])
-              colnames(expr_sub)[1] <- geneset_name
-              expr_sub[,SampleNameCol] <- rownames(expr_sub)
-              ssGSEA <- expr_sub
+              
+              
             }
-            
-            ## Subset columns needed for plot and rename for surv function
-            meta_ssgsea_sdf <- merge(meta[,c(SampleNameCol,surv_time_col,surv_id_col)],ssGSEA[,c(SampleNameCol,geneset_name)])
-            
-            if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
-              if (length(meta_ssgsea_sdf[,4]) > 1) {
-                res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
-                cutp <- res.cut$cutpoint[["cutpoint"]]
-                res.cat <- surv_categorize(res.cut)
-                ssGSEA$OptimalCutP <- res.cat[,3]
-              }
-            }
-            
-            ## Perform further functions
-            ssGSEA$VAR_Q <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
-            ssGSEA$QuartileCutP <- paste("", ssGSEA$VAR_Q, sep="")
-            ssGSEA$MedianCutP <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
-            ssGSEA$TopBottomCutP <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
-            ssGSEA$UserCutP <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
-            
-            meta_ssGSEA <- merge(meta,ssGSEA)
-            meta_ssGSEA
           }
-          
         }
+        
+        
         
         
       })
       
       ## Median CutP -----------------------------------------------------------
       
-      #SubsetSurvData <- function(df,time,id,feat,feat2 = NULL) {
-      #  SampleNameCol <- colnames(df)[1]
-      #  if (is.null(feat2)) {
-      #    df <- df[,c(SampleNameCol,time,id,feat)]
-      #    if ("TopBottomCutP" %in% c(feat,feat2)) {
-      #      df <- df[which(df$TopBottomCutP != "BetweenCutoff"),]
-      #    }
-      #    colnames(df)[which(colnames(df) == time)] <- "time"
-      #    colnames(df)[which(colnames(df) == id)] <- "ID"
-      #  } else {
-      #    df <- df[,c(SampleNameCol,time,id,feat,feat2)]
-      #    if ("TopBottomCutP" %in% c(feat,feat2)) {
-      #      df <- df[which(df$TopBottomCutP != "BetweenCutoff"),]
-      #    }
-      #    colnames(df)[which(colnames(df) == time)] <- "time"
-      #    colnames(df)[which(colnames(df) == id)] <- "ID"
-      #  }
-      #  return(df)
-      #}
-      
       MedianCutP_react <- reactive({
         req(ssGSEAmeta())
-        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,"MedianCutP")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_MedianCutP"))
       })
-      
-      #CoxPHobj <- function(df,feat,ref) {
-      #  df[,feat] <- as.factor(df[,feat])
-      #  df[,feat] <- relevel(df[,feat], ref = ref)
-      #  tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",feat)),data = df)
-      #  #tab <- coxph(Surv(time,ID) ~ Feature, data = df)
-      #  return(tab)
-      #}
       
       MedianCutPTab_react <- reactive({
         req(MedianCutP_react())
-        CoxPHobj(MedianCutP_react(),"MedianCutP","Low")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        CoxPHobj(MedianCutP_react(),paste0(geneset_name,"_MedianCutP"),"Low")
       })
-      
-      #CoxPHtabUni <- function(obj) {
-      #  obj <- obj %>% 
-      #    gtsummary::tbl_regression(exp = TRUE) %>%
-      #    as_gt()
-      #  tab_df <- as.data.frame(obj)
-      #  tab_df <- tab_df %>%
-      #    dplyr::select(label,estimate,ci,p.value)
-      #  colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
-      #  tab_df <- sapply(tab_df,function(x) { gsub("<br />", "", x) })
-      #  return(tab_df)
-      #}
       
       SBinaryHRtab_react <- reactive({
         req(MedianCutPTab_react())
-        #CoxPHtabUni(MedianCutPTab_react(),"MedianCutP")
         CoxPHtabUni(MedianCutPTab_react())
       })
-      
-      #SurvPlotExpl <- function(CutPlabel,surv_time_col,geneset_name,scoreMethod,metacol_sampletype,SampleTypeSelected,Feature,subFeature,Pval_Tab,HR_Tab) {
-      #  SurvDateType <- sub("\\..*","",surv_time_col)
-      #  pval <- get_lik_pval(Pval_Tab)
-      #  if (as.numeric(pval) < 0.05) {
-      #    pval_char <- "strongly associated"
-      #  } else if (as.numeric(pval) >= 0.05 & as.numeric(pval) < 0.1) {
-      #    pval_char <- "moderately associated"
-      #  } else if (as.numeric(pval) >= 0.1) {
-      #    pval_char <- "not associated"
-      #  }
-      #  if (isTruthy(SampleTypeSelected)) {
-      #    if (SampleTypeSelected != "All Sample Types") {
-      #      if (Feature != "Show all Samples") {
-      #        line1 <- paste0("<li><b>",SurvDateType,"</b> survival analysis ", metacol_sampletype," of <b>",SampleTypeSelected,"</b> Patients.</li>")
-      #        line2 <- paste0("<li>The dataset is filtered by <b>",Feature,"</b> - <b>",subFeature,"</b>.</li>")
-      #      } else {
-      #        line1 <- paste0("<li><b>",SurvDateType,"</b> survival analysis ", metacol_sampletype," of <b>",SampleTypeSelected,"</b> Patients.</li>")
-      #        line2 <- NULL
-      #      }
-      #    } else {
-      #      if (Feature != "Show all Samples") {
-      #        line1 <- paste0("<li><b>",SurvDateType,"</b> survival analysis of all sample types.</li>")
-      #        line2 <- paste0("<li>The dataset is filtered by <b>",Feature,"</b> - <b>",subFeature,"</b>.</li>")
-      #      } else {
-      #        line1 <- paste0("<li><b>",SurvDateType,"</b> survival analysis of all sample types.</li>")
-      #        line2 <- NULL
-      #      }
-      #    }
-      #  } else {
-      #    if (Feature != "Show all Samples") {
-      #      line1 <- paste0("<li><b>",SurvDateType,"</b> survival analysis.</li>")
-      #      line2 <- paste0("<li>The dataset is filtered by <b>",Feature,"</b> - <b>",subFeature,"</b>.</li>")
-      #    } else {
-      #      line1 <- paste0("<li><b>",SurvDateType,"</b> survival analysis.</li>")
-      #      line2 <- NULL
-      #    }
-      #  }
-      #  line3 <- paste0("<li>Kaplan-Meier survival curve categorized by <b>",geneset_name,"</b> <b>",scoreMethod,"</b> ",CutPlabel,".</li>")
-      #  if (nrow(HR_Tab) == 3) {
-      #    HR <- HR_Tab[3,2]
-      #    HR_char <- ifelse(as.numeric(gsub(",","",(HR))) > 1,"high risk","low risk")
-      #    chacteristic <- str_squish(HR_Tab[3,1])
-      #    line4 <- paste("<li>Cox hazard regression analysis finds a Likelihood Ratio P.value of <b>",pval,"</b> and a Hazard Ratio of <b>",HR,"</b>, <b>",chacteristic,"</b> <b>",geneset_name,
-      #                   "</b> is <b>",pval_char,"</b> with <b>",HR_char,"</b> for <b>",SurvDateType,"</b>.</li>",sep = "")
-      #  } else {
-      #    line4 <- paste("<li>Cox hazard regression analysis finds a Likelihood Ratio P.value of <b>",pval,"</b> shows that <b>",geneset_name,
-      #                   "</b> is <b>",pval_char,"</b> with <b>",SurvDateType,"</b>.</li>",sep = "")
-      #  }
-      #  if (is.null(line2)) {
-      #    return(HTML(paste0("<ul>",line1,line3,line4,"</ul>")))
-      #  } else if (!is.null(line2)) {
-      #    return(HTML(paste0("<ul>",line1,line2,line3,line4,"</ul>")))
-      #  }
-      #  
-      #}
       
       output$BINSurvDescrip <- renderUI({
         HR_Tab <- SBinaryHRtab_react()
@@ -2428,89 +2178,12 @@ server <- function(input, output, session) {
         SurvPlotExpl("median cut-point",surv_time_col,geneset_name,scoreMethod,metacol_sampletype,SampleTypeSelected,Feature,subFeature,Pval_Tab,HR_Tab)
       })
       
-      #SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim) {
-      #  breakTime <- ifelse(max(df[,"time"]) < 365.25,NULL,365.25)
-      #  ggsurv <- survminer::ggsurvplot(fit, data = df, risk.table = TRUE,
-      #                                  title = title,
-      #                                  xscale = c("d_y"),
-      #                                  break.time.by=breakTime,
-      #                                  xlab = "Years", 
-      #                                  ylab = ylab,
-      #                                  submain = "Based on Kaplan-Meier estimates",
-      #                                  caption = "created with survminer",
-      #                                  pval = pval,
-      #                                  conf.int = conf,
-      #                                  ggtheme = theme_bw(),
-      #                                  font.title = c(16, "bold"),
-      #                                  font.submain = c(12, "italic"),
-      #                                  font.caption = c(12, "plain"),
-      #                                  font.x = c(14, "plain"),
-      #                                  font.y = c(14, "plain"),
-      #                                  font.tickslab = c(12, "plain"),
-      #                                  legend = legend,
-      #                                  risk.table.height = 0.20,
-      #                                  surv.median.line = median
-      #  )
-      #  if (median != "none") {
-      #    MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
-      #    MedSurvItem_df <- MedSurvItem[[1]][["data"]]
-      #    MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
-      #    MedSurvItem_df <- MedSurvItem_df %>%
-      #      mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
-      #    rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
-      #    if (nrow(MedSurvItem_df) > 1) {
-      #      ggsurv$plot <- ggsurv$plot +
-      #        geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
-      #    }
-      #  }
-      #  if (!is.null(xlim)) {
-      #    ggsurv$plot$coordinates$limits$x <- c(0,xlim)
-      #    ggsurv$table$coordinates$limits$x <- c(0,xlim)
-      #  }
-      #  ggsurv$table <- ggsurv$table + theme_cleantable()
-      #  ggsurv
-      #}
-      
-      #SurvPlotTitle <- function(SampleTypeSelected,geneset_name = NULL,scoreMethodLab,Feature,subFeature,CutPLabel,univar = NULL,multivar = NULL) {
-      #  if (isTruthy(geneset_name)) {
-      #    primeFeatLab <- paste0(geneset_name," (",scoreMethodLab,") at ",CutPLabel)
-      #  }
-      #  if (isTruthy(univar)) {
-      #    primeFeatLab <- paste0(univar)
-      #  }
-      #  if (isTruthy(multivar)) {
-      #    primeFeatLab <- paste0(multivar)
-      #  }
-      #  if (isTruthy(SampleTypeSelected)) {
-      #    if (SampleTypeSelected != "All Sample Types") {
-      #      if (Feature != "Show all Samples") {
-      #        PlotTitle <- paste0("Survival Curve of ",primeFeatLab,"\nAcross Patients Classified as ",SampleTypeSelected," - ",Feature," (",subFeature,")")
-      #      } else {
-      #        PlotTitle <- paste0("Survival Curve of ",primeFeatLab,"\nAcross Patients Classified as ",SampleTypeSelected)
-      #      }
-      #    } else {
-      #      if (Feature != "Show all Samples") {
-      #        PlotTitle <- paste0("Survival Curve of ",primeFeatLab,"\nAcross Patients Classified as ",Feature," (",subFeature,")")
-      #      } else {
-      #        PlotTitle <- paste0("Survival Curve of ",primeFeatLab,"\nAcross All Patients")
-      #      }
-      #    }
-      #  } else {
-      #    if (Feature != "Show all Samples") {
-      #      PlotTitle <- paste0("Survival Curve of ",primeFeatLab,"\nAcross Patients Classified as ",Feature," (",subFeature,")")
-      #    } else {
-      #      PlotTitle <- paste0("Survival Curve of ",primeFeatLab,"\nAcross All Patients")
-      #    }
-      #  }
-      #  return(PlotTitle)
-      #}
-      
       SplotBIN_react <- reactive({
         req(MedianCutP_react())
         meta_ssgsea_sdf <- MedianCutP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        SurvFeature <- "MedianCutP"
+        SurvFeature <- paste0(geneset_name,"_MedianCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         SampleTypeSelected <- input$SampleTypeChoices
@@ -2518,9 +2191,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -2544,54 +2224,18 @@ server <- function(input, output, session) {
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Median Cut-Point")
         
+        SurvFeature <- sprintf(ifelse(grepl(" ", SurvFeature), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
         
-        #fit <- survfit(Surv(time,ID) ~ Feature, data = meta_ssgsea_sdf, type="kaplan-meier")
-        #attr(fit$strata,"names") <- gsub("Feature=",paste0(geneset_name,"="),attr(fit$strata,"names"))
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       output$SplotBIN <- renderPlot({
         plot <- SplotBIN_react()
         plot
       })
-      
-      #densPlot <- function(score,quant,xlab,ylab,title,CutPlabel,ShowQuartile = TRUE,user_vline = 0){
-      #  dens_data <- density(score[,1],na.rm = T)
-      #  y_max <- max(dens_data$y)
-      #  y_max_int <- y_max/6
-      #  p <- ggplot(score, aes(x=score[,1])) + 
-      #    geom_density(color="darkblue", fill="lightblue", alpha = 0.4) +
-      #    xlab(xlab) +
-      #    ylab(ylab) +
-      #    ggtitle(title) +
-      #    theme(axis.text = element_text(size = 14),
-      #          axis.title = element_text(size = 16),
-      #          plot.title = element_text(size = 20))
-      #  if (!is.null(CutPlabel)) {
-      #    p <- p + geom_vline(data = quant, aes(xintercept = Quantile), linetype = "dashed", color = "darkblue", linewidth = 1)
-      #    if (nrow(quant) == 1) {
-      #      p <- p + geom_text(aes(quant[1,1],y_max-(y_max_int/6),label = paste(as.character(quant[1,1]),CutPlabel),hjust = -0.1,vjust = -0.1),size = 6, check_overlap = T)
-      #    } else if (nrow(quant) == 2) {
-      #      p <- p + geom_text(aes(quant[1,1],y_max-(y_max_int/6),label = paste(as.character(quant[1,1]),CutPlabel[1]),hjust = -0.1,vjust = -0.1),size = 6, check_overlap = T)
-      #      p <- p + geom_text(aes(quant[2,1],y_max-y_max_int,label = paste(as.character(quant[2,1]),CutPlabel[2]),hjust = -0.1,vjust = -0.1),size = 6, check_overlap = T)
-      #    } else if (nrow(quant) == 3) {
-      #      p <- p + geom_text(aes(quant[1,1],y_max-(y_max_int/6),label = paste(as.character(quant[1,1]),CutPlabel[1],sep="\n"),hjust = -0.1,vjust = 0.5),size = 6, check_overlap = T)
-      #      p <- p + geom_text(aes(quant[2,1],y_max-y_max_int,label = paste(as.character(quant[2,1]),CutPlabel[2],sep="\n"),hjust = -0.1,vjust = 0.5),size = 6, check_overlap = T)
-      #      p <- p + geom_text(aes(quant[3,1],y_max-(y_max_int*2),label = paste(as.character(quant[3,1]),CutPlabel[3],sep="\n"),hjust = -0.1,vjust = 0.5),size = 6, check_overlap = T)
-      #    }
-      #  } else {
-      #    if (ShowQuartile == TRUE) {
-      #      p <- p + geom_vline(data = quant, aes(xintercept = Quantile), linetype = "dashed", color = "darkblue", linewidth = 1)
-      #    }
-      #    if (user_vline != 0) {
-      #      p <- p + geom_vline(xintercept = user_vline, linetype = "dashed", color = "darkred", linewidth = 1)
-      #    }
-      #  }
-      #  
-      #  return(p)
-      #}
       
       ssgseaBINDensity_react <- reactive({
         
@@ -2645,22 +2289,6 @@ server <- function(input, output, session) {
         
       })
       
-      #CoxPHsumm <- function(CoxPHobj,bivarAdd = FALSE,bivarInt = FALSE) {
-      #  out <- capture.output(summary(CoxPHobj))
-      #  xph <- capture.output(cox.zph(CoxPHobj))
-      #  con_line <- grep("^Concordance=",out,value = T)
-      #  lik_line <- grep("^Likelihood ratio test=",out,value = T)
-      #  wal_line <- grep("^Wald test",out,value = T)
-      #  sco_line <- grep("^Score ",out,value = T)
-      #  text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],sep = "\n")
-      #  if (bivarAdd) {
-      #    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],xph[4],sep = "\n")
-      #  }
-      #  if (bivarInt) {
-      #    text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,"","Proportional Hazards assumption:",xph[1],xph[2],xph[3],xph[4],xph[5], sep = "\n")
-      #  }
-      #  return(cat(text))
-      #}
       output$MedianCutPSumm <- renderPrint({
         req(MedianCutPTab_react())
         CoxPHsumm(MedianCutPTab_react())
@@ -2674,12 +2302,16 @@ server <- function(input, output, session) {
       
       QuartileCutP_react <- reactive({
         req(ssGSEAmeta())
-        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,"QuartileCutP")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_QuartileCutP"))
       })
       
       QuartileCutPTab_react <- reactive({
         req(QuartileCutP_react())
-        CoxPHobj(QuartileCutP_react(),"QuartileCutP","Q1_Low")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        CoxPHobj(QuartileCutP_react(),paste0(geneset_name,"_QuartileCutP"),"Q1_Low")
       })
       
       SQuartileHRtab_react <- reactive({
@@ -2714,7 +2346,7 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- QuartileCutP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        SurvFeature <- "QuartileCutP"
+        SurvFeature <- paste0(geneset_name,"_QuartileCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         SampleTypeSelected <- input$SampleTypeChoices
@@ -2722,9 +2354,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -2748,13 +2387,13 @@ server <- function(input, output, session) {
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Quartile Cut-Point")
         
+        SurvFeature <- sprintf(ifelse(grepl(" ", SurvFeature), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
         
-        #fit <- survfit(Surv(time,ID) ~ Feature, data = meta_ssgsea_sdf, type="kaplan-meier")
-        #attr(fit$strata,"names") <- gsub("Feature=",paste0(geneset_name,"="),attr(fit$strata,"names"))
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       output$Splot <- renderPlot({
         Splot_react()
@@ -2824,12 +2463,16 @@ server <- function(input, output, session) {
       
       OptimalCutP_react <- reactive({
         req(ssGSEAmeta())
-        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,"OptimalCutP")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_OptimalCutP"))
       })
       
       OptimalCutPTab_react <- reactive({
         req(OptimalCutP_react())
-        CoxPHobj(OptimalCutP_react(),"OptimalCutP","low")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        CoxPHobj(OptimalCutP_react(),paste0(geneset_name,"_OptimalCutP"),"low")
       })
       
       CutPointHRtab_react <- reactive({
@@ -2864,7 +2507,7 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- OptimalCutP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        SurvFeature <- "OptimalCutP"
+        SurvFeature <- paste0(geneset_name,"_OptimalCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         SampleTypeSelected <- input$SampleTypeChoices
@@ -2872,9 +2515,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -2897,12 +2547,14 @@ server <- function(input, output, session) {
         }
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Optimal Cut-Point")
+        
+        SurvFeature <- sprintf(ifelse(grepl(" ", SurvFeature), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
-        #fit <- survfit(Surv(time,ID) ~ Feature, data = meta_ssgsea_sdf, type="kaplan-meier")
-        #attr(fit$strata,"names") <- gsub("Feature=",paste0(geneset_name,"="),attr(fit$strata,"names"))
+        
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       output$ScutPointPlot <- renderPlot({
         ScutPointPlot_react()
@@ -2923,8 +2575,6 @@ server <- function(input, output, session) {
         if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
           res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = "time", event = "ID", variable = geneset_name, minprop = 0.01)
           cutp <- res.cut$cutpoint[["cutpoint"]]
-          res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = "time", event = "ID", variable = geneset_name)
-          cutp <- round(res.cut$cutpoint[["cutpoint"]],3) 
         }
         
         quant_df <- data.frame(Quantile = cutp)
@@ -2976,14 +2626,18 @@ server <- function(input, output, session) {
       
       TopBottomCutP_react <- reactive({
         req(ssGSEAmeta())
-        meta_ssgsea_sdf <- SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,"TopBottomCutP")
-        meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,"TopBottomCutP"] != "BetweenCutoff"),]
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        meta_ssgsea_sdf <- SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_TopBottomCutP"))
+        meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,paste0(geneset_name,"_TopBottomCutP")] != "BetweenCutoff"),]
         meta_ssgsea_sdf
       })
       
       TopBottomCutPTab_react <- reactive({
         req(TopBottomCutP_react())
-        CoxPHobj(TopBottomCutP_react(),"TopBottomCutP","Low")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        CoxPHobj(TopBottomCutP_react(),paste0(geneset_name,"_TopBottomCutP"),"Low")
       })
       
       SQuantileHRtab_react <- reactive({
@@ -3018,7 +2672,7 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- TopBottomCutP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        SurvFeature <- "TopBottomCutP"
+        SurvFeature <- paste0(geneset_name,"_TopBottomCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         SampleTypeSelected <- input$SampleTypeChoices
@@ -3026,9 +2680,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -3052,12 +2713,13 @@ server <- function(input, output, session) {
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"top/bottom quantile cut-points")
         
+        SurvFeature <- sprintf(ifelse(grepl(" ", SurvFeature), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
-        #fit <- survfit(Surv(time,ID) ~ Feature, data = meta_ssgsea_sdf, type="kaplan-meier")
-        #attr(fit$strata,"names") <- gsub("Feature=",paste0(geneset_name,"="),attr(fit$strata,"names"))
+        
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       output$SquantPlot <- renderPlot({
         SquantPlot_react()
@@ -3130,13 +2792,17 @@ server <- function(input, output, session) {
       
       UserCutP_react <- reactive({
         req(ssGSEAmeta())
-        meta_ssgsea_sdf <- SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,"UserCutP")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        meta_ssgsea_sdf <- SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_UserCutP"))
         meta_ssgsea_sdf
       })
       
       UserCutPTab_react <- reactive({
         req(UserCutP_react())
-        CoxPHobj(UserCutP_react(),"UserCutP","Low")
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        CoxPHobj(UserCutP_react(),paste0(geneset_name,"_UserCutP"),"Low")
       })
       
       SQuantileHR2tab_react <- reactive({
@@ -3171,7 +2837,7 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- UserCutP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        SurvFeature <- "UserCutP"
+        SurvFeature <- paste0(geneset_name,"_UserCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         SampleTypeSelected <- input$SampleTypeChoices
@@ -3179,9 +2845,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -3204,12 +2877,14 @@ server <- function(input, output, session) {
         }
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"user cut-point")
+        
+        SurvFeature <- sprintf(ifelse(grepl(" ", SurvFeature), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
-        #fit <- survfit(Surv(time,ID) ~ Feature, data = meta_ssgsea_sdf, type="kaplan-meier")
-        #attr(fit$strata,"names") <- gsub("Feature=",paste0(geneset_name,"="),attr(fit$strata,"names"))
+        
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       output$SquantPlot2 <- renderPlot({
         SquantPlot2_react()
@@ -3277,26 +2952,10 @@ server <- function(input, output, session) {
       ## Univariate ----------------------------------------------------------------
       
       observe({
-        updateSelectizeInput(session = session,inputId = "SingleSurvivalFeature", choices = metacol_feature(), selected = "MedianCutP", server = T)
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        updateSelectizeInput(session = session,inputId = "SingleSurvivalFeature", choices = metacol_feature(), selected = paste0(geneset_name,"_MedianCutP"), server = T)
       })
-      
-      #survFeatRefSelect <- function(meta,Feature,na.rm = TRUE,cont = FALSE,hilo = TRUE) {
-      #  Var_choices <- meta[,Feature]
-      #  if (na.rm == TRUE) {
-      #    Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
-      #    Var_choices <- Var_choices[which(Var_choices != "Inf" & Var_choices != "N/A" & Var_choices != "n/a")]
-      #    Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
-      #  }
-      #  if (cont == FALSE) {
-      #    Var_choices <- unique(meta[,Feature])
-      #    Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
-      #  } else if (cont == TRUE) {
-      #    if (hilo == TRUE) {
-      #      Var_choices <- c("Low","High")
-      #    }
-      #  }
-      #  return(Var_choices)
-      #}
       
       output$rendSurvFeatVariableUni <- renderUI({
         req(input$SingleSurvivalFeature)
@@ -3304,18 +2963,8 @@ server <- function(input, output, session) {
         Feature <- input$SingleSurvivalFeature
         meta <- ssGSEAmeta()
         Var_choices <- survFeatRefSelect(meta,Feature,input$UniVarNAcheck,input$UniVarContCheck,input$UniVarContCheck)
-        selectInput("SurvFeatVariableUni","Select Coxh Feature Reference:", choices = Var_choices)
+        selectInput("SurvFeatVariableUni","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
-      
-      #observe({
-      #  Feature <- input$SingleSurvivalFeature
-      #  meta_ssgsea <- ssGSEAmeta()
-      #  if (isTruthy(meta_ssgsea[,Feature])) {
-      #    if (is.numeric(meta_ssgsea[,Feature])) {
-      #      updateSelectInput(session,"UniVarContCheck",selected = TRUE)
-      #    }
-      #  }
-      #})
       
       UniVarFeat_react <- reactive({
         Feature <- input$SingleSurvivalFeature
@@ -3330,8 +2979,14 @@ server <- function(input, output, session) {
             meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
           }
         }
-        SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature)
-
+        meta_ssgsea_sdf <- SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature)
+        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- "Feature"
+        #meta_ssgsea_sdf$Feature <- as.factor(meta_ssgsea_sdf$Feature)
+        #labelled::var_label(meta_ssgsea_sdf) <- list(
+        #  Feature = Feature #this variable is a numeric -> label works
+        #)
+        meta_ssgsea_sdf
+        
       })
       
       UniVarFeatTab_react <- reactive({
@@ -3339,12 +2994,18 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- UniVarFeat_react()
         Feature <- input$SingleSurvivalFeature
         ref_Feature <- input$SurvFeatVariableUni
+        #Feature <- sprintf(ifelse(grepl(" ", Feature), "`%s`", "%s"), Feature)
+        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- "Feature"
         if ((input$UniVarContCheck == FALSE) | (input$UniVarContCheck == TRUE & input$UniVarContHiLoCheck == TRUE)) {
           tab <- CoxPHobj(meta_ssgsea_sdf,Feature,ref_Feature)
+          #tab <- CoxPHobj(meta_ssgsea_sdf,"Feature",ref_Feature)
         } else {
+          Feature <- sprintf(ifelse(grepl(" ", Feature), "`%s`", "%s"), Feature)
           tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature)),data = meta_ssgsea_sdf)
-          #tab <- coxph(Surv(time,ID) ~ Feature ,data = meta_ssgsea_sdf)
+          #tab <- coxph(as.formula(paste0("Surv(time,ID) ~ Feature")),data = meta_ssgsea_sdf)
         }
+        #names(tab[["assign"]]) <- gsub("^Feature",Feature,names(tab[["assign"]]))
+        #names(tab[["coefficients"]]) <- gsub("^Feature",Feature,names(tab[["coefficients"]]))
         tab
         
       })
@@ -3352,9 +3013,14 @@ server <- function(input, output, session) {
       SSingleFeatureHRtab_react <- reactive({
         
         #Feature <- input$SingleSurvivalFeature
-        tab <- UniVarFeatTab_react()
-        CoxPHtabUni(tab)
+        #meta_ssgsea_sdf <- UniVarFeat_react()
+        Feature <- input$SingleSurvivalFeature
+        #ref_Feature <- input$SurvFeatVariableUni
         
+        tab <- UniVarFeatTab_react()
+        #names(tab[["assign"]]) <- gsub("^Feature",Feature,names(tab[["assign"]]))
+        tabOut <- CoxPHtabUni(tab,Feature)
+        tabOut
       })
       
       featSplot_react <- reactive({
@@ -3369,9 +3035,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -3385,7 +3058,7 @@ server <- function(input, output, session) {
         SurvDateType <- sub("\\..*","",surv_time_col)
         
         ## determine Feature and Sample Type label
-        ## Adjust 'Sample Type' for label 
+        ## Adjust 'Sample Type' for label
         if (!is.null(SampleType)) {
           SampleTypeLab <- paste(" (",SampleType,") ",sep = "")
         } else { SampleTypeLab <- " " }
@@ -3404,15 +3077,17 @@ server <- function(input, output, session) {
         }
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature, univar = Feature)
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- "Feature"
+        form <- paste0("Surv(time,ID) ~ Feature")
+        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
+        names(fit[["strata"]]) <- gsub("^Feature=",paste0(Feature,"="),names(fit[["strata"]]))
         
-        form <- as.formula(paste0("Surv(time,ID) ~ ",Feature))
-        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
-        
-        #fit <- survfit(Surv(time,ID) ~ Feature, data = meta_ssgsea_sdf, type="kaplan-meier")
-        #attr(fit$strata,"names") <- gsub("Feature=",paste0(Feature,"="),attr(fit$strata,"names"))
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
+        
       })
+      
       
       output$featSplot <- renderPlot({
         plot <- featSplot_react()
@@ -3429,20 +3104,17 @@ server <- function(input, output, session) {
       output$UnivarSummary <- renderPrint({
         
         tab <- UniVarFeatTab_react()
+        Feature <- input$SingleSurvivalFeature
         CoxPHsumm(tab)
         
       })
       
-      #forestPlot_Simple <- function(obj,df,Feature,Font) {
-      #  forest <- survminer::ggforest(obj,
-      #                                data = df,
-      #                                main = paste("Hazard Ratio Modeling: ",Feature,sep = ""),
-      #                                fontsize = Font)
-      #  return(forest)
-      #}
-      
       SinglevarForestPlot_react <- reactive({
-        forestPlot_Simple(UniVarFeatTab_react(),UniVarFeat_react(),input$SingleSurvivalFeature,input$ForestFontSize)
+        obj <- UniVarFeatTab_react()
+        Feature <- input$SingleSurvivalFeature
+        meta_ssgsea_sdf <- UniVarFeat_react()
+        forest <- forestPlot_Simple(obj,meta_ssgsea_sdf,input$SingleSurvivalFeature,input$ForestFontSize)
+        forest
       })
       output$SinglevarForestPlot <- renderPlot({
         forest <- SinglevarForestPlot_react()
@@ -3594,7 +3266,7 @@ server <- function(input, output, session) {
         tm <- forest_theme(base_size = 16,
                            # Confidence interval point shape, line type/color/width
                            ci_pch = 15,ci_col = "black",ci_fill = "black",ci_alpha = 0.8,
-                           ci_lty = 1,ci_lwd = 1.5,ci_Theight = 0.2, # Set an T end at the end of CI 
+                           ci_lty = 1,ci_lwd = 1.5,ci_Theight = 0.2, # Set an T end at the end of CI
                            # Reference line width/type/color
                            refline_lwd = 1,refline_lty = "dashed",refline_col = "grey20",
                            # Vertical line width/type/color
@@ -3604,7 +3276,7 @@ server <- function(input, output, session) {
         p_OS <- forest(FeatColsDF[,c(1:2,7:9)],
                        #title = "PROMOTE OS",
                        est = FeatColsDF$`Hazard Ratio`,
-                       lower = FeatColsDF$Low, 
+                       lower = FeatColsDF$Low,
                        upper = FeatColsDF$High,
                        #sizes = coxOS$`Standard Error`,
                        x_trans = Xtrans,
@@ -3633,23 +3305,7 @@ server <- function(input, output, session) {
         forest <- MultiFeatUnivarForestPlot_react()
         forest
       })
-      #linearityPlot <- function(obj,Feature,resid,pred,axisFont,mainFont,tickFont) {
-      #  p <- survminer::ggcoxdiagnostics(obj,
-      #                                   type = resid,
-      #                                   sline = T,
-      #                                   sline.se = T,
-      #                                   ggtheme = theme_minimal(),
-      #                                   ox.scale = pred)
-      #  p <- ggpar(p,
-      #             font.x = axisFont,
-      #             font.y = axisFont,
-      #             font.main = mainFont,
-      #             font.tickslab = tickFont,
-      #             main = paste("Linearity Plot Featuring: ",Feature, sep = ""),
-      #             ylab = paste(str_to_title(resid)," Residuals", sep = "")
-      #  )
-      #  p
-      #}
+      
       UnivarLinearityPlot_react <- reactive({
         linearityPlot(UniVarFeatTab_react(),input$SingleSurvivalFeature,input$ResidualTypeUni,input$linPredict1,
                       input$linAxisFont,input$linMainFont,input$linTickFont)
@@ -3663,11 +3319,13 @@ server <- function(input, output, session) {
       observe({
         req(ssGSEAmeta())
         meta <- ssGSEAmeta()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
         FeatureChoices <- meta %>%
           dplyr::select(where(~ n_distinct(.x[nzchar(.x)], na.rm = TRUE) > 1)) %>%
           names
         #metacol_feature()
-        updateSelectizeInput(session = session,inputId = "SurvivalFeatureBi1", choices = FeatureChoices, selected = "MedianCutP", server = T)
+        updateSelectizeInput(session = session,inputId = "SurvivalFeatureBi1", choices = FeatureChoices, selected = paste0(geneset_name,"_MedianCutP"), server = T)
       })
       observe({
         req(ssGSEAmeta())
@@ -3686,13 +3344,13 @@ server <- function(input, output, session) {
         Feature <- input$SurvivalFeatureBi1
         meta <- ssGSEAmeta()
         Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarAddNAcheck1,input$BiVarAddContCheck1,input$BiVarAddContHiLoCheck1)
-        selectInput("SurvFeatVariableBi1","Select Coxh Feature Reference:", choices = Var_choices)
+        selectInput("SurvFeatVariableBi1","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
       output$rendSurvFeatVariableBi2 <- renderUI({
         Feature <- input$SurvivalFeatureBi2
         meta <- ssGSEAmeta()
         Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarAddNAcheck2,input$BiVarAddContCheck2,input$BiVarAddContHiLoCheck2)
-        selectInput("SurvFeatVariableBi2","Select Coxh Feature Reference:", choices = Var_choices)
+        selectInput("SurvFeatVariableBi2","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
       
       BiVarAddFeature_react <- reactive({
@@ -3737,16 +3395,20 @@ server <- function(input, output, session) {
       BiVarAddTab_react <- reactive({
         Feature1 <- input$SurvivalFeatureBi1
         Feature2 <- input$SurvivalFeatureBi2
+        Feature1 <- sprintf(ifelse(grepl(" ", Feature1), "`%s`", "%s"), Feature1)
+        Feature2 <- sprintf(ifelse(grepl(" ", Feature2), "`%s`", "%s"), Feature2)
         tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2))),data = BiVarAddFeature_react())
         tab
       })
       BiVarAddTabFeat1_react <- reactive({
         Feature1 <- input$SurvivalFeatureBi1
+        Feature1 <- sprintf(ifelse(grepl(" ", Feature1), "`%s`", "%s"), Feature1)
         tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature1)),data = BiVarAddFeature_react())
         tab
       })
       BiVarAddTabFeat2_react <- reactive({
         Feature2 <- input$SurvivalFeatureBi2
+        Feature2 <- sprintf(ifelse(grepl(" ", Feature2), "`%s`", "%s"), Feature2)
         tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature2)),data = BiVarAddFeature_react())
         tab
       })
@@ -3765,17 +3427,6 @@ server <- function(input, output, session) {
         CoxPHsumm(BiVarAddTab_react(),bivarAdd = TRUE)
       })
       
-      #biVarAnova <- function(obj,obj2) {
-      #  annova_res <- anova(obj,obj2)
-      #  out <- capture.output(annova_res)
-      #  line1 <- out[3]
-      #  line2 <- out[4]
-      #  line3 <- out[5]
-      #  line4 <- out[6]
-      #  line5 <- out[7]
-      #  text <- paste("Model Comparison:",line1,line2,line3,line4,line5,sep = "\n")
-      #  return(cat(text))
-      #}
       output$bivarAnova1 <- renderPrint({
         biVarAnova(BiVarAddTab_react(),BiVarAddTabFeat1_react())
       })
@@ -3813,10 +3464,12 @@ server <- function(input, output, session) {
       observe({
         req(ssGSEAmeta())
         meta <- ssGSEAmeta()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
         FeatureChoices <- meta %>%
           dplyr::select(where(~ n_distinct(.x[nzchar(.x)], na.rm = TRUE) > 1)) %>%
           names
-        updateSelectizeInput(session = session,inputId = "SurvivalFeatureBi1Inter", choices = FeatureChoices, selected = "MedianCutP", server = T)
+        updateSelectizeInput(session = session,inputId = "SurvivalFeatureBi1Inter", choices = FeatureChoices, selected = paste0(geneset_name,"_MedianCutP"), server = T)
       })
       observe({
         req(ssGSEAmeta())
@@ -3835,13 +3488,13 @@ server <- function(input, output, session) {
         Feature <- input$SurvivalFeatureBi1Inter
         meta <- ssGSEAmeta()
         Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarIntNAcheck1,input$BiVarIntContCheck1,input$BiVarIntContHiLoCheck1)
-        selectInput("SurvFeatVariableBi1Inter","Select Coxh Feature Reference:", choices = Var_choices)
+        selectInput("SurvFeatVariableBi1Inter","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
       output$rendSurvFeatVariableBi2Inter <- renderUI({
         Feature <- input$SurvivalFeatureBi2Inter
         meta <- ssGSEAmeta()
         Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarIntNAcheck2,input$BiVarIntContCheck2,input$BiVarIntContHiLoCheck2)
-        selectInput("SurvFeatVariableBi2Inter","Select Coxh Feature Reference:", choices = Var_choices)
+        selectInput("SurvFeatVariableBi2Inter","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
       
       BiVarIntFeature_react <- reactive({
@@ -3887,6 +3540,8 @@ server <- function(input, output, session) {
       BiVarIntTab_react <- reactive({
         Feature1 <- input$SurvivalFeatureBi1Inter
         Feature2 <- input$SurvivalFeatureBi2Inter
+        Feature1 <- sprintf(ifelse(grepl(" ", Feature1), "`%s`", "%s"), Feature1)
+        Feature2 <- sprintf(ifelse(grepl(" ", Feature2), "`%s`", "%s"), Feature2)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"*",Feature2)))
         tab <- eval(substitute(coxph(form,data = BiVarIntFeature_react())))
         tab
@@ -3894,6 +3549,8 @@ server <- function(input, output, session) {
       BiVarIntTab4Annova_react <- reactive({
         Feature1 <- input$SurvivalFeatureBi1Inter
         Feature2 <- input$SurvivalFeatureBi2Inter
+        Feature1 <- sprintf(ifelse(grepl(" ", Feature1), "`%s`", "%s"), Feature1)
+        Feature2 <- sprintf(ifelse(grepl(" ", Feature2), "`%s`", "%s"), Feature2)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
         tab <- eval(substitute(coxph(form,data = BiVarIntFeature_react())))
         tab
@@ -3931,9 +3588,16 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         if (!is.null(input$SurvXaxis)) {
-          xaxlim <- input$SurvXaxis * 365.25
+          if (input$SurvYearOrMonth == "Years") {
+            xaxlim <- input$SurvXaxis * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
+          } else {
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
+            xaxlim <- input$SurvXaxis * 30.4375
+          }
         } else {
           xaxlim <- NULL
+          xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -3949,11 +3613,25 @@ server <- function(input, output, session) {
         PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature,
                                    multivar = paste0(Feature1," + ",Feature2))
         
-        form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
-        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        
+        #Feature1 <- sprintf(ifelse(grepl(" ", Feature1), "`%s`", "%s"), Feature1)
+        #Feature2 <- sprintf(ifelse(grepl(" ", Feature2), "`%s`", "%s"), Feature2)
+        
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature1)] <- "Feature1"
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature2)] <- "Feature2"
+        form <- paste0("Surv(time,ID) ~ Feature1 + Feature2")
+        
+        #save(list = ls(), file = "shiny_env_mutliInt.Rdata", envir = environment())
+        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
+        names(fit[["strata"]]) <- gsub("^Feature1=",paste0(Feature1,"="),names(fit[["strata"]]))
+        names(fit[["strata"]]) <- gsub(", Feature2=",paste0(Feature2,"="),names(fit[["strata"]]))
+        
+        #form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
+        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim)
+                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       
       output$featSplotBi <- renderPlot({
@@ -3979,10 +3657,12 @@ server <- function(input, output, session) {
       observe({
         req(ssGSEAmeta())
         meta <- ssGSEAmeta()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
         FeatureChoices <- meta %>%
           dplyr::select(where(~ n_distinct(.x[nzchar(.x)], na.rm = TRUE) > 1)) %>%
           names
-        updateSelectizeInput(session = session,inputId = "SurvivalFeature", choices = FeatureChoices, selected = "MedianCutP", server = T)
+        updateSelectizeInput(session = session,inputId = "SurvivalFeature", choices = FeatureChoices, selected = paste0(geneset_name,"_MedianCutP"), server = T)
       })
       
       MultiVarFeat_react <- reactive({
@@ -4024,6 +3704,7 @@ server <- function(input, output, session) {
       MultiVarTabCat_react <- reactive({
         meta_ssgsea_sdf <- MultiVarFeatCat_react()
         Feature <- input$SurvivalFeature
+        Feature <- sprintf(ifelse(grepl(" ", Feature), "`%s`", "%s"), Feature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste(Feature,collapse = "+")))
         tab <- eval(substitute(coxph(form,data = meta_ssgsea_sdf)))
         tab
@@ -4032,6 +3713,7 @@ server <- function(input, output, session) {
       MultiVarTabCont_react <- reactive({
         meta_ssgsea_sdf <- MultiVarFeatCont_react()
         Feature <- input$SurvivalFeature
+        Feature <- sprintf(ifelse(grepl(" ", Feature), "`%s`", "%s"), Feature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste(Feature,collapse = "+")))
         tab <- eval(substitute(coxph(form,data = meta_ssgsea_sdf)))
         tab
@@ -4161,7 +3843,7 @@ server <- function(input, output, session) {
           metaSub[,mainFeat] <- as.factor(metaSub[,mainFeat])
           metaSub[,mainFeat] <- relevel(metaSub[,mainFeat], ref = mainFeatRef)
           metaSub
-        } 
+        }
       })
       
       output$multiForestPlotTable <- DT::renderDataTable({
@@ -4220,7 +3902,7 @@ server <- function(input, output, session) {
         FeatColsDF <- as.data.frame(do.call(rbind, FeatColsList))
         rownames(FeatColsDF) <- NULL
         
-        FeatColsDF$Variable <- ifelse(is.na(FeatColsDF$N), 
+        FeatColsDF$Variable <- ifelse(is.na(FeatColsDF$N),
                                       FeatColsDF$Variable,
                                       paste0("   ", FeatColsDF$Variable))
         
@@ -4290,7 +3972,7 @@ server <- function(input, output, session) {
                            ci_alpha = 0.8,
                            ci_lty = 1,
                            ci_lwd = 1.5,
-                           ci_Theight = 0.2, # Set an T end at the end of CI 
+                           ci_Theight = 0.2, # Set an T end at the end of CI
                            # Reference line width/type/color
                            refline_lwd = 1,
                            refline_lty = "dashed",
@@ -4307,7 +3989,7 @@ server <- function(input, output, session) {
         p_OS <- forest(FeatColsDF[,c(1:2,7:9)],
                        title = PlotTitle,
                        est = FeatColsDF$`Hazard Ratio`,
-                       lower = FeatColsDF$Low, 
+                       lower = FeatColsDF$Low,
                        upper = FeatColsDF$High,
                        #sizes = coxOS$`Standard Error`,
                        x_trans = Xtrans,
@@ -4331,6 +4013,971 @@ server <- function(input, output, session) {
       output$MultiFeatMultivarForestPlot <- renderPlot({
         MultiFeatMultivarForestPlot_react()
       })
+      
+      ## Lasso
+      #
+      #SampleType_Selec <- reactiveValues(SampleType = PreSelect_SamplyType_react())
+      #observeEvent(input$SampleTypeSelection, {
+      #  SampleType_Selec$SampleType <- input$SampleTypeSelection
+      #})
+      ### Select sample type to subset samples by - only render if more than one sample type
+      #output$rendSampleTypeSelection_lasso <- renderUI({
+      #  metacol_sampletype <- metacol_sampletype()
+      #  meta <- meta_react()
+      #  if (length(unique(meta[,metacol_sampletype])) > 1) {
+      #    SampleTypeChoices <- unique(meta[,metacol_sampletype])
+      #    SampleTypeChoices <- c("All Sample Types",SampleTypeChoices)
+      #    selectInput("SampleTypeSelection_lasso",paste("Select Sample Type (",metacol_sampletype,"):",sep = ""),
+      #                choices = SampleTypeChoices, selected = SampleType_Selec$SampleType)
+      #  }
+      #})
+      #
+      #Feature_Selec <- reactiveValues(Feature = PreSelect_Feature_react())
+      #observeEvent(input$FeatureSelection, {
+      #  Feature_Selec$Feature <- input$FeatureSelection
+      #})
+      #observe({
+      #  req(metaP_react())
+      #  MetaParam <- metaP_react()
+      #  metacol_feature <- c("Show all Samples",MetaParam[,1])
+      #  updateSelectizeInput(session = session, inputId = "FeatureSelection_lasso",
+      #                       choices = metacol_feature, selected = Feature_Selec$Feature, server = T)
+      #})
+      #
+      #SubFeature_Selec <- reactiveValues(SubFeature = PreSelect_SubFeature_react())
+      #observeEvent(input$SubFeatureSelection, {
+      #  SubFeature_Selec$SubFeature <- input$SubFeatureSelection
+      #})
+      #output$rendSubFeatureSelection_lasso <- renderUI({
+      #  req(input$FeatureSelection_lasso)
+      #  meta <- meta_react()
+      #  if (isTruthy(input$SampleTypeSelection_lasso)) {
+      #    if (input$SampleTypeSelection_lasso != "All Sample Types") {
+      #      metacol_sampletype <- metacol_sampletype()
+      #      meta <- meta[which(meta[,metacol_sampletype] == input$SampleTypeSelection_lasso),]
+      #    } else {
+      #      meta <- meta
+      #    }
+      #  }
+      #  if (input$FeatureSelection_lasso != "Show all Samples") {
+      #    SubFeatureChoices <- unique(meta[,input$FeatureSelection_lasso])
+      #    SubFeatureChoices <- sort(SubFeatureChoices, decreasing = T, na.last = T)
+      #    selectInput("SubFeatureSelection_lasso","Feature Condition:",choices = SubFeatureChoices, selected = PreSelect_SubFeature_react())
+      #  }
+      #})
+      #
+      #observe({
+      #  req(metacol_survtime())
+      #  SurTimeChoices <- metacol_survtime()
+      #  updateSelectizeInput(session = session, inputId = "SurvTimeSelec_lasso",choices = SurTimeChoices, selected = input$SurvivalType_time, server = T)
+      #})
+      #
+      #observe({
+      #  req(metacol_survid())
+      #  SurIDChoices <- metacol_survid()
+      #  updateSelectizeInput(session = session, inputId = "SurvIDSelect_lasso",choices = SurIDChoices, selected = input$SurvivalType_id, server = T)
+      #})
+      #
+      #observe({
+      #  exprGenes <- rownames(expr_react())
+      #  LassoFeatures <- c(exprGenes,decon_score_cols())
+      #  updateSelectizeInput(session, "LassoFeatureSelection_lasso", choices = LassoFeatures,
+      #                       selected = "", options = list(delimiter = " ", create = T), server = T)
+      #})
+      #
+      #output$rendCutPinput <- renderUI({
+      #  if (input$LassoPlotCutP == "Quantile") {
+      #    numericInput("CutPinput","Top/Bottom Cut-Point Quantile Cutoff (%)", value = 25, min = 0, max = 100, width = "200px")
+      #  }
+      #  else if (input$LassoPlotCutP == "User Specified") {
+      #    numericInput("CutPinput","Above/Below User Quantile Cut-Point (%)", value = 25, min = 0, max = 100, width = "200px")
+      #  }
+      #})
+      #
+      #output$rendCustomLambda <- renderUI({
+      #
+      #  if (input$viewLassoMinOrSE == "Custom") {
+      #    numericInput("CustomLambda","Custom Lambda:",min = 0, value = "")
+      #  }
+      #  else if(input$viewLassoMinOrSE == "Lambda Min") {
+      #    model <- LassoRun_train_model()
+      #    l_min <- model$lambda.min
+      #    p(paste("Lambda Min:",l_min))
+      #  }
+      #  else if(input$viewLassoMinOrSE == "Lambda SE") {
+      #    model <- LassoRun_train_model()
+      #    l_se <- model$lambda.1se
+      #    p(paste("Lambda SE:",l_se))
+      #  }
+      #})
+      #
+      #output$rednLassoCoefTable <- renderUI({
+      #
+      #  if (input$viewLassoMinOrSE == "Lambda Min" || input$viewLassoMinOrSE == "Lambda SE") {
+      #    div(DT::dataTableOutput("LassoCoefTable"), style = "font-size:12px")
+      #  }
+      #
+      #})
+      #
+      #output$rendLassoTrainHRtab <- renderUI({
+      #  div(shinycssloaders::withSpinner(tableOutput("LassoTrainHRtab"), type = 7, size = 0.5), style = "font-size:12px")
+      #})
+      #output$rendLassoTestHRtab <- renderUI({
+      #  div(shinycssloaders::withSpinner(tableOutput("LassoTestHRtab"), type = 7, size = 0.5), style = "font-size:12px")
+      #})
+      #
+      #
+      #lasso_runData <- eventReactive(input$RunLassoModelGen, {
+      #
+      #  if (length(input$LassoFeatureSelection_lasso) > 1 ) {
+      #
+      #    req(metaSub())
+      #    req(exprSub())
+      #
+      #    SeedSelected <- input$LassoSeedSelection
+      #    SampleType <- input$SampleTypeSelection_lasso
+      #    Feature <- input$FeatureSelection_lasso
+      #    SubFeature <- input$SubFeatureSelection_lasso
+      #    LassoFeatures <- input$LassoFeatureSelection_lasso
+      #    LassoSurvTimeCol <- input$SurvTimeSelec_lasso
+      #    LassoSurvIDCol <- input$SurvIDSelect_lasso
+      #    LassoTrainProportion <- input$LassoTrainProp
+      #
+      #    set.seed(SeedSelected)
+      #    meta <- meta_react()
+      #    expr <- expr_react()
+      #    metacol_sampletype <- metacol_sampletype()
+      #
+      #    if (isTruthy(SampleType)) {
+      #      if (SampleType != "All Sample Types") {
+      #        meta <- meta[which(meta[,metacol_sampletype] == SampleType),]
+      #      } else {
+      #        meta <- meta
+      #      }
+      #    } else {
+      #      meta <- meta
+      #    }
+      #    if (Feature != "Show all Samples") {
+      #      meta <- meta[which(meta[,Feature] == SubFeature),]
+      #    } else {
+      #      meta <- meta
+      #    }
+      #    metaSub <- meta
+      #    exprSub <- expr[,metaSub[,1]]
+      #
+      #    if (any(LassoFeatures %in% rownames(expr))) {
+      #      expr_feats <- exprSub[which(rownames(exprSub) %in% LassoFeatures),]
+      #      expr_feats <- as.data.frame(t(expr_feats))
+      #      expr_feats$SampleName <- rownames(expr_feats)
+      #    } else {
+      #      expr_feats <- data.frame(SampleName = metaSub[,1])
+      #    }
+      #
+      #    if (any(LassoFeatures %in% colnames(metaSub))) {
+      #      meta_feats <- metaSub[,which(colnames(metaSub) %in% LassoFeatures), drop = F]
+      #    } else {
+      #      meta_feats <- data.frame(SampleName = metaSub[,1])
+      #    }
+      #
+      #    Lasso_Score_df <- merge(meta_feats,expr_feats, by.x = colnames(meta_feats)[1], by.y = "SampleName")
+      #    Lasso_Score_df <- Lasso_Score_df[complete.cases(Lasso_Score_df),]
+      #    colnames(Lasso_Score_df)[1] <- "SampleName"
+      #
+      #    survData <- metaSub[metaSub[,1] %in% Lasso_Score_df[,1],c(colnames(metaSub)[1],LassoSurvIDCol,LassoSurvTimeCol)]
+      #    rownames(survData) <- survData[,1]
+      #    survData <- survData[,-1]
+      #    colnames(survData) <- c("status","time")
+      #    survData <- survData[which(survData$time > 0),]
+      #
+      #    Lasso_Score_df <- Lasso_Score_df[which(Lasso_Score_df$SampleName %in% rownames(survData)),]
+      #
+      #    train_num <- round(length(Lasso_Score_df$SampleName) * (LassoTrainProportion/100))
+      #    train_samp <- sample(Lasso_Score_df$SampleName,train_num)
+      #    test_samp <- setdiff(Lasso_Score_df$SampleName,train_samp)
+      #
+      #    rownames(Lasso_Score_df) <- Lasso_Score_df$SampleName
+      #    Lasso_Score_df <- Lasso_Score_df[,-1, drop = F]
+      #
+      #    score_train <- as.matrix(Lasso_Score_df[train_samp,])
+      #    score_test <- as.matrix(Lasso_Score_df[test_samp,])
+      #
+      #    survData_test <- as.matrix(survData[test_samp,])
+      #    survData_train <- as.matrix(survData[train_samp,])
+      #
+      #    runData <- list(train_samp = train_samp,
+      #                    test_samp = test_samp,
+      #                    score_train = score_train,
+      #                    score_test = score_test,
+      #                    survData_test = survData_test,
+      #                    survData_train = survData_train)
+      #    runData
+      #  }
+      #
+      #})
+      #
+      #LassoRun_train_model <- eventReactive(input$RunLassoModelGen, {
+      #  #LassoRun_train_model <- reactive({
+      #
+      #  runData <- lasso_runData()
+      #  expr <- expr_react()
+      #  score_train <- as.matrix(runData$score_train)
+      #  survData_train <- as.matrix(runData$survData_train)
+      #  AlphaIn <- input$LassoAlpha
+      #
+      #  save(list = ls(), file = "~/R/ShinyAppsIO/PATH_SURVEYOR/shiny_env.Rdata", envir = environment())
+      #
+      #  print(summary(runData))
+      #  print(head(score_train,c(5,5)))
+      #  print(dim(score_train))
+      #  print(head(survData_train,c(5,5)))
+      #  print(dim(survData_train))
+      #  print(AlphaIn)
+      #
+      #  model <- cv.glmnet(score_train, survData_train, family = "cox", type.measure = "C", alpha=AlphaIn)
+      #
+      #  score_train_save <- score_train
+      #
+      #  rownames(score_train) <- NULL
+      #  survData_train_save <- survData_train
+      #
+      #  survData_train <- survData_train %>% as.data.frame() %>% select(time,status) %>% as.matrix()
+      #  survData_train_save <- survData_train_save %>% as.data.frame() %>% select(status,time) %>% as.matrix()
+      #  survData_train_save <- apply(survData_train_save,2,as.numeric)
+      #
+      #  survData_train <- with(survData_train_save, Surv(time, status))
+      #
+      #
+      #  samples <- intersect(rownames(survData_train_save),rownames(score_train_save))
+      #  score_train_save <- as.data.frame(score_train_save)
+      #  score_train_save <- mutate_all(score_train_save, function(x) as.numeric(as.character(x)))
+      #  score_train_save <- as.matrix(score_train_save[samples,])
+      #  survData_train_save <- survData_train_save[samples,]
+      #  survData_train_save_surv <- with(as.data.frame(survData_train_save), Surv(time, status) )
+      #  model <- cv.glmnet(score_train_save, survData_train_save_surv, family = "cox", type.measure = "C", alpha=1)
+      #
+      #
+      #  survData_train <- Surv(time = unname(survData_train_save[,1]),event = unname(survData_train_save[,2]))
+      #
+      #
+      #  survData_train[,1] <- survData_train[,1]/365.25
+      #
+      #  sparsematrix <- as(score_train_save, "sparseMatrix")
+      #
+      #  model <- cv.glmnet(score_train, survData_train, family = "cox", type.measure = "C", alpha=1)
+      #  model
+      #  x <- CoxExample$x
+      #  y <- CoxExample$y
+      #  fit <- cv.glmnet(x, y, family = "cox")
+      #})
+      #
+      #LassoLambdaPlot_react <- reactive({
+      #
+      #  model <- LassoRun_train_model()
+      #  plot(model)
+      #
+      #})
+      #output$Lasso_LambdaPlot <- renderPlot({
+      #
+      #  p <- LassoLambdaPlot_react()
+      #  p
+      #
+      #})
+      #
+      #
+      #LassoRun_train_model2 <- eventReactive(input$RunLassoModelGen, {
+      #  #LassoRun_train_model <- reactive({
+      #
+      #  runData <- lasso_runData()
+      #  score_train <- as.matrix(runData$score_train)
+      #  survData_train <- as.matrix(runData$survData_train)
+      #  AlphaIn <- input$LassoAlpha
+      #
+      #  model2 <- glmnet(score_train, survData_train, family = "cox", type.measure = "C", alpha=AlphaIn)
+      #
+      #  model2
+      #
+      #})
+      #
+      #LassoCoeffPlot_react <- reactive({
+      #
+      #  model2 <- LassoRun_train_model2()
+      #  plot(model2)
+      #
+      #})
+      #output$Lasso_CoeffPlot <- renderPlot({
+      #
+      #  p <- LassoCoeffPlot_react()
+      #  p
+      #
+      #})
+      #
+      #LassoRun_Lmin_coef_table <- reactive({
+      #
+      #  model <- LassoRun_train_model()
+      #  l_min <- model$lambda.min
+      #  model_coef_min <- coef(model ,s=l_min)
+      #  model_coef_min_df <- data.frame(Feature = names(sort(model_coef_min[,1])), Coefficient = unname(sort(model_coef_min[,1])))
+      #  model_coef_min_df
+      #
+      #})
+      #LassoRun_Lse_coef_table <- reactive({
+      #
+      #  model <- LassoRun_train_model()
+      #  l_se <- model$lambda.1se
+      #  model_coef_se <- coef(model ,s=l_se)
+      #  model_coef_se_df <- data.frame(Feature = names(sort(model_coef_se[,1])), Coefficient = unname(sort(model_coef_se[,1])))
+      #  model_coef_se_df
+      #
+      #})
+      #
+      #output$LassoCoefTable <- DT::renderDataTable({
+      #
+      #  if (input$viewLassoMinOrSE == "Lambda Min") {
+      #    df <- LassoRun_Lmin_coef_table()
+      #  }
+      #  else if (input$viewLassoMinOrSE == "Lambda SE") {
+      #    df <- LassoRun_Lse_coef_table()
+      #  }
+      #  DT::datatable(df, options = list(paging = F,searching = FALSE), rownames = F)
+      #
+      #})
+      #LassoRun_Lmin_Pred_train <- reactive({
+      #
+      #  ModelName <- input$LassoModelName
+      #  runData <- lasso_runData()
+      #  model <- LassoRun_train_model()
+      #  l_min <- model$lambda.min
+      #  score_test <- runData$score_train
+      #  Pred_Lmin_train <- as.data.frame(predict(model, s=l_min, newx=score_test, type = "response"))
+      #  Pred_Lmin_train_ScoreName <- paste("LassoLmin_Train_",ModelName,"_RiskScore", sep = "")
+      #  colnames(Pred_Lmin_train)[1] <- Pred_Lmin_train_ScoreName
+      #  Pred_Lmin_train$SampleName <- rownames(Pred_Lmin_train)
+      #  Pred_Lmin_train <- Pred_Lmin_train %>%
+      #    relocate(SampleName)
+      #  Pred_Lmin_train
+      #
+      #})
+      #LassoRun_Lse_Pred_train <- reactive({
+      #
+      #  ModelName <- input$LassoModelName
+      #  runData <- lasso_runData()
+      #  model <- LassoRun_train_model()
+      #  l_se <- model$lambda.1se
+      #  score_test <- runData$score_train
+      #  Pred_Lse_train <- as.data.frame(predict(model, s=l_se, newx=score_test, type = "response"))
+      #  Pred_Lse_train_ScoreName <- paste("LassoLse_Train_",ModelName,"_RiskScore", sep = "")
+      #  colnames(Pred_Lse_train)[1] <- Pred_Lse_train_ScoreName
+      #  Pred_Lse_train$SampleName <- rownames(Pred_Lse_train)
+      #  Pred_Lse_train<- Pred_Lse_train %>%
+      #    relocate(SampleName)
+      #  Pred_Lse_train
+      #
+      #})
+      #LassoRun_LCustom_Pred_train <- reactive({
+      #
+      #  if (input$viewLassoMinOrSE == "Custom") {
+      #    if (!is.na(input$CustomLambda)) {
+      #      ModelName <- input$LassoModelName
+      #      runData <- lasso_runData()
+      #      model <- LassoRun_train_model()
+      #      l_Custom <- input$CustomLambda
+      #      score_test <- runData$score_train
+      #      Pred_LCustom_train <- as.data.frame(predict(model, s=l_Custom, newx=score_test, type = "response"))
+      #      Pred_LCustom_train_ScoreName <- paste("LassoCustomLambda_Train_",ModelName,"_RiskScore", sep = "")
+      #      colnames(Pred_LCustom_train)[1] <- Pred_LCustom_train_ScoreName
+      #      Pred_LCustom_train$SampleName <- rownames(Pred_LCustom_train)
+      #      Pred_LCustom_train<- Pred_LCustom_train %>%
+      #        relocate(SampleName)
+      #      Pred_LCustom_train
+      #    }
+      #  }
+      #
+      #})
+      #LassoRun_Lmin_Pred_test <- reactive({
+      #
+      #  ModelName <- input$LassoModelName
+      #  runData <- lasso_runData()
+      #  model <- LassoRun_train_model()
+      #  l_min <- model$lambda.min
+      #  score_test <- runData$score_test
+      #  Pred_Lmin_test <- as.data.frame(predict(model, s=l_min, newx=score_test, type = "response"))
+      #  Pred_Lmin_test_ScoreName <- paste("LassoLmin_Test_",ModelName,"_RiskScore", sep = "")
+      #  colnames(Pred_Lmin_test)[1] <- Pred_Lmin_test_ScoreName
+      #  Pred_Lmin_test$SampleName <- rownames(Pred_Lmin_test)
+      #  Pred_Lmin_test <- Pred_Lmin_test %>%
+      #    relocate(SampleName)
+      #  Pred_Lmin_test
+      #
+      #})
+      #LassoRun_Lse_Pred_test <- reactive({
+      #
+      #  ModelName <- input$LassoModelName
+      #  runData <- lasso_runData()
+      #  model <- LassoRun_train_model()
+      #  l_se <- model$lambda.1se
+      #  score_test <- runData$score_test
+      #  Pred_Lse_test <- as.data.frame(predict(model, s=l_se, newx=score_test, type = "response"))
+      #  Pred_Lse_test_ScoreName <- paste("LassoLse_Test_",ModelName,"_RiskScore", sep = "")
+      #  colnames(Pred_Lse_test)[1] <- Pred_Lse_test_ScoreName
+      #  Pred_Lse_test$SampleName <- rownames(Pred_Lse_test)
+      #  Pred_Lse_test <- Pred_Lse_test %>%
+      #    relocate(SampleName)
+      #  Pred_Lse_test
+      #
+      #})
+      #LassoRun_LCustom_Pred_test <- reactive({
+      #
+      #  if (input$viewLassoMinOrSE == "Custom") {
+      #    if (!is.na(input$CustomLambda)) {
+      #      ModelName <- input$LassoModelName
+      #      runData <- lasso_runData()
+      #      model <- LassoRun_train_model()
+      #      l_Custom <- input$CustomLambda
+      #      score_test <- runData$score_test
+      #      Pred_LCustom_test <- as.data.frame(predict(model, s=l_Custom, newx=score_test, type = "response"))
+      #      Pred_LCustom_test_ScoreName <- paste("LassoCustomLambda_Test_",ModelName,"_RiskScore", sep = "")
+      #      colnames(Pred_LCustom_test)[1] <- Pred_LCustom_test_ScoreName
+      #      Pred_LCustom_test$SampleName <- rownames(Pred_LCustom_test)
+      #      Pred_LCustom_test <- Pred_LCustom_test %>%
+      #        relocate(SampleName)
+      #      Pred_LCustom_test
+      #    }
+      #  }
+      #
+      #})
+      #
+      #LassoDnldTable <- reactive({
+      #
+      #  runData <- lasso_runData()
+      #  RiskScore_List <- list()
+      #  RiskScore_LminTrain <- LassoRun_Lmin_Pred_train()
+      #  RiskScore_List[["RiskScore_LminTrain"]] <- RiskScore_LminTrain
+      #  RiskScore_LseTrain <- LassoRun_Lse_Pred_train()
+      #  RiskScore_List[["RiskScore_LseTrain"]] <- RiskScore_LseTrain
+      #  RiskScore_LminTest <- LassoRun_Lmin_Pred_test()
+      #  RiskScore_List[["RiskScore_LminTest"]] <- RiskScore_LminTest
+      #  RiskScore_LseTest <- LassoRun_Lse_Pred_test()
+      #  RiskScore_List[["RiskScore_LseTest"]] <- RiskScore_LseTest
+      #  if (input$viewLassoMinOrSE == "Custom") {
+      #    RiskScore_LCustomTrain <- LassoRun_LCustom_Pred_train()
+      #    RiskScore_List[["RiskScore_LCustomTrain"]] <- RiskScore_LCustomTrain
+      #    RiskScore_LCustomTest <- LassoRun_LCustom_Pred_test()
+      #    RiskScore_List[["RiskScore_LCustomTest"]] <- RiskScore_LCustomTest
+      #  }
+      #  RiskScore_df <- Reduce(function(dtf1, dtf2) merge(dtf1, dtf2, by = "SampleName", all = TRUE),
+      #                         RiskScore_List)
+      #
+      #  RiskScore_df$TrainOrTest <- ifelse(RiskScore_df$SampleName %in% runData$train_samp, "Training", "Testing")
+      #  RiskScore_df <- RiskScore_df %>%
+      #    relocate(SampleName,TrainOrTest)
+      #  RiskScore_df
+      #
+      #})
+      #
+      #Lasso_Train_Surv_df <- reactive({
+      #
+      #  ## Assign variables
+      #  CutPoption <- input$LassoPlotCutP
+      #  surv_time_col <- input$SurvTimeSelecView_lasso
+      #  surv_id_col <- input$SurvIDSelecView_lasso
+      #  userCutP <- input$CutPinput
+      #  if (input$viewLassoMinOrSE == "Lambda Min") {
+      #    Pred_train_df <- LassoRun_Lmin_Pred_train()
+      #  }
+      #  else if (input$viewLassoMinOrSE == "Lambda SE") {
+      #    Pred_train_df <- LassoRun_Lse_Pred_train()
+      #  }
+      #  else if (input$viewLassoMinOrSE == "Custom") {
+      #    req(input$CustomLambda)
+      #    Pred_train_df <- LassoRun_LCustom_Pred_train()
+      #  }
+      #
+      #  meta_surv <- meta[,c("SampleName",surv_time_col,surv_id_col)]
+      #
+      #  KP_df_train <- merge(Pred_train_df,meta_surv, by = "SampleName")
+      #
+      #  ## Subset columns needed for plot
+      #  colnames(KP_df_train)[which(colnames(KP_df_train) == surv_time_col)] <- "time"
+      #  colnames(KP_df_train)[which(colnames(KP_df_train) == surv_id_col)] <- "ID"
+      #
+      #  if (CutPoption == "Median") {
+      #    KP_df_train$MedianCutP <- highlow(KP_df_train[,2])
+      #  }
+      #  else if (CutPoption == "Quartile") {
+      #    KP_df_train$VAR_Q <- quartile_conversion(KP_df_train[,2])
+      #    KP_df_train$QuartileCutP <- paste("", KP_df_train$VAR_Q, sep="")
+      #  }
+      #  else if (CutPoption == "Optimal") {
+      #    if (length(KP_df_train[,2][KP_df_train[,2] > 0])/length(KP_df_train[,2]) > 0.01) {
+      #      if (length(KP_df_train[,4]) > 1) {
+      #        res.cut <- survminer::surv_cutpoint(KP_df_train,time = "time", event = "ID", variable = colnames(KP_df_train)[2], minprop = 0.01)
+      #        cutp <- res.cut$cutpoint[["cutpoint"]]
+      #        res.cat <- surv_categorize(res.cut)
+      #        KP_df_train$OptimalCutP <- res.cat[,3]
+      #      }
+      #    }
+      #  }
+      #  else if (CutPoption == "Quantile") {
+      #    userCutP <- userCutP/100
+      #    KP_df_train$TopBottomCutP <- quantile_conversion(KP_df_train[,2], userCutP)
+      #    KP_df_train <- KP_df_train[which(KP_df_train$TopBottomCutP != "BetweenCutoff"),]
+      #  }
+      #  else if (CutPoption == "User Specified") {
+      #    userCutP <- userCutP/100
+      #    KP_df_train$UserCutP <- quantile_conversion2(KP_df_train[,2], userCutP)
+      #  }
+      #
+      #  KP_df_train
+      #
+      #})
+      #Lasso_Test_Surv_df <- reactive({
+      #
+      #  req(metaSub())
+      #  req(exprSub())
+      #  metaSub <- metaSub()
+      #  expr <- exprSub()
+      #
+      #  ## Assign variables
+      #  CutPoption <- input$LassoPlotCutP
+      #  surv_time_col <- input$SurvTimeSelecView_lasso
+      #  surv_id_col <- input$SurvIDSelecView_lasso
+      #  userCutP <- input$CutPinput
+      #  if (input$viewLassoMinOrSE == "Lambda Min") {
+      #    Pred_test_df <- LassoRun_Lmin_Pred_test()
+      #  }
+      #  else if (input$viewLassoMinOrSE == "Lambda SE") {
+      #    Pred_test_df <- LassoRun_Lse_Pred_test()
+      #  }
+      #  else if (input$viewLassoMinOrSE == "Custom") {
+      #    req(input$CustomLambda)
+      #    Pred_test_df <- LassoRun_LCustom_Pred_test()
+      #  }
+      #
+      #
+      #
+      #  meta_surv <- meta[,c("SampleName",surv_time_col,surv_id_col)]
+      #
+      #  KP_df_test <- merge(Pred_test_df,meta_surv, by = "SampleName")
+      #
+      #  ## Subset columns needed for plot
+      #  colnames(KP_df_test)[which(colnames(KP_df_test) == surv_time_col)] <- "time"
+      #  colnames(KP_df_test)[which(colnames(KP_df_test) == surv_id_col)] <- "ID"
+      #
+      #  if (CutPoption == "Median") {
+      #    KP_df_test$MedianCutP <- highlow(KP_df_test[,2])
+      #  }
+      #  else if (CutPoption == "Quartile") {
+      #    KP_df_test$VAR_Q <- quartile_conversion(KP_df_test[,2])
+      #    KP_df_test$QuartileCutP <- paste("", KP_df_test$VAR_Q, sep="")
+      #  }
+      #  else if (CutPoption == "Optimal") {
+      #    if (length(KP_df_test[,2][KP_df_test[,2] > 0])/length(KP_df_test[,2]) > 0.01) {
+      #      if (length(KP_df_test[,4]) > 1) {
+      #        res.cut <- survminer::surv_cutpoint(KP_df_test,time = "time", event = "ID", variable = colnames(KP_df_test)[2], minprop = 0.01)
+      #        cutp <- res.cut$cutpoint[["cutpoint"]]
+      #        res.cat <- surv_categorize(res.cut)
+      #        KP_df_test$OptimalCutP <- res.cat[,3]
+      #      }
+      #    }
+      #  }
+      #  else if (CutPoption == "Quantile") {
+      #    userCutP <- userCutP/100
+      #    KP_df_test$TopBottomCutP <- quantile_conversion(KP_df_test[,2], userCutP)
+      #    KP_df_test <- KP_df_test[which(KP_df_test$TopBottomCutP != "BetweenCutoff"),]
+      #  }
+      #  else if (CutPoption == "User Specified") {
+      #    userCutP <- userCutP/100
+      #    KP_df_test$UserCutP <- quantile_conversion2(KP_df_test[,2], userCutP)
+      #  }
+      #
+      #  KP_df_test
+      #
+      #})
+      #
+      #Lasso_Train_Surv_Tab_react <- reactive({
+      #
+      #  KP_df_train <- Lasso_Train_Surv_df()
+      #  CutPoption <- input$LassoPlotCutP
+      #  KP_df_train[,5] <- as.factor(KP_df_train[,5])
+      #  KP_df_train[,5] <- relevel(KP_df_train[,5],
+      #                             ref = grep("low",unique(KP_df_train[,5]),
+      #                                        value = T, ignore.case = T))
+      #
+      #  ## Survival Function
+      #  ## Survival Function
+      #  tab_train <- coxph(as.formula(paste("Surv(time,ID) ~ ",colnames(KP_df_train)[5],sep = "")),
+      #                     data = KP_df_train)
+      #  tab_train
+      #
+      #})
+      #Lasso_Test_Surv_Tab_react <- reactive({
+      #
+      #  KP_df_test <- Lasso_Test_Surv_df()
+      #  CutPoption <- input$LassoPlotCutP
+      #  KP_df_test[,5] <- as.factor(KP_df_test[,5])
+      #  KP_df_test[,5] <- relevel(KP_df_test[,5],
+      #                            ref = grep("low",unique(KP_df_test[,5]),
+      #                                       value = T, ignore.case = T))
+      #
+      #  ## Survival Function
+      #  tab_test <- coxph(as.formula(paste("Surv(time,ID) ~ ",colnames(KP_df_test)[5],sep = "")),
+      #                    data = KP_df_test)
+      #  tab_test
+      #
+      #})
+      #
+      #output$LassoTrainCoxSumm <- renderPrint({
+      #
+      #  tab <- Lasso_Train_Surv_Tab_react()
+      #  out <- capture.output(summary(tab))
+      #
+      #  con_line <- grep("^Concordance=",out,value = T)
+      #  lik_line <- grep("^Likelihood ratio test=",out,value = T)
+      #  wal_line <- grep("^Wald test",out,value = T)
+      #  sco_line <- grep("^Score ",out,value = T)
+      #
+      #  text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+      #  cat(text)
+      #
+      #})
+      #output$LassoTestCoxSumm <- renderPrint({
+      #
+      #  tab <- Lasso_Test_Surv_Tab_react()
+      #  out <- capture.output(summary(tab))
+      #
+      #  con_line <- grep("^Concordance=",out,value = T)
+      #  lik_line <- grep("^Likelihood ratio test=",out,value = T)
+      #  wal_line <- grep("^Wald test",out,value = T)
+      #  sco_line <- grep("^Score ",out,value = T)
+      #
+      #  text <- paste("CoxH Summary:",con_line,lik_line,wal_line,sco_line,sep = "\n")
+      #  cat(text)
+      #
+      #})
+      #
+      #
+      #Lasso_Train_Surv_HRTab_react <- reactive({
+      #
+      #  tab_train <- Lasso_Train_Surv_Tab_react()
+      #  tab_train <- tab_train %>%
+      #    gtsummary::tbl_regression(exp = TRUE) %>%
+      #    as_gt()
+      #
+      #  tab_train_df <- as.data.frame(tab_train)
+      #
+      #  tab_train_df <- tab_train_df %>%
+      #    dplyr::select(label,estimate,ci,p.value)
+      #  colnames(tab_train_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
+      #
+      #  tab_train_df
+      #
+      #})
+      #Lasso_Test_Surv_HRTab_react <- reactive({
+      #
+      #  tab_test <- Lasso_Test_Surv_Tab_react()
+      #  tab_test <- tab_test %>%
+      #    gtsummary::tbl_regression(exp = TRUE) %>%
+      #    as_gt()
+      #
+      #  tab_test_df <- as.data.frame(tab_test)
+      #
+      #  tab_test_df <- tab_test_df %>%
+      #    dplyr::select(label,estimate,ci,p.value)
+      #  colnames(tab_test_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
+      #
+      #  tab_test_df
+      #
+      #})
+      #
+      #output$LassoTrainHRtab <- renderTable({
+      #
+      #  tab <- Lasso_Train_Surv_HRTab_react()
+      #  tab
+      #
+      #})
+      #output$LassoTestHRtab <- renderTable({
+      #
+      #  tab <- Lasso_Test_Surv_HRTab_react()
+      #  tab
+      #
+      #})
+      #
+      #Lasso_Train_Splot_react <- reactive({
+      #
+      #  ## Assign variables
+      #  KP_df_train <- Lasso_Train_Surv_df()
+      #  #LassoModelName <- colnames(KP_df_train)[2]
+      #  LassoModelName <- input$LassoModelName
+      #  LambdaChoice <- input$viewLassoMinOrSE
+      #  CutPoption <- input$LassoPlotCutP
+      #  SampleType <- input$SampleTypeSelection_lasso
+      #  Feature <- input$FeatureSelection_lasso
+      #  show_pval <- input$ShowPval_lasso
+      #  ShowConfInt <- input$ShowConfInt_lasso
+      #  xaxlim <- input$SurvXaxis_lasso * 365.25
+      #  surv_time_col <- input$SurvTimeSelecView_lasso
+      #  showLegend <- input$SurvLegendPos_lasso
+      #  showMedSurv <- input$ShowMedSurvLine_lasso
+      #  LambdaSelect <- input$viewLassoMinOrSE
+      #  if (showMedSurv == T) {
+      #    showMedSurv <- "hv"
+      #  }
+      #  else if (showMedSurv == F) {
+      #    showMedSurv <- "none"
+      #  }
+      #
+      #  Feature <- colnames(KP_df_train)[5]
+      #
+      #  form <- paste("Surv(time,ID) ~ ",Feature,sep = "")
+      #  form2 <- as.formula(form)
+      #  fit_train <- eval(substitute(survfit(form2,data = KP_df_train, type="kaplan-meier")))
+      #
+      #  ## Survival Function
+      #  #fit_train <- survfit(Surv(time,ID) ~ FeatureCut, data = KP_df_train, type="kaplan-meier")
+      #
+      #  ## Determine type of survival data - OS/EFS/PFS?
+      #  SurvDateType <- sub("\\..*","",surv_time_col)
+      #
+      #
+      #
+      #  ### determine Feature and Sample Type label
+      #  #if (length(unique(meta[,metacol_sampletype])) > 1) {
+      #  #  if (SampleType == "Show All Sample Types") {
+      #  #    if (Feature == "Show All Samples") {
+      #  #      SampleTypeLab <- "All Features in All Patients\n"
+      #  #    }
+      #  #    if (Feature != "Show All Samples") {
+      #  #      SampleTypeLab <- paste(Feature," in All Patients\n")
+      #  #    }
+      #  #  }
+      #  #  else {
+      #  #    if (Feature == "Show All Samples") {
+      #  #      SampleTypeLab <- paste("All Features (",SampleType,") Patients\n",sep = "")
+      #  #    }
+      #  #    if (Feature != "Show All Samples") {
+      #  #      SampleTypeLab <- paste(Feature," (",SampleType,") Patients\n",sep = "")
+      #  #    }
+      #  #  }
+      #  #}
+      #  #if (length(unique(meta[,metacol_sampletype])) <= 1) {
+      #  #  if (Feature == "Show All Samples") {
+      #  #    SampleTypeLab <- "All Features in All Patients\n"
+      #  #  }
+      #  #  if (Feature != "Show All Samples") {
+      #  #    SampleTypeLab <- paste(Feature," in All Patients\n")
+      #  #  }
+      #  #}
+      #
+      #  CutPMethodLab <- paste(CutPoption, " Cut-Point", sep = "")
+      #  if (LambdaChoice == "Custom") {
+      #    LambdaChoice <- "Custom Lambda"
+      #  }
+      #
+      #  ## Determine Plot title
+      #  if (is.null(input$SurvPlotTitleLasso)) {
+      #    SurvPlotTitle <- paste("Survival curves of Training Data (",LambdaChoice,")\n",
+      #                           LassoModelName," (",CutPMethodLab,")", sep = "")
+      #  }
+      #  else if (!is.null(input$SurvPlotTitleLasso)) {
+      #    if (input$SurvPlotTitleMedian == "") {
+      #      SurvPlotTitle <- paste("Survival curves of Training Data (",LambdaChoice,")\n",
+      #                             LassoModelName," (",CutPMethodLab,")", sep = "")
+      #    }
+      #    else if (input$SurvPlotTitleLasso != "") {
+      #      SurvPlotTitle <- input$SurvPlotTitleLasso
+      #    }
+      #  }
+      #
+      #  breakTime <- 365.25
+      #  if (max(KP_df_train[,"time"]) < 365.25) {
+      #    breakTime <- NULL
+      #  }
+      #
+      #  ## Generate plot
+      #  ggsurv <- survminer::ggsurvplot(fit_train, data = KP_df_train, risk.table = TRUE,
+      #                                  title = SurvPlotTitle,
+      #                                  xscale = c("d_y"),
+      #                                  break.time.by=breakTime,
+      #                                  xlab = "Years",
+      #                                  ylab = paste(SurvDateType,"Survival Probability"),
+      #                                  submain = "Based on Kaplan-Meier estimates",
+      #                                  caption = "created with survminer",
+      #                                  pval=show_pval,
+      #                                  conf.int = ShowConfInt,
+      #                                  ggtheme = theme_bw(),
+      #                                  font.title = c(16, "bold"),
+      #                                  font.submain = c(12, "italic"),
+      #                                  font.caption = c(12, "plain"),
+      #                                  font.x = c(14, "plain"),
+      #                                  font.y = c(14, "plain"),
+      #                                  font.tickslab = c(12, "plain"),
+      #                                  legend = showLegend,
+      #                                  risk.table.height = 0.20,
+      #                                  surv.median.line = showMedSurv
+      #  )
+      #  if (showMedSurv != "none") {
+      #    MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+      #    MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+      #    MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+      #    MedSurvItem_df <- MedSurvItem_df %>%
+      #      mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+      #    rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+      #    if (nrow(MedSurvItem_df) > 1) {
+      #      ggsurv$plot <- ggsurv$plot +
+      #        geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+      #    }
+      #  }
+      #  if (!is.null(input$SurvXaxis)) {
+      #    ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+      #    ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
+      #  }
+      #
+      #  ggsurv$table <- ggsurv$table + theme_cleantable()
+      #  ggsurv
+      #
+      #
+      #})
+      #
+      #Lasso_Test_Splot_react <- reactive({
+      #
+      #  ## Assign variables
+      #  KP_df_test <- Lasso_Test_Surv_df()
+      #  #LassoModelName <- colnames(KP_df_test)[2]
+      #  LassoModelName <- input$LassoModelName
+      #  CutPoption <- input$LassoPlotCutP
+      #  LambdaChoice <- input$viewLassoMinOrSE
+      #  SampleType <- input$SampleTypeSelection_lasso
+      #  Feature <- input$FeatureSelection_lasso
+      #  show_pval <- input$ShowPval_lasso
+      #  ShowConfInt <- input$ShowConfInt_lasso
+      #  xaxlim <- input$SurvXaxis_lasso * 365.25
+      #  surv_time_col <- input$SurvTimeSelecView_lasso
+      #  showLegend <- input$SurvLegendPos_lasso
+      #  showMedSurv <- input$ShowMedSurvLine_lasso
+      #  LambdaSelect <- input$viewLassoMinOrSE
+      #  if (showMedSurv == T) {
+      #    showMedSurv <- "hv"
+      #  }
+      #  else if (showMedSurv == F) {
+      #    showMedSurv <- "none"
+      #  }
+      #
+      #  Feature <- colnames(KP_df_test)[5]
+      #
+      #  form <- paste("Surv(time,ID) ~ ",Feature,sep = "")
+      #  form2 <- as.formula(form)
+      #  fit_test <- eval(substitute(survfit(form2,data = KP_df_test, type="kaplan-meier")))
+      #
+      #  ## Survival Function
+      #  #fit_train <- survfit(Surv(time,ID) ~ FeatureCut, data = KP_df_train, type="kaplan-meier")
+      #
+      #  ## Determine type of survival data - OS/EFS/PFS?
+      #  SurvDateType <- sub("\\..*","",surv_time_col)
+      #
+      #  ### determine Feature and Sample Type label
+      #  #if (length(unique(meta[,metacol_sampletype])) > 1) {
+      #  #  if (SampleType == "Show All Sample Types") {
+      #  #    if (Feature == "Show All Samples") {
+      #  #      SampleTypeLab <- "All Features in All Patients\n"
+      #  #    }
+      #  #    if (Feature != "Show All Samples") {
+      #  #      SampleTypeLab <- paste(Feature," in All Patients\n")
+      #  #    }
+      #  #  }
+      #  #  else {
+      #  #    if (Feature == "Show All Samples") {
+      #  #      SampleTypeLab <- paste("All Features (",SampleType,") Patients\n",sep = "")
+      #  #    }
+      #  #    if (Feature != "Show All Samples") {
+      #  #      SampleTypeLab <- paste(Feature," (",SampleType,") Patients\n",sep = "")
+      #  #    }
+      #  #  }
+      #  #}
+      #  #if (length(unique(meta[,metacol_sampletype])) <= 1) {
+      #  #  if (Feature == "Show All Samples") {
+      #  #    SampleTypeLab <- "All Features in All Patients\n"
+      #  #  }
+      #  #  if (Feature != "Show All Samples") {
+      #  #    SampleTypeLab <- paste(Feature," in All Patients\n")
+      #  #  }
+      #  #}
+      #
+      #  CutPMethodLab <- paste(CutPoption, " Cut-Point", sep = "")
+      #
+      #
+      #  ## Determine Plot title
+      #  if (is.null(input$SurvPlotTitleLasso)) {
+      #    SurvPlotTitle <- paste("Survival curves of Testing Data (",LambdaChoice,")\n",
+      #                           LassoModelName," (",CutPMethodLab,")", sep = "")
+      #  }
+      #  else if (!is.null(input$SurvPlotTitleLasso)) {
+      #    if (input$SurvPlotTitleMedian == "") {
+      #      SurvPlotTitle <- paste("Survival curves of Testing Data (",LambdaChoice,")\n",
+      #                             LassoModelName," (",CutPMethodLab,")", sep = "")
+      #    }
+      #    else if (input$SurvPlotTitleLasso != "") {
+      #      SurvPlotTitle <- input$SurvPlotTitleLasso
+      #    }
+      #  }
+      #
+      #  breakTime <- 365.25
+      #  if (max(KP_df_test[,"time"]) < 365.25) {
+      #    breakTime <- NULL
+      #  }
+      #
+      #  ## Generate plot
+      #  ggsurv <- survminer::ggsurvplot(fit_test, data = KP_df_test, risk.table = TRUE,
+      #                                  title = SurvPlotTitle,
+      #                                  xscale = c("d_y"),
+      #                                  break.time.by=breakTime,
+      #                                  xlab = "Years",
+      #                                  ylab = paste(SurvDateType,"Survival Probability"),
+      #                                  submain = "Based on Kaplan-Meier estimates",
+      #                                  caption = "created with survminer",
+      #                                  pval=show_pval,
+      #                                  conf.int = ShowConfInt,
+      #                                  ggtheme = theme_bw(),
+      #                                  font.title = c(16, "bold"),
+      #                                  font.submain = c(12, "italic"),
+      #                                  font.caption = c(12, "plain"),
+      #                                  font.x = c(14, "plain"),
+      #                                  font.y = c(14, "plain"),
+      #                                  font.tickslab = c(12, "plain"),
+      #                                  legend = showLegend,
+      #                                  risk.table.height = 0.20,
+      #                                  surv.median.line = showMedSurv
+      #  )
+      #  if (showMedSurv != "none") {
+      #    MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
+      #    MedSurvItem_df <- MedSurvItem[[1]][["data"]]
+      #    MedSurvItem_df <- MedSurvItem_df[order(MedSurvItem_df[,1]),]
+      #    MedSurvItem_df <- MedSurvItem_df %>%
+      #      mutate(label = paste(round(MedSurvItem_df[,1]),"Days"))
+      #    rownames(MedSurvItem_df) <- 1:nrow(MedSurvItem_df)
+      #    if (nrow(MedSurvItem_df) > 1) {
+      #      ggsurv$plot <- ggsurv$plot +
+      #        geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
+      #    }
+      #  }
+      #  if (!is.null(input$SurvXaxis)) {
+      #    ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
+      #    ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
+      #  }
+      #
+      #  ggsurv$table <- ggsurv$table + theme_cleantable()
+      #  ggsurv
+      #
+      #
+      #})
+      #
+      #output$Lasso_Train_Splot <- renderPlot({
+      #  plot <- Lasso_Train_Splot_react()
+      #  plot
+      #})
+      #output$Lasso_Test_Splot <- renderPlot({
+      #  plot <- Lasso_Test_Splot_react()
+      #  plot
+      #})
       
       # Data Exploration -------------------------------------------------------
       
@@ -4480,7 +5127,7 @@ server <- function(input, output, session) {
           }
         }
       })
-
+      
       FeatCompScatterPlot_react <- reactive({
         
         req(FeatCompScatter_react())
@@ -4554,6 +5201,15 @@ server <- function(input, output, session) {
         regLine <- input$RegressionLine
         p <- FeatCompScatterPlot_react()
         p <- ggplotly(p,tooltip = "text")
+        p <- p %>%
+          config(
+            toImageButtonOptions = list(
+              format = "svg",
+              height = input$PlotDnldHight,
+              width = input$PlotDnldWidth,
+              filename = paste0(ProjectName_react(),"_",Feature,"_vs_",geneset_name)
+            )
+          )
         plot_df_sub2 <- scores[,c(1,2,3)]
         colnames(plot_df_sub2) <- c("SampleName","xVar","yVar")
         ScatterTitle_in <- paste(Feature,"vs.",geneset_name,scoreMethod)
@@ -4583,7 +5239,7 @@ server <- function(input, output, session) {
                                                        rSqu,
                                                        '</sup>'),
                                          x = 0,
-                                         xref='paper', 
+                                         xref='paper',
                                          yref='paper',
                                          align = "left"
           )
@@ -4680,7 +5336,7 @@ server <- function(input, output, session) {
         ## Determine type of survival data - OS/EFS/PFS?
         SurvDateType <- sub("\\..*","",surv_time_col)
         
-        ## Adjust 'Sample Type' for label 
+        ## Adjust 'Sample Type' for label
         if (isTruthy(SampleType)) {
           SampleTypeLab <- paste(" (",SampleType,") ",sep = "")
         } else {
@@ -4708,7 +5364,8 @@ server <- function(input, output, session) {
                title = paste(GeneSet," ",scoreMethod,": ",Feature,SampleTypeLab,"Patients",sep = "")) +
           theme_bw() +
           ggpubr::stat_compare_means(method = input$boxoptselecRisk,label.x = 0.5) +
-          theme(text = element_text(size = font))
+          theme(text = element_text(size = font),
+                legend.position = "none")
         plot
         
       })
@@ -4852,7 +5509,7 @@ server <- function(input, output, session) {
         decon_score_cols <- decon_score_cols()
         boxTab <- FeatureStrat_df()
         
-        ## Adjust 'Sample Type' for label 
+        ## Adjust 'Sample Type' for label
         if (isTruthy(SampleType)) {
           SampleTypeLab <- paste(" (",SampleType,") ",sep = "")
         } else {
@@ -5023,2155 +5680,126 @@ server <- function(input, output, session) {
       })
       
       
-      ####----Downloaders----####
+      # Downloaders ------------------------------------------------------------
       
-      ####----DNLD Path Surv----####
+      ## Path Surv Plots -------------------------------------------------------
       
-      ## quartile
-      output$dnldSplot_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuartileSurvival.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuartileSurvival.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- Splot_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldSplot_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuartileSurvival.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuartileSurvival.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- SplotBIN_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
+      dnldPlot_server("dnldSplotBIN_SVG",SplotBIN_react()$plot,gsub("[[:space:]]","",paste0(ProjectName_react(),"_MedianCutPoint_Survival_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldSplot_SVG",Splot_react()$plot,gsub("[[:space:]]","",paste0(ProjectName_react(),"_QuaretileCutPoint_Survival_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldScutPointPlot_SVG",ScutPointPlot_react()$plot,gsub("[[:space:]]","",paste0(ProjectName_react(),"_OptimalCutPoint_Survival_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldSquantPlot_SVG",SquantPlot_react()$plot,gsub("[[:space:]]","",paste0(ProjectName_react(),"_TopBottomCutPoint_Survival_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldSquantPlot2_SVG",SquantPlot2_react()$plot,gsub("[[:space:]]","",paste0(ProjectName_react(),"_UserCutPoint_Survival_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
       
-      ## binary
-      output$dnldSplotBIN_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPSurvival.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPSurvival.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- SplotBIN_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldSplotBIN_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPSurvival.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_MedianCutPSurvival.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- SplotBIN_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
+      ## Path Density Plots ----------------------------------------------------
       
-      ## cut p
-      output$dnldScutPointPlot_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointSurvival.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointSurvival.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- ScutPointPlot_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldScutPointPlot_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointSurvival.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointSurvival.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- ScutPointPlot_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
+      dnldPlot_server("dnldssgseaBINDensity_SVG",ssgseaBINDensity_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_MedianCutPoint_Density_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldssgseaQuartDensity_SVG",ssgseaQuartDensity_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_QuaretileCutPoint_Density_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldssgseaCutPDensity_SVG",ssgseaCutPDensity_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_OptimalCutPoint_Density_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldssgseaQuantDensity_SVG",ssgseaQuantDensity_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_TopBottomCutPoint_Density_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldssgseaQuant2Density_SVG",ssgseaQuant2Density_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_UserCutPoint_Density_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
       
-      ## Quantile
-      output$dnldSquantPlot_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileSurvival.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileSurvival.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- SquantPlot_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldSquantPlot_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileSurvival.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileSurvival.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- SquantPlot_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
+      ## Univariate Plots ------------------------------------------------------
       
-      ## cutoff
-      output$dnldSquantPlot2_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffSurvival.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffSurvival.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- SquantPlot2_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldSquantPlot2_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffSurvival.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffSurvival.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- SquantPlot2_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
+      dnldPlot_server("dnldfeatSplot_SVG",featSplot_react()$plot,gsub("[[:space:]]","",paste0(ProjectName_react(),"_Univariate_Survival_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldUniVarForestplot_SVG",SinglevarForestPlot_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_Univariate_Forest_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldMultiFeatUnivarForestPlot_SVG",MultiFeatUnivarForestPlot_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_Univariate_MultiFeatureForest_",Sys.Date(),".svg")),
+                      type = "forest")
+      dnldDF_server("dnldMultiFeatUnivarForestPlot_table",MultiFeatUnivarForestPlotTab_react()[,-7],gsub("[[:space:]]","",paste0(ProjectName_react(),"_Univariate_MultiFeatureForest_",Sys.Date(),".txt")))
+      dnldDF_server("dnldunivarForestPlotTable",MultiFeat_ForestMeta(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_Univariate_MultiFeatureForestData_",Sys.Date(),".txt")))
+      dnldPlot_server("dnldUniVarLinplot_SVG",UnivarLinearityPlot_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_Univariate_Linearity_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
       
-      ####----DNLD Univar----####
+      ## Bivariate Add Plots ------------------------------------------------------
       
-      ##--Survival Plot--##
+      dnldPlot_server("dnldBiVarAddForest_SVG",BivarForestPlot_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_BivariateAdditive_Forest_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldBiVarAddLinplot_SVG",BivarLinearityPlot_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_BivariateAdditive_Linearity_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
       
-      output$dnldfeatSplot_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SingleSurvivalFeature
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateSurvival.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateSurvival.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- featSplot_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldfeatSplot_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SingleSurvivalFeature
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateSurvival.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateSurvival.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- featSplot_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
+      ## Bivariate Int Plots ------------------------------------------------------
       
-      ##--Forest Plot--##
+      dnldPlot_server("dnldfeatSplotBi_SVG",featSplotBi_react()$plot,gsub("[[:space:]]","",paste0(ProjectName_react(),"_BivariateInteractive_Survival_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldBiVarIntLinplot_SVG",BivarLinearityPlotInter_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_BivariateInteractive_Linearity_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
       
-      output$dnldUniVarForestplot_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SingleSurvivalFeature
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateForest.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateForest.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- SinglevarForestPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldUniVarForestplot_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SingleSurvivalFeature
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateForest.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateForest.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- SinglevarForestPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
+      ## Multivariate Plots ------------------------------------------------------
       
-      ##--Linearity Plot--##
+      dnldPlot_server("dnldMultiVarForest_SVG",MultiFeatMultivarForestPlot_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_Multivariate_Forest_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldPlot_server("dnldMultiFeatMultivarForestPlot_SVG",MultiFeatMultivarForestPlot_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_Multivariate_MultiFeatureForest_",Sys.Date(),".svg")),
+                      type = "forest")
+      dnldDF_server("dnldMultiFeatMultivarForestPlot_table",MultiFeatMultivarForestPlotTab_react()[,-7],gsub("[[:space:]]","",paste0(ProjectName_react(),"_Multivariate_MultiFeatureForest_",Sys.Date(),".txt")))
+      dnldDF_server("dnldmultiForestPlotTable",MultiFeat_InterForestMeta(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_Multivariate_MultiFeatureForestData_",Sys.Date(),".txt")))
       
-      output$dnldUniVarLinplot_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SingleSurvivalFeature
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateLinearity.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateLinearity.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- UnivarLinearityPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldUniVarLinplot_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SingleSurvivalFeature
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateLinearity.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateLinearity.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- UnivarLinearityPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
+      ## Data Exploration Plots ------------------------------------------------------
       
-      output$dnldMultiFeatUnivarForestPlot_table <- downloadHandler(
-        filename = function() {
-          ProjectName <- gsub(" ","",ProjectName)
-          ProjectName <- gsub("[[:punct:]]","",ProjectName)
-          Todaydate <- gsub("-","",Sys.Date())
-          paste0(ProjectName,"_UnivarForestPlotTable_",Todaydate,".txt")
-        },
-        content = function(file) {
-          df <- MultiFeatUnivarForestPlotTab_react()
-          df <- df[,-7]
-          write_delim(df,file,delim = '\t', col_names = T)
-        }
-      )
+      dnldDF_server("DnldClin",ssGSEAmeta(),
+                    gsub("[[:space:]]","",paste0(ProjectName_react(),"_Clinical_",Sys.Date(),".txt")))
+      exprDnld <- reactive({
+        req(exprSub())
+        expr <- as.data.frame(exprSub())
+        expr$Gene <- rownames(expr)
+        expr <- expr %>%
+          relocate(Gene)
+        expr
+      })
+      dnldDF_server("DnldExpr",exprDnld(),
+                    gsub("[[:space:]]","",paste0(ProjectName_react(),"_Expression_",Sys.Date(),".txt")))
       
-      output$dnldMultiFeatUnivarForestPlot_SVG <- downloadHandler(
-        filename = function() {
-          ProjectName <- gsub(" ","",ProjectName)
-          ProjectName <- gsub("[[:punct:]]","",ProjectName)
-          Todaydate <- gsub("-","",Sys.Date())
-          paste0(ProjectName,"_UnivarForestPlot_",Todaydate,".svg")
-        },
-        content = function(file) {
-          #p_OS <- MultiFeatUnivarForestPlot_react()
-          #dims <- get_wh(MultiFeatUnivarForestPlot_react())
-          pdf(NULL)
-          #p_OS <- MultiFeatUnivarForestPlot_react()
-          dims <- get_wh(MultiFeatUnivarForestPlot_react())
-          #pdf(file="RPlots.pdf")
-          #svg(NULL)
-          #dev.off()
-          #dims <- get_wh(MultiFeatUnivarForestPlot_react())
-          #pdf(file, width = unname(dims[1]), height = unname(dims[2]),family = "sans",pointsize = 12)
-          svg(file, width = unname(dims[1]+1), height = unname(dims[2]+1))
-          plot(MultiFeatUnivarForestPlot_react())
-          dev.off()
-        }
-      )
+      dnldPlot_server("dnldssgseaDensity_SVG",ssgseaDensity_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_",names(gs_react()),"_Density_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldDF_server("dnldssgseaDensityTable",ssGSEAmeta()[,c(colnames(ssGSEAmeta())[1],names(gs_react()))],
+                    gsub("[[:space:]]","",paste0(ProjectName_react(),"_",names(gs_react()),"_Density_",Sys.Date(),".txt")))
       
-      output$dnldunivarForestPlotTable <- downloadHandler(
-        filename = function() {
-          ProjectName <- gsub(" ","",ProjectName)
-          ProjectName <- gsub("[[:punct:]]","",ProjectName)
-          Todaydate <- gsub("-","",Sys.Date())
-          paste0(ProjectName,"_UnivarForestPlot_MetaData_",Todaydate,".txt")
-        },
-        content = function(file) {
-          df <- MultiFeat_ForestMeta()
-          write_delim(df,file,delim = '\t', col_names = T)
-        }
-      )
+      dnldDF_server("dnldFeatCompScatterTable",FeatCompScatter_react(),
+                    gsub("[[:space:]]","",paste0(ProjectName_react(),"_ScatterComparisonTable_",Sys.Date(),".txt")))
       
+      dnldPlot_server("dnldSboxplot_SVG",Sboxplot_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_RiskStrat_Boxplot_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldDF_server("dnldSBoxplotTab",as.data.frame(SboxplotReact()[,c(colnames(SboxplotReact())[1],input$SurvivalType_time,input$SurvivalType_id,names(gs_react()),"SurvivalCutoff")]),
+                    gsub("[[:space:]]","",paste0(ProjectName_react(),"_RiskStrat_BoxplotTable_",Sys.Date(),".txt")))
       
-      
-      ####----DNLD Add Bivariate----####
-      
-      ##--Forest--##
-      
-      output$dnldBiVarAddForest_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1
-          Feature2 <- input$SurvivalFeatureBi2
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateForest.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateForest.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- BivarForestPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldBiVarAddForest_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1
-          Feature2 <- input$SurvivalFeatureBi2
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateForest.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateForest.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- BivarForestPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      
-      ##--Linearity Plot--##
-      
-      output$dnldBiVarAddLinplot_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1
-          Feature2 <- input$SurvivalFeatureBi2
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateLinearity.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateLinearity.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- BivarLinearityPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldBiVarAddLinplot_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1
-          Feature2 <- input$SurvivalFeatureBi2
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateLinearity.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateLinearity.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- BivarLinearityPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      
-      
-      ####----DNLD Int Bivariate----####
-      
-      ##--Survival--##
-      
-      output$dnldfeatSplotBi_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1Inter
-          Feature2 <- input$SurvivalFeatureBi2Inter
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateSurvival.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateSurvival.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- featSplotBi_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldfeatSplotBi_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1Inter
-          Feature2 <- input$SurvivalFeatureBi2Inter
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateSurvival.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateSurvival.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- featSplotBi_react()
-          ggsave(file,p$plot,width = 10, height = 8)
-          
-        }
-      )
-      
-      ##--Forest--##
-      
-      output$dnldBiVarIntForest_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1Inter
-          Feature2 <- input$SurvivalFeatureBi2Inter
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateForest.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateForest.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- BivarForestPlotInter_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldBiVarIntForest_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1Inter
-          Feature2 <- input$SurvivalFeatureBi2Inter
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateForest.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateForest.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- BivarForestPlotInter_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      
-      ##--Linearity--##
-      
-      output$dnldBiVarIntLinplot_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1Inter
-          Feature2 <- input$SurvivalFeatureBi2Inter
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateLinearity.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateLinearity.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- BivarLinearityPlotInter_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldBiVarIntLinplot_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1Inter
-          Feature2 <- input$SurvivalFeatureBi2Inter
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateLinearity.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateLinearity.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- BivarLinearityPlotInter_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      
-      
-      output$dnldMultiFeatMultivarForestPlot_table <- downloadHandler(
-        filename = function() {
-          ProjectName <- gsub(" ","",ProjectName)
-          ProjectName <- gsub("[[:punct:]]","",ProjectName)
-          Todaydate <- gsub("-","",Sys.Date())
-          paste0(ProjectName,"_MultivarForestPlotTable_",Todaydate,".txt")
-        },
-        content = function(file) {
-          df <- MultiFeatMultivarForestPlotTab_react()
-          df <- df[,-7]
-          df[is.na(df)] <- ""
-          write_delim(df,file,delim = '\t', col_names = T)
-        }
-      )
-      
-      output$dnldMultiFeatMultivarForestPlot_SVG <- downloadHandler(
-        filename = function() {
-          ProjectName <- gsub(" ","",ProjectName)
-          ProjectName <- gsub("[[:punct:]]","",ProjectName)
-          Todaydate <- gsub("-","",Sys.Date())
-          paste0(ProjectName,"_MultivarForestPlot_",Todaydate,".svg")
-        },
-        content = function(file) {
-          #p_OS <- MultiFeatUnivarForestPlot_react()
-          #dims <- get_wh(MultiFeatUnivarForestPlot_react())
-          pdf(NULL)
-          #p_OS <- MultiFeatUnivarForestPlot_react()
-          dims <- get_wh(MultiFeatMultivarForestPlot_react())
-          #pdf(file="RPlots.pdf")
-          #svg(NULL)
-          #dev.off()
-          #dims <- get_wh(MultiFeatUnivarForestPlot_react())
-          #pdf(file, width = unname(dims[1]), height = unname(dims[2]),family = "sans",pointsize = 12)
-          svg(file, width = unname(dims[1]+1), height = unname(dims[2]+1))
-          plot(MultiFeatMultivarForestPlot_react())
-          dev.off()
-        }
-      )
-      
-      output$dnldmultiForestPlotTable <- downloadHandler(
-        filename = function() {
-          ProjectName <- gsub(" ","",ProjectName)
-          ProjectName <- gsub("[[:punct:]]","",ProjectName)
-          Todaydate <- gsub("-","",Sys.Date())
-          paste0(ProjectName,"_MultivarForestPlot_MetaData_",Todaydate,".txt")
-        },
-        content = function(file) {
-          df <- MultiFeat_InterForestMeta()
-          write_delim(df,file,delim = '\t', col_names = T)
-        }
-      )
-      
-      ####----DNLD Multivariate----####
-      
-      ##--Forest--##
-      
-      output$dnldMultiVarForest_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1Inter
-          Feature2 <- input$SurvivalFeatureBi2Inter
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_MultivariateForest.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_MultivariateForest.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- MultivarForestPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      output$dnldMultiVarForest_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          Feature1 <- input$SurvivalFeatureBi1Inter
-          Feature2 <- input$SurvivalFeatureBi2Inter
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleType <- input$SampleTypeSelection
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_MultivariateForest.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_MultivariateForest.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- MultivarForestPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-          
-        }
-      )
-      
-      ####----DNLD Risk Strat----####
-      
-      ##--Boxplot--##
-      
-      output$dnldSboxplot_SVG <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          scoreMethod <- input$ScoreMethod
-          logchoice <- input$SBoxLog
-          ## Adjust 'Sample Type' for label 
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleTypeLab <- paste("_",SampleType,"_",sep = "")
-          }
-          if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            SampleTypeLab <- "_"
-          }
-          if (GeneSet %in% decon_score_cols) {
-            scoreMethod <- "PreProcessed_Score"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethod <- "GeneExpressionScore"
-          }
-          if (input$GeneSetTabs != 2 & !(GeneSet %in% decon_score_cols)) {
-            scoreMethod <- paste(scoreMethod,"Score",sep = "")
-          }
-          if (logchoice == TRUE) {
-            scoreMethod <- paste(scoreMethod,"logPlus1",sep = "")
-          }
-          paste(gsub(" ","",ProjectName),SampleTypeLab,Feature,"_",GeneSet,"_",scoreMethod,"RiskStratBoxPlot.svg",sep = "")
-        },
-        content = function(file) {
-          p <- Sboxplot_react()
-          ggsave(file,p,width = 10, height = 8)
-        }
-      )
-      output$dnldSboxplot_PDF <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          scoreMethod <- input$ScoreMethod
-          logchoice <- input$SBoxLog
-          ## Adjust 'Sample Type' for label 
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleTypeLab <- paste("_",SampleType,"_",sep = "")
-          }
-          if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            SampleTypeLab <- "_"
-          }
-          
-          if (GeneSet %in% decon_score_cols) {
-            scoreMethod <- "PreProcessed_Score"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethod <- "GeneExpressionScore"
-          }
-          if (input$GeneSetTabs != 2 & !(GeneSet %in% decon_score_cols)) {
-            scoreMethod <- paste(scoreMethod,"Score",sep = "")
-          }
-          if (logchoice == TRUE) {
-            scoreMethod <- paste(scoreMethod,"logPlus1",sep = "")
-          }
-          paste(gsub(" ","",ProjectName),SampleTypeLab,Feature,"_",GeneSet,"_",scoreMethod,"RiskStratBoxPlot.pdf",sep = "")
-        },
-        content = function(file) {
-          p <- Sboxplot_react()
-          ggsave(file,p,width = 10, height = 8)
-        }
-      )
-      
-      output$dnldSBoxplotTab <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          scoreMethod <- input$ScoreMethod
-          logchoice <- input$SBoxLog
-          ## Adjust 'Sample Type' for label 
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleTypeLab <- paste("_",SampleType,"_",sep = "")
-          }
-          if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            SampleTypeLab <- "_"
-          }
-          if (GeneSet %in% decon_score_cols) {
-            scoreMethod <- "PreProcessed_Score"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethod <- "GeneExpressionScore"
-          }
-          if (input$GeneSetTabs != 2 & !(GeneSet %in% decon_score_cols)) {
-            scoreMethod <- paste(scoreMethod,"Score",sep = "")
-          }
-          if (logchoice == TRUE) {
-            scoreMethod <- paste(scoreMethod,"logPlus1",sep = "")
-          }
-          paste(gsub(" ","",ProjectName),SampleTypeLab,Feature,"_",GeneSet,"_",scoreMethod,".txt",sep = "")
-        },
-        content = function(file) {
-          ssGSEA_meta <- SboxplotReact()
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-            surv_time_col <- metacol_survtime[1]
-            surv_id_col <- metacol_survid[1]
-          }
-          if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-            surv_time_col <- input$SurvivalType_time
-            surv_id_col <- input$SurvivalType_id
-          }
-          boxTab <- as.data.frame(ssGSEA_meta[,c("SampleName",surv_time_col,surv_id_col,GeneSet,"SurvivalCutoff")])
-          write_delim(boxTab,file,delim = '\t')
-        }
-      )
-      
-      ##--Heatmap--##
-      
-      output$dnldSheatmap_SVG <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          ## Adjust 'Sample Type' for label 
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleTypeLab <- paste("_",SampleType,"_",sep = "")
-          }
-          if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            SampleTypeLab <- "_"
-          }
-          paste(gsub(" ","",ProjectName),SampleTypeLab,Feature,"_",GeneSet,"_","RiskStratHeatmap.svg",sep = "")
-        },
-        content = function(file) {
-          p <- Sheatmap_react()
-          ggsave(file,p,width = 10, height = 15)
-        }
-      )
-      output$dnldSheatmap_PDF <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          ## Adjust 'Sample Type' for label 
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleTypeLab <- paste("_",SampleType,"_",sep = "")
-          }
-          if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            SampleTypeLab <- "_"
-          }
-          paste(gsub(" ","",ProjectName),SampleTypeLab,Feature,"_",GeneSet,"_","RiskStratHeatmap.pdf",sep = "")
-        },
-        content = function(file) {
-          p <- Sheatmap_react()
-          ggsave(file,p,width = 10, height = 15)
-        }
-      )
-      ## Download handler for expression
-      output$dnldSheatmapexpr <- downloadHandler(
-        filename = function() {
-          # Variables
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          geneset <- gs_react()                 #Chosen Gene Set
-          geneset_name <- names(geneset)        #Name of chosen gene set
-          # Make file name
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"SurvivalCutoff_expr.txt",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"SurvivalCutoff_expr.txt",sep = "")
-          }
-        },
-        content = function(file) {
-          expr <- exprSub()
-          geneset <- gs_react()                 #Chosen Gene Set
-          geneset_name <- names(geneset)        #Name of chosen gene set
-          GSgenes <- geneset[[geneset_name]]
-          # Include only genes from gene set
-          expr <- expr[which(rownames(expr) %in% GSgenes),]
-          # Reformat to make sure genes show in file
+      dnldHeatExpr <- reactive({
+        req(exprSub())
+        req(gs_react())
+        expr <- exprSub()
+        GSgenes <- unname(unlist(gs_react()))
+        if (length(GSgenes) > 0) {
+          expr <- as.data.frame(expr[which(rownames(expr) %in% GSgenes),])
           expr$Gene <- rownames(expr)
           expr <- expr %>%
             relocate(Gene)
-          write_delim(expr,file,delim = '\t')
+          expr
         }
-      )
+      })
       
-      ####----DNLD Feat Strat----####
+      dnldPlot_server("dnldSheatmap_SVG",Sheatmap_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_RiskStrat_Heatmap_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,type = "complex")
+      dnldDF_server("dnldSheatmapexpr",dnldHeatExpr(),
+                    gsub("[[:space:]]","",paste0(ProjectName_react(),"_",names(gs_react()),"_RiskStrat_Heatmap_Expression",Sys.Date(),".txt")))
       
-      ##--Boxplot--##
+      dnldPlot_server("dnldFboxplot_SVG",Featureboxplot_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_FeatureStrat_Boxplot_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      dnldDF_server("dnldFeatureboxplotTab",as.data.frame(ssGSEAmeta()[,c(colnames(ssGSEAmeta())[1],input$BoxplotFeature,names(gs_react()))]),
+                    gsub("[[:space:]]","",paste0(ProjectName_react(),"_FeatureStrat_BoxplotTable_",Sys.Date(),".txt")))
       
-      output$dnldFboxplot_SVG <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          Feature2 <- input$BoxplotFeature
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          scoreMethod <- input$ScoreMethod
-          logchoice <- input$FBoxLog
-          ## Adjust 'Sample Type' for label 
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleTypeLab <- paste("_",SampleType,"_",sep = "")
-          }
-          if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            SampleTypeLab <- "_"
-          }
-          if (GeneSet %in% decon_score_cols) {
-            scoreMethod <- "PreProcessed_Score"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethod <- "GeneExpressionScore"
-          }
-          if (input$GeneSetTabs != 2 & !(GeneSet %in% decon_score_cols)) {
-            scoreMethod <- paste(scoreMethod,"Score",sep = "")
-          }
-          if (logchoice == TRUE) {
-            scoreMethod <- paste(scoreMethod,"logPlus1",sep = "")
-          }
-          paste(gsub(" ","",ProjectName),SampleTypeLab,Feature,"_",Feature2,"_",GeneSet,"_",scoreMethod,"FeatureStratBoxPlot.svg",sep = "")
-        },
-        content = function(file) {
-          p <- Featureboxplot_react()
-          ggsave(file,p,width = 10, height = 8)
-        }
-      )
-      output$dnldFboxplot_PDF <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          Feature2 <- input$BoxplotFeature
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          scoreMethod <- input$ScoreMethod
-          logchoice <- input$FBoxLog
-          ## Adjust 'Sample Type' for label 
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleTypeLab <- paste("_",SampleType,"_",sep = "")
-          }
-          if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            SampleTypeLab <- "_"
-          }
-          
-          if (GeneSet %in% decon_score_cols) {
-            scoreMethod <- "PreProcessed_Score"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethod <- "GeneExpressionScore"
-          }
-          if (input$GeneSetTabs != 2 & !(GeneSet %in% decon_score_cols)) {
-            scoreMethod <- paste(scoreMethod,"Score",sep = "")
-          }
-          if (logchoice == TRUE) {
-            scoreMethod <- paste(scoreMethod,"logPlus1",sep = "")
-          }
-          paste(gsub(" ","",ProjectName),SampleTypeLab,Feature,"_",Feature2,"_",GeneSet,"_",scoreMethod,"FeatureStratBoxPlot.pdf",sep = "")
-        },
-        content = function(file) {
-          p <- Featureboxplot_react()
-          ggsave(file,p,width = 10, height = 8)
-        }
-      )
-      
-      output$dnldFeatureboxplotTab <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          FeatureSelec <- input$BoxplotFeature
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          scoreMethod <- input$ScoreMethod
-          logchoice <- input$FBoxLog
-          ## Adjust 'Sample Type' for label 
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleTypeLab <- paste("_",SampleType,"_",sep = "")
-          }
-          if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            SampleTypeLab <- "_"
-          }
-          if (GeneSet %in% decon_score_cols) {
-            scoreMethod <- "PreProcessed_Score"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethod <- "GeneExpressionScore"
-          }
-          if (input$GeneSetTabs != 2 & !(GeneSet %in% decon_score_cols)) {
-            scoreMethod <- paste(scoreMethod,"Score",sep = "")
-          }
-          if (logchoice == TRUE) {
-            scoreMethod <- paste(scoreMethod,"logPlus1",sep = "")
-          }
-          
-          paste(gsub(" ","",ProjectName),SampleTypeLab,Feature,"_",FeatureSelec,"_",GeneSet,"_",scoreMethod,".txt",sep = "")
-        },
-        content = function(file) {
-          meta_ssGSEA <- ssGSEAmeta()
-          FeatureSelec <- input$BoxplotFeature
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          boxTab <- meta_ssGSEA[,c("SampleName",FeatureSelec,GeneSet)]
-          write_delim(boxTab,file,delim = '\t')
-        }
-      )
-      
-      ##--Heatmap--##
-      
-      output$dnldFheatmap_SVG <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          feature2 <- input$HeatmapFeature
-          ## Adjust 'Sample Type' for label 
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleTypeLab <- paste("_",SampleType,"_",sep = "")
-          }
-          if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            SampleTypeLab <- "_"
-          }
-          paste(gsub(" ","",ProjectName),SampleTypeLab,Feature,"_",feature2,"_",GeneSet,"_FeatureHeatmap.svg",sep = "")
-        },
-        content = function(file) {
-          p <- FeatureHeatmap_react()
-          ggsave(file,p,width = 10, height = 15)
-        }
-      )
-      output$dnldFheatmap_PDF <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          feature2 <- input$HeatmapFeature
-          ## Adjust 'Sample Type' for label 
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            SampleTypeLab <- paste("_",SampleType,"_",sep = "")
-          }
-          if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            SampleTypeLab <- "_"
-          }
-          paste(gsub(" ","",ProjectName),SampleTypeLab,Feature,"_",feature2,"_",GeneSet,"_FeatureHeatmap.pdf",sep = "")
-        },
-        content = function(file) {
-          p <- FeatureHeatmap_react()
-          ggsave(file,p,width = 10, height = 15)
-        }
-      )
-      ## Download handler for expression
-      output$dnldFheatmapexpr <- downloadHandler(
-        filename = function() {
-          # Variables
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          Feature2 <- input$HeatmapFeature
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          geneset <- gs_react()                 #Chosen Gene Set
-          geneset_name <- names(geneset)        #Name of chosen gene set
-          # Make file name
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"Featuring_",Feature2,"_expr.txt",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"Featuring_",Feature2,"_expr.txt",sep = "")
-          }
-        },
-        content = function(file) {
-          expr <- exprSub()
-          geneset <- gs_react()                 #Chosen Gene Set
-          geneset_name <- names(geneset)        #Name of chosen gene set
-          GSgenes <- geneset[[geneset_name]]
-          # Include only genes from gene set
-          expr <- expr[which(rownames(expr) %in% GSgenes),]
-          # Reformat to make sure genes show in file
-          expr$Gene <- rownames(expr)
-          expr <- expr %>%
-            relocate(Gene)
-          write_delim(expr,file,delim = '\t')
-        }
-      )
-      
-      ####----DNLD All Density----####
-      
-      output$dnldssgseaDensity_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_DensityPlot.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_DensityPlot.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- ssgseaDensity_react()
-          ggsave(file,p,width = 10, height = 8)
-        }
-      )
-      output$dnldssgseaDensity_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-            #if (input$RawOrSS == "Raw Gene Expression") {
-            #  scoreMethodLab <- "RawGeneExpression"
-            #}
-            #else if (input$RawOrSS == "Rank Normalized") {
-            #  scoreMethodLab <- scoreMethod
-            #}
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_DensityPlot.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_DensityPlot.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- ssgseaDensity_react()
-          ggsave(file,p,width = 10, height = 8)
-        }
-      )
-      output$dnldssgseaDensityTable <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          score_method <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",score_method,".txt",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",score_method,".txt",sep = "")
-          }
-        },
-        content = function(file) {
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          ssgsea_meta <- ssGSEAmeta()
-          table <- ssgsea_meta[,c("SampleName",GeneSet)]
-          write_delim(table,file,delim = '\t')
-        }
-      )
-      
-      ####---DNLD Meta----####
-      
-      ## Download handler for meta
-      output$dnldMeta <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          geneset <- gs_react()                 #Chosen Gene Set
-          geneset_name <- names(geneset)        #Name of chosen gene set
-          # Make file name
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_meta.txt",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_meta.txt",sep = "")
-          }
-        },
-        content = function(file) {
-          meta <- ssGSEAmeta()
-          write_delim(meta,file,delim = '\t')
-        }
-      )
-      
-      ####---DNLD Expr----####
-      
-      ## Download handler for expression
-      output$dnldExpr <- downloadHandler(
-        filename = function() {
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          # Make file name
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"expr.txt",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"expr.txt",sep = "")
-          }
-        },
-        content = function(file) {
-          expr <- exprSub()
-          # Reformat to make sure genes show in file
-          expr$Gene <- rownames(expr)
-          expr <- expr %>%
-            relocate(Gene)
-          write_delim(expr,file,delim = '\t')
-        }
-      )
-      
-      ####----DNLD Scatter Plot----####
-      output$dnldFeatCompScatter_SVG <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          FeatureScatter <- input$ScatterFeature
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",FeatureScatter,"_",geneset_name,"_",scoreMethodLab,"_ScatterPlot.svg",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",FeatureScatter,"_",geneset_name,"_",scoreMethodLab,"_ScatterPlot.svg",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- FeatCompScatterPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-        }
-      )
-      output$dnldFeatCompScatter_PDF <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          FeatureScatter <- input$ScatterFeature
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",FeatureScatter,"_",geneset_name,"_",scoreMethodLab,"_ScatterPlot.pdf",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",FeatureScatter,"_",geneset_name,"_",scoreMethodLab,"_ScatterPlot.pdf",sep = "")
-          }
-        },
-        content = function(file) {
-          p <- FeatCompScatterPlot_react()
-          ggsave(file,p,width = 10, height = 8)
-        }
-      )
-      ## Download handler for expression
-      output$dnldFeatCompScatterTable <- downloadHandler(
-        filename = function() {
-          geneset <- gs_react()
-          geneset_name <- names(geneset)
-          SampleType <- input$SampleTypeSelection
-          Feature <- input$FeatureSelection
-          FeatureScatter <- input$ScatterFeature
-          scoreMethod <- input$ScoreMethod
-          if (Feature != "Show All Samples") {
-            SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
-          }
-          if (Feature == "Show All Samples") {
-            SubFeature <- "_"
-          }
-          if (input$GeneSetTabs == 2) {
-            scoreMethodLab <- "RawGeneExpression"
-          }
-          else if (input$GeneSetTabs != 2) {
-            if (geneset_name %in% decon_score_cols) {
-              scoreMethodLab <- "PreProcessed"
-            }
-            else {
-              scoreMethodLab <- scoreMethod
-            }
-          }
-          # If more than one sample type
-          if (length(unique(meta[,metacol_sampletype])) > 1) {
-            paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",FeatureScatter,"_",geneset_name,"_",scoreMethodLab,"_ComparisonTable.txt",sep = "")
-          }
-          # If only one sample type
-          else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-            paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",FeatureScatter,"_",geneset_name,"_",scoreMethodLab,"_ComparisonTable.txt",sep = "")
-          }
-        },
-        content = function(file) {
-          tab <- FeatCompScatter_react()
-          if (input$ColorScatterChoice == "Single Color") {
-            tab <- tab[,-4]
-          }
-          write_delim(tab,file,delim = '\t')
-        }
-      )
+      dnldPlot_server("dnldFheatmap_SVG",FeatureHeatmap_react(),gsub("[[:space:]]","",paste0(ProjectName_react(),"_FeatureStrat_Heatmap_",Sys.Date(),".svg")),
+                      input$PlotDnldHight,input$PlotDnldWidth,type = "complex")
+      dnldDF_server("dnldFheatmapexpr",dnldHeatExpr(),
+                    gsub("[[:space:]]","",paste0(ProjectName_react(),"_",names(gs_react()),"_FeatureStrat_Heatmap_Expression",Sys.Date(),".txt")))
       
     }
     
