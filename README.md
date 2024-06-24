@@ -104,6 +104,7 @@ More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tr
   * Cox Proportional Hazard Regression output for all pathways or genes
 
 More Information Here: https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/tree/main/3-PATH-SURVEYOR-Pipeline
+<img width="231" alt="image" src="https://github.com/shawlab-moffitt/PATH-SURVEYOR-Suite/assets/89986836/c4542cce-1bfd-468e-bc5e-c747c6d573e2">
 
 # PATH-SURVEYOR: Pathway Connectivity
 
