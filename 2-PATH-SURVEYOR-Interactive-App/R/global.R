@@ -1,4 +1,5 @@
 
+
 library(shiny)
 library(shinyjqui)
 library(gtsummary)
@@ -27,11 +28,18 @@ library(plotly)
 library(ggrepel)
 library(data.table)
 library(glmnet)
+library(svglite)
+library(shinyjs)
+library(broom.helpers)
 
+library(BiocManager)
 library(GSVA)
 library(clusterProfiler)
 library(AnnotationDbi)
 library(ComplexHeatmap)
+library(sva)
+library(biomaRt)
+library(preprocessCore)
 
 immudecon_check <- "immunedeconv" %in% rownames(installed.packages())
 if (immudecon_check == TRUE) {

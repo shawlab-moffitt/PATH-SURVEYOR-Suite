@@ -155,9 +155,10 @@ SubsetSurvData <- function(df,time,id,feat,feat2 = NULL) {
 CoxPHobj <- function(df,feat,ref) {
   df[,feat] <- as.factor(df[,feat])
   df[,feat] <- relevel(df[,feat], ref = ref)
-  feat <- sprintf(ifelse(grepl(" ", feat), "`%s`", "%s"), feat)
+  colnames(df)[which(colnames(df) == feat)] <- gsub("-","_",feat)
+  feat <- gsub("-","_",feat)
+  feat <- sprintf(ifelse((grepl(" ", feat) | !is.na(suppressWarnings(as.numeric(substring(feat, 1, 1))))), "`%s`", "%s"), feat)
   tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",feat)),data = df)
-  #tab <- coxph(Surv(time,ID) ~ Feature, data = df)
   return(tab)
 }
 
