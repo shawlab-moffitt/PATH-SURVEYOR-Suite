@@ -1,4 +1,4 @@
-version_id <- paste0("v2.0.20240820")
+version_id <- paste0("v2.0.20240821")
 
 # User Input -------------------------------------------------------------------
 
@@ -13,7 +13,7 @@ MetaParam_File <- ''
 
 ## Password Settings -----------------------------------------------------------
 Password_Protected <- FALSE
-PasswordSet <- "password"
+PasswordSet <- "teamscience"
 
 ## Pre-Selected Inputs ---------------------------------------------------------
 # An option from the meta, All, or NULL
@@ -236,7 +236,8 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                             h3("Survival Plot Parameters"),
                                                                             fluidRow(
                                                                               column(6,
-                                                                                     uiOutput("rendSurvXaxis"),
+                                                                                     numericInput("SurvXaxis","Survival Age Limit (years)", value = NA),
+                                                                                     #uiOutput("rendSurvXaxis"),
                                                                                      numericInput("SurvXaxisBreaks","Survival X-Axis Breaks (Years):",value = 1, min = 0, step = 0.25),
                                                                                      selectInput("SurvLegendPos","Legend Position",choices = c("right","left","top","bottom","none"))
                                                                               ),
@@ -1820,22 +1821,38 @@ server <- function(input, output, session) {
         updateSelectizeInput(session = session, inputId = "SurvivalType_id",choices = SurIDChoices, server = T)
       })
       
-      output$rendSurvXaxis <- renderUI({
-        req(ssGSEAmeta())
-        req(input$SurvivalType_time)
-        req(input$SurvivalType_id)
-        req(input$SurvYearOrMonth)
-        meta_ssgsea <- ssGSEAmeta()
-        yOm <- input$SurvYearOrMonth
-        surv_time_col <- input$SurvivalType_time
-        surv_id_col <- input$SurvivalType_id
-        max_time <- ceiling(max(meta_ssgsea[,surv_time_col])/365.25)
-        if (yOm == "Years") {
-          numericInput("SurvXaxis","X-Axis Limit (years)", value = max_time)
-        } else if (yOm == "Months") {
-          numericInput("SurvXaxis","X-Axis Limit (months)", value = max_time*12)
-        }
-      })
+      #observe({
+      #  req(meta_react())
+      #  req(input$SurvivalType_time)
+      #  req(input$SurvivalType_id)
+      #  req(input$SurvYearOrMonth)
+      #  meta_ssgsea <- meta_react()
+      #  yOm <- input$SurvYearOrMonth
+      #  surv_time_col <- input$SurvivalType_time
+      #  max_time <- ceiling(max(meta_ssgsea[,surv_time_col], na.rm = T)/365.25)
+      #  if (yOm == "Years") {
+      #    updateNumericInput(session,"SurvXaxis","Survival Age Limit (years)", value = max_time)
+      #  } else if (yOm == "Months") {
+      #    updateNumericInput(session,"SurvXaxis","Survival Age Limit (months)", value = max_time*12)
+      #  }
+      #})
+      
+      #output$rendSurvXaxis <- renderUI({
+      #  req(ssGSEAmeta())
+      #  req(input$SurvivalType_time)
+      #  req(input$SurvivalType_id)
+      #  req(input$SurvYearOrMonth)
+      #  meta_ssgsea <- ssGSEAmeta()
+      #  yOm <- input$SurvYearOrMonth
+      #  surv_time_col <- input$SurvivalType_time
+      #  surv_id_col <- input$SurvivalType_id
+      #  max_time <- ceiling(max(meta_ssgsea[,surv_time_col])/365.25)
+      #  if (yOm == "Years") {
+      #    numericInput("SurvXaxis","Survival Age Limit (years)", value = max_time)
+      #  } else if (yOm == "Months") {
+      #    numericInput("SurvXaxis","Survival Age Limit (months)", value = max_time*12)
+      #  }
+      #})
       
       observe({
         req(input$SurvYearOrMonth)
@@ -2048,6 +2065,7 @@ server <- function(input, output, session) {
         req(metaSub())
         req(exprSub())
         req(gs_react())
+        #req(input$SurvXaxis)
         meta <- metaSub()
         expr <- exprSub()
         geneset <- gs_react()
@@ -2108,26 +2126,42 @@ server <- function(input, output, session) {
                     ssGSEA <- expr_sub
                   }
                   
-                  ## Subset columns needed for plot and rename for surv function
+                  #ssGSEA
+                  
+                  # Subset columns needed for plot and rename for surv function
+                  #print(head(meta[,c(SampleNameCol,surv_time_col,surv_id_col)]))
+                  #print(head(ssGSEA[,c(SampleNameCol,geneset_name)]))
                   meta_ssgsea_sdf <- merge(meta[,c(SampleNameCol,surv_time_col,surv_id_col)],ssGSEA[,c(SampleNameCol,geneset_name)])
+                  
+                  #print(input$SurvXaxis)
+                  #print(input$SurvYearOrMonth)
+                  if (isTruthy(input$SurvXaxis)) {
+                    if (input$SurvYearOrMonth == "Months") {
+                      xaxlim <- input$SurvXaxis * 30.4375
+                      meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
+                      ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
+                    } else {
+                      xaxlim <- input$SurvXaxis * 365.25
+                      meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
+                      ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
+                    }
+                  } else {
+                    xaxlim <- max(meta_ssgsea_sdf[,surv_time_col],na.rm = T)
+                    meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
+                    ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
+                  }
+                  
+                  #print(head(meta_ssgsea_sdf))
+                  #save(list = ls(), file = "ssgsea_env.RData", envir = environment())
                   
                   if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
                     if (length(meta_ssgsea_sdf[,4]) > 1) {
                       res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
                       cutp <- res.cut$cutpoint[["cutpoint"]]
                       res.cat <- surv_categorize(res.cut)
-                      #ssGSEA$OptimalCutP <- res.cat[,3]
                       ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- res.cat[,3]
                     }
                   }
-                  
-                  ## Perform further functions
-                  #ssGSEA$VAR_Q <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
-                  #ssGSEA$QuartileCutP <- paste("", ssGSEA$VAR_Q, sep="")
-                  #ssGSEA$MedianCutP <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
-                  #ssGSEA$TopBottomCutP <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
-                  #ssGSEA$UserCutP <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
-                  
                   
                   ssGSEA[,paste0(geneset_name,"_VAR_Q")] <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
                   ssGSEA[,paste0(geneset_name,"_QuartileCutP")] <- paste("", ssGSEA[,paste0(geneset_name,"_VAR_Q")], sep="")
@@ -2147,6 +2181,64 @@ server <- function(input, output, session) {
         }
         
       })
+      
+      #ssGSEAmeta <- reactive({
+      #  
+      #  req(ssGSEAmeta_pre())
+      #  req(metaSub())
+      #  ssGSEA <- ssGSEAmeta_pre()
+      #  meta <- metaSub()
+      #  geneset_name <- colnames(ssGSEA)[1]
+      #  quantCutoff <- input$QuantPercent/100
+      #  quantCutoff2 <- input$QuantPercent2/100
+      #  surv_time_col <- input$SurvivalType_time
+      #  surv_id_col <- input$SurvivalType_id
+      #  SampleNameCol <- metacol_samplename_react()
+      #  
+      #  ## Remove rows with NA in survival column
+      #  meta <- meta[!is.na(meta[,surv_time_col]),]
+      #  meta <- meta[!is.na(meta[,surv_id_col]),]
+      #  meta[,surv_id_col] <- as.numeric(meta[,surv_id_col])
+      #  meta[,surv_time_col] <- as.numeric(meta[,surv_time_col])
+      #  meta_ssgsea_sdf <- merge(meta[,c(SampleNameCol,surv_time_col,surv_id_col)],ssGSEA[,c(SampleNameCol,geneset_name)])
+      #  
+      #  save(list = ls(), file = "ssGSEA_React.RData",envir = environment())
+      #
+      #  if (isTruthy(input$SurvXaxis)) {
+      #    if (input$SurvYearOrMonth == "Months") {
+      #      xaxlim <- input$SurvXaxis * 30.4375
+      #      meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
+      #      ssGSEA <- ssGSEA[meta_ssgsea_sdf[,1],]
+      #    } else {
+      #      xaxlim <- input$SurvXaxis * 365.25
+      #      meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
+      #      ssGSEA <- ssGSEA[meta_ssgsea_sdf[,1],]
+      #    }
+      #  }
+      #  
+      #  if (isTruthy(meta_ssgsea_sdf)) {
+      #    if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
+      #      if (length(meta_ssgsea_sdf[,4]) > 1) {
+      #        res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
+      #        cutp <- res.cut$cutpoint[["cutpoint"]]
+      #        res.cat <- surv_categorize(res.cut)
+      #        ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- res.cat[,3]
+      #      }
+      #    }
+      #  }
+      #  
+      #  
+      #  ssGSEA[,paste0(geneset_name,"_VAR_Q")] <- quartile_conversion(ssGSEA[,1])
+      #  ssGSEA[,paste0(geneset_name,"_QuartileCutP")] <- paste("", ssGSEA[,paste0(geneset_name,"_VAR_Q")], sep="")
+      #  ssGSEA[,paste0(geneset_name,"_MedianCutP")] <- highlow(ssGSEA[,1])
+      #  ssGSEA[,paste0(geneset_name,"_TopBottomCutP")] <- quantile_conversion(ssGSEA[,1], quantCutoff)
+      #  ssGSEA[which(ssGSEA[,paste0(geneset_name,"_TopBottomCutP")] == "BetweenCutoff"),paste0(geneset_name,"_TopBottomCutP")] <- NA
+      #  ssGSEA[,paste0(geneset_name,"_UserCutP")] <- quantile_conversion2(ssGSEA[,1], quantCutoff2)
+      #  
+      #  meta_ssGSEA <- merge(meta,ssGSEA)
+      #  meta_ssGSEA
+      #  
+      #})
       
       
       ## Median CutP -----------------------------------------------------------
@@ -2211,13 +2303,15 @@ server <- function(input, output, session) {
         } else {
           xBreaks <- input$SurvXaxisBreaks * 30.4375
         }
-        if (!is.null(input$SurvXaxis)) {
+        if (isTruthy(input$SurvXaxis)) {
           if (input$SurvYearOrMonth == "Years") {
             xaxlim <- input$SurvXaxis * 365.25
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
             #xBreaks <- input$SurvXaxisBreaks * 365.25
           } else {
             #xBreaks <- input$SurvXaxisBreaks * 30.4375
             xaxlim <- input$SurvXaxis * 30.4375
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
           }
         } else {
           xaxlim <- NULL
@@ -2389,13 +2483,15 @@ server <- function(input, output, session) {
         } else {
           xBreaks <- input$SurvXaxisBreaks * 30.4375
         }
-        if (!is.null(input$SurvXaxis)) {
+        if (isTruthy(input$SurvXaxis)) {
           if (input$SurvYearOrMonth == "Years") {
             xaxlim <- input$SurvXaxis * 365.25
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
             #xBreaks <- input$SurvXaxisBreaks * 365.25
           } else {
             #xBreaks <- input$SurvXaxisBreaks * 30.4375
             xaxlim <- input$SurvXaxis * 30.4375
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
           }
         } else {
           xaxlim <- NULL
@@ -2557,13 +2653,15 @@ server <- function(input, output, session) {
         } else {
           xBreaks <- input$SurvXaxisBreaks * 30.4375
         }
-        if (!is.null(input$SurvXaxis)) {
+        if (isTruthy(input$SurvXaxis)) {
           if (input$SurvYearOrMonth == "Years") {
             xaxlim <- input$SurvXaxis * 365.25
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
             #xBreaks <- input$SurvXaxisBreaks * 365.25
           } else {
             #xBreaks <- input$SurvXaxisBreaks * 30.4375
             xaxlim <- input$SurvXaxis * 30.4375
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
           }
         } else {
           xaxlim <- NULL
@@ -2730,13 +2828,15 @@ server <- function(input, output, session) {
         } else {
           xBreaks <- input$SurvXaxisBreaks * 30.4375
         }
-        if (!is.null(input$SurvXaxis)) {
+        if (isTruthy(input$SurvXaxis)) {
           if (input$SurvYearOrMonth == "Years") {
             xaxlim <- input$SurvXaxis * 365.25
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
             #xBreaks <- input$SurvXaxisBreaks * 365.25
           } else {
             #xBreaks <- input$SurvXaxisBreaks * 30.4375
             xaxlim <- input$SurvXaxis * 30.4375
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
           }
         } else {
           xaxlim <- NULL
@@ -2903,13 +3003,15 @@ server <- function(input, output, session) {
         } else {
           xBreaks <- input$SurvXaxisBreaks * 30.4375
         }
-        if (!is.null(input$SurvXaxis)) {
+        if (isTruthy(input$SurvXaxis)) {
           if (input$SurvYearOrMonth == "Years") {
             xaxlim <- input$SurvXaxis * 365.25
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
             #xBreaks <- input$SurvXaxisBreaks * 365.25
           } else {
             #xBreaks <- input$SurvXaxisBreaks * 30.4375
             xaxlim <- input$SurvXaxis * 30.4375
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
           }
         } else {
           xaxlim <- NULL
@@ -3105,12 +3207,14 @@ server <- function(input, output, session) {
         } else {
           xBreaks <- input$SurvXaxisBreaks * 30.4375
         }
-        if (!is.null(input$SurvXaxis)) {
+        if (isTruthy(input$SurvXaxis)) {
           if (input$SurvYearOrMonth == "Years") {
             xaxlim <- input$SurvXaxis * 365.25
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
             #xBreaks <- input$SurvXaxisBreaks * 365.25
           } else {
             #xBreaks <- input$SurvXaxisBreaks * 30.4375
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
             xaxlim <- input$SurvXaxis * 30.4375
           }
         } else {
@@ -3146,6 +3250,7 @@ server <- function(input, output, session) {
             SurvPlotTitle <- input$SurvPlotTitleUniVar
           }
         }
+        
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature, univar = Feature)
         colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- "Feature"
@@ -3741,12 +3846,14 @@ server <- function(input, output, session) {
         } else {
           xBreaks <- input$SurvXaxisBreaks * 30.4375
         }
-        if (!is.null(input$SurvXaxis)) {
+        if (isTruthy(input$SurvXaxis)) {
           if (input$SurvYearOrMonth == "Years") {
             xaxlim <- input$SurvXaxis * 365.25
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
             #xBreaks <- input$SurvXaxisBreaks * 365.25
           } else {
             #xBreaks <- input$SurvXaxisBreaks * 30.4375
+            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
             xaxlim <- input$SurvXaxis * 30.4375
           }
         } else {
@@ -5000,7 +5107,7 @@ server <- function(input, output, session) {
       #        geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
       #    }
       #  }
-      #  if (!is.null(input$SurvXaxis)) {
+      #  if (isTruthy(input$SurvXaxis)) {
       #    ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
       #    ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
       #  }
@@ -5132,7 +5239,7 @@ server <- function(input, output, session) {
       #        geom_label_repel(data = MedSurvItem_df, aes(x = x1, y = y1, label = label, size = 4), label.size = NA, show.legend = FALSE)
       #    }
       #  }
-      #  if (!is.null(input$SurvXaxis)) {
+      #  if (isTruthy(input$SurvXaxis)) {
       #    ggsurv$plot$coordinates$limits$x <- c(0,xaxlim)
       #    ggsurv$table$coordinates$limits$x <- c(0,xaxlim)
       #  }
