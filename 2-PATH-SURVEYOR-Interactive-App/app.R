@@ -1,4 +1,4 @@
-version_id <- paste0("v2.0.20240821")
+version_id <- paste0("v2.0.20240916")
 
 # User Input -------------------------------------------------------------------
 
@@ -13,7 +13,7 @@ MetaParam_File <- ''
 
 ## Password Settings -----------------------------------------------------------
 Password_Protected <- FALSE
-PasswordSet <- "teamscience"
+PasswordSet <- ""
 
 ## Pre-Selected Inputs ---------------------------------------------------------
 # An option from the meta, All, or NULL
@@ -236,7 +236,7 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                             h3("Survival Plot Parameters"),
                                                                             fluidRow(
                                                                               column(6,
-                                                                                     numericInput("SurvXaxis","Survival Age Limit (years)", value = NA),
+                                                                                     numericInput("SurvXaxis","Survival X-Axis Limit (years)", value = NA),
                                                                                      #uiOutput("rendSurvXaxis"),
                                                                                      numericInput("SurvXaxisBreaks","Survival X-Axis Breaks (Years):",value = 1, min = 0, step = 0.25),
                                                                                      selectInput("SurvLegendPos","Legend Position",choices = c("right","left","top","bottom","none"))
@@ -1821,38 +1821,6 @@ server <- function(input, output, session) {
         updateSelectizeInput(session = session, inputId = "SurvivalType_id",choices = SurIDChoices, server = T)
       })
       
-      #observe({
-      #  req(meta_react())
-      #  req(input$SurvivalType_time)
-      #  req(input$SurvivalType_id)
-      #  req(input$SurvYearOrMonth)
-      #  meta_ssgsea <- meta_react()
-      #  yOm <- input$SurvYearOrMonth
-      #  surv_time_col <- input$SurvivalType_time
-      #  max_time <- ceiling(max(meta_ssgsea[,surv_time_col], na.rm = T)/365.25)
-      #  if (yOm == "Years") {
-      #    updateNumericInput(session,"SurvXaxis","Survival Age Limit (years)", value = max_time)
-      #  } else if (yOm == "Months") {
-      #    updateNumericInput(session,"SurvXaxis","Survival Age Limit (months)", value = max_time*12)
-      #  }
-      #})
-      
-      #output$rendSurvXaxis <- renderUI({
-      #  req(ssGSEAmeta())
-      #  req(input$SurvivalType_time)
-      #  req(input$SurvivalType_id)
-      #  req(input$SurvYearOrMonth)
-      #  meta_ssgsea <- ssGSEAmeta()
-      #  yOm <- input$SurvYearOrMonth
-      #  surv_time_col <- input$SurvivalType_time
-      #  surv_id_col <- input$SurvivalType_id
-      #  max_time <- ceiling(max(meta_ssgsea[,surv_time_col])/365.25)
-      #  if (yOm == "Years") {
-      #    numericInput("SurvXaxis","Survival Age Limit (years)", value = max_time)
-      #  } else if (yOm == "Months") {
-      #    numericInput("SurvXaxis","Survival Age Limit (months)", value = max_time*12)
-      #  }
-      #})
       
       observe({
         req(input$SurvYearOrMonth)
@@ -2135,21 +2103,21 @@ server <- function(input, output, session) {
                   
                   #print(input$SurvXaxis)
                   #print(input$SurvYearOrMonth)
-                  if (isTruthy(input$SurvXaxis)) {
-                    if (input$SurvYearOrMonth == "Months") {
-                      xaxlim <- input$SurvXaxis * 30.4375
-                      meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
-                      ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
-                    } else {
-                      xaxlim <- input$SurvXaxis * 365.25
-                      meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
-                      ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
-                    }
-                  } else {
-                    xaxlim <- max(meta_ssgsea_sdf[,surv_time_col],na.rm = T)
-                    meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
-                    ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
-                  }
+                  #if (isTruthy(input$SurvXaxis)) {
+                  #  if (input$SurvYearOrMonth == "Months") {
+                  #    xaxlim <- input$SurvXaxis * 30.4375
+                  #    meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
+                  #    ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
+                  #  } else {
+                  #    xaxlim <- input$SurvXaxis * 365.25
+                  #    meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
+                  #    ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
+                  #  }
+                  #} else {
+                  #  xaxlim <- max(meta_ssgsea_sdf[,surv_time_col],na.rm = T)
+                  #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
+                  #  ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
+                  #}
                   
                   #print(head(meta_ssgsea_sdf))
                   #save(list = ls(), file = "ssgsea_env.RData", envir = environment())
@@ -2349,14 +2317,20 @@ server <- function(input, output, session) {
         form <- paste0("Surv(time,ID) ~ Feature")
         fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
         names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
+        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
         
-        
-        
-        
+        #save(list = ls(),file = "survPlot_env.RData", envir = environment())
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
                  xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
+      
+      #survP <- SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
+      #                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+      #                  xScale = "Years", xBreaks = xBreaks)
+      #
+      
       output$SplotBIN <- renderPlot({
         plot <- SplotBIN_react()
         plot

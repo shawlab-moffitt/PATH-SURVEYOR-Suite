@@ -246,6 +246,7 @@ SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Ye
     xScale <- "d_y"
     xLabel <- "Years"
   }
+  surv_summary(fit)
   ggsurv <- survminer::ggsurvplot(fit, data = df, risk.table = TRUE,
                                   title = title,
                                   xscale = c(xScale),
@@ -267,6 +268,20 @@ SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Ye
                                   risk.table.height = 0.20,
                                   surv.median.line = median
   )
+  #test1 <- levels(ggsurv[["table"]][["data"]][["strata"]])
+  #test2 <- as.character(levels(ggsurv[["table"]][["data"]][["strata"]]))
+  #test3 <- gsub("_"," ",levels(ggsurv[["table"]][["data"]][["strata"]]))
+  #test4 <- gsub("_","-",levels(ggsurv[["table"]][["data"]][["strata"]]))
+  #test5 <- gsub("_"," ",levels(ggsurv[["data.survtable"]][["strata"]]))
+  #
+  #str_wrap(test1,width = 20, whitespace_only = FALSE)
+  #str_wrap(test2,width = 20, whitespace_only = FALSE)
+  #levels(ggsurv[["table"]][["data"]][["strata"]]) <- str_wrap(test3,width = 25, whitespace_only = FALSE)
+  #str_wrap(test4,width = 22, whitespace_only = FALSE)
+  #levels(ggsurv[["data.survtable"]][["strata"]]) <- str_wrap(test5,width = 25, whitespace_only = TRUE)
+  #
+  #
+  #levels(ggsurv[["table"]][["data"]][["strata"]]) <- str_wrap(levels(ggsurv[["table"]][["data"]][["strata"]]),width = 20, whitespace_only = FALSE)
   if (median != "none") {
     MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
     MedSurvItem_df <- MedSurvItem[[1]][["data"]]
@@ -286,6 +301,21 @@ SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Ye
   ggsurv$table <- ggsurv$table + theme_cleantable()
   ggsurv
 }
+
+#df = meta_ssgsea_sdf
+#title = PlotTitle
+#ylab = paste(SurvDateType,"Survival Probability")
+#pval = show_pval
+#conf = ShowConfInt
+#legend = showLegend
+#median = showMedSurv
+#xlim = xaxlim
+#xScale = "Years"
+#xBreaks = 365.25
+#
+#SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
+#         pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+#         xScale = "Years", xBreaks = xBreaks)
 
 SurvPlotTitle <- function(SampleTypeSelected,geneset_name = NULL,scoreMethodLab,Feature,subFeature,CutPLabel,univar = NULL,multivar = NULL) {
   if (isTruthy(geneset_name)) {
