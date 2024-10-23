@@ -1,4 +1,4 @@
-version_id <- paste0("v2.0.20240916")
+version_id <- paste0("v2.0.20241023")
 
 # User Input -------------------------------------------------------------------
 
@@ -1117,7 +1117,7 @@ if (Password_Protected) {
 
 server <- function(input, output, session) {
   
-  
+  if(!interactive()) pdf(NULL)
   
   # hack to add the logout button to the navbar on app launch
   if (Password_Protected) {
@@ -2496,6 +2496,9 @@ server <- function(input, output, session) {
         SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
+        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
@@ -2666,6 +2669,9 @@ server <- function(input, output, session) {
         SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
+        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
@@ -2841,6 +2847,9 @@ server <- function(input, output, session) {
         SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
+        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
@@ -3016,6 +3025,9 @@ server <- function(input, output, session) {
         SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
         fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
+        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
@@ -3231,6 +3243,8 @@ server <- function(input, output, session) {
         form <- paste0("Surv(time,ID) ~ Feature")
         fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
         names(fit[["strata"]]) <- gsub("^Feature=",paste0(Feature,"="),names(fit[["strata"]]))
+        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
@@ -3295,6 +3309,7 @@ server <- function(input, output, session) {
         req(ssGSEAmeta())
         req(input$SurvivalType_time)
         req(input$SurvivalType_id)
+        req(input$MultiFeatUnivarSelect)
         meta <- ssGSEAmeta()
         geneset <- gs_react()
         geneset_name <- names(geneset)
@@ -3860,6 +3875,8 @@ server <- function(input, output, session) {
         fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
         names(fit[["strata"]]) <- gsub("^Feature1=",paste0(Feature1,"="),names(fit[["strata"]]))
         names(fit[["strata"]]) <- gsub(", Feature2=",paste0(Feature2,"="),names(fit[["strata"]]))
+        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
         
         #form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
         #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
@@ -5965,6 +5982,57 @@ server <- function(input, output, session) {
       # Downloaders ------------------------------------------------------------
       
       ## Path Surv Plots -------------------------------------------------------
+      observe({
+        req(SplotBIN_react())
+        plot <- SplotBIN_react()$plot
+        #pdf(NULL)
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_MedianCutPoint_Survival_",Sys.Date(),".svg")
+        dnldPlot_server("dnldSplotBIN_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(Splot_react())
+        plot <- Splot_react()$plot
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_QuaretileCutPoint_Survival_",Sys.Date(),".svg")
+        dnldPlot_server("dnldSplot_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(ScutPointPlot_react())
+        plot <- ScutPointPlot_react()$plot
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_OptimalCutPoint_Survival_",Sys.Date(),".svg")
+        dnldPlot_server("dnldScutPointPlot_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(SquantPlot_react())
+        plot <- SquantPlot_react()$plot
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_TopBottomCutPoint_Survival_",Sys.Date(),".svg")
+        dnldPlot_server("dnldSquantPlot_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(SquantPlot2_react())
+        plot <- SquantPlot2_react()$plot
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_UserCutPoint_Survival_",Sys.Date(),".svg")
+        dnldPlot_server("dnldSquantPlot2_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
       #observe({
       #  req(SplotBIN_react())
       #  plot <- SplotBIN_react()$plot
@@ -5991,6 +6059,56 @@ server <- function(input, output, session) {
       #})
       #
       ### Path Density Plots ----------------------------------------------------
+      observe({
+        req(ssgseaBINDensity_react())
+        plot <- ssgseaBINDensity_react()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_MedianCutPoint_Density_",Sys.Date(),".svg")
+        dnldPlot_server("dnldssgseaBINDensity_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(ssgseaQuartDensity_react())
+        plot <- ssgseaQuartDensity_react()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_QuaretileCutPoint_Density_",Sys.Date(),".svg")
+        dnldPlot_server("dnldssgseaQuartDensity_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(ssgseaCutPDensity_react())
+        plot <- ssgseaCutPDensity_react()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_OptimalCutPoint_Density_",Sys.Date(),".svg")
+        dnldPlot_server("dnldssgseaCutPDensity_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(ssgseaQuantDensity_react())
+        plot <- ssgseaQuantDensity_react()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_TopBottomCutPoint_Density_",Sys.Date(),".svg")
+        dnldPlot_server("dnldssgseaQuantDensity_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(ssgseaQuant2Density_react())
+        plot <- ssgseaQuant2Density_react()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_UserCutPoint_Density_",Sys.Date(),".svg")
+        dnldPlot_server("dnldssgseaQuant2Density_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
       #
       #observe({
       #  req(ssgseaBINDensity_react())
@@ -6024,6 +6142,57 @@ server <- function(input, output, session) {
       #})
       #
       ### Univariate Plots ------------------------------------------------------
+      observe({
+        req(featSplot_react())
+        plot <- featSplot_react()$plot
+        Feature <- input$SingleSurvivalFeature
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        Feature <- gsub("[[:space:]]|[[:punct:]]","",Feature)
+        file_name <- paste0(project,"_",Feature,"_Univariate_Survival_",Sys.Date(),".svg")
+        dnldPlot_server("dnldfeatSplot_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      output$dnldUniVarForestplot_SVG <- shiny::downloadHandler(
+        filename = function() {
+          project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+          gsub("[[:space:]]","",paste0(project,"_Univariate_Forest_",Sys.Date(),".svg"))
+        },
+        content = function(file) {
+          ggplot2::ggsave(filename = file, plot = SinglevarForestPlot_react(),
+                          width = input$PlotDnldWidth, height = input$PlotDnldHight,units = input$PlotDnldUnits)
+        }
+      )
+      observe({
+        req(MultiFeatUnivarForestPlot_react())
+        plot <- MultiFeatUnivarForestPlot_react()
+        Feature <- input$SingleSurvivalFeature
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        Feature <- gsub("[[:space:]]|[[:punct:]]","",Feature)
+        file_name <- paste0(project,"_",Feature,"_Univariate_MultiFeatureForest_",Sys.Date(),".svg")
+        dnldPlot_server("dnldMultiFeatUnivarForestPlot_SVG",plot,file_name,type = "forest")
+      })
+      observe({
+        req(MultiFeatUnivarForestPlotTab_react())
+        plot <- MultiFeatUnivarForestPlotTab_react()[,-7]
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_Univariate_MultiFeatureForest_",Sys.Date(),".txt")
+        dnldDF_server("dnldMultiFeatUnivarForestPlot_table",plot,file_name)
+      })
+      observe({
+        req(MultiFeat_ForestMeta())
+        plot <- MultiFeat_ForestMeta()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_Univariate_MultiFeatureForestData_",Sys.Date(),".txt")
+        dnldDF_server("dnldunivarForestPlotTable",plot,file_name)
+      })
+      observe({
+        req(UnivarLinearityPlot_react())
+        plot <- UnivarLinearityPlot_react()
+        Feature <- input$SingleSurvivalFeature
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        Feature <- gsub("[[:space:]]|[[:punct:]]","",Feature)
+        file_name <- paste0(project,"_",Feature,"_Univariate_Linearity_",Sys.Date(),".svg")
+        dnldPlot_server("dnldUniVarLinplot_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
       #
       #observe({
       #  req(featSplot_react())
@@ -6069,6 +6238,23 @@ server <- function(input, output, session) {
       #})
       #
       ### Bivariate Add Plots ------------------------------------------------------
+      output$dnldBiVarAddForest_SVG <- shiny::downloadHandler(
+        filename = function() {
+          project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+          gsub("[[:space:]]","",paste0(project,"_BivariateAdditive_Forest_",Sys.Date(),".svg"))
+        },
+        content = function(file) {
+          ggplot2::ggsave(filename = file, plot = BivarForestPlot_react(),
+                          width = input$PlotDnldWidth, height = input$PlotDnldHight,units = input$PlotDnldUnits)
+        }
+      )
+      observe({
+        req(BivarLinearityPlot_react())
+        plot <- BivarLinearityPlot_react()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_BivariateAdditive_Linearity_",Sys.Date(),".svg")
+        dnldPlot_server("dnldBiVarAddLinplot_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
       #
       ##observe({
       ##  req(BivarForestPlot_react())
@@ -6092,6 +6278,20 @@ server <- function(input, output, session) {
       #})
       #
       ### Bivariate Int Plots ------------------------------------------------------
+      observe({
+        req(featSplotBi_react())
+        plot <- featSplotBi_react()$plot
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_BivariateInteractive_Survival_",Sys.Date(),".svg")
+        dnldPlot_server("dnldfeatSplotBi_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(BivarLinearityPlotInter_react())
+        plot <- BivarLinearityPlotInter_react()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_BivariateInteractive_Linearity_",Sys.Date(),".svg")
+        dnldPlot_server("dnldBiVarIntLinplot_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
       #
       #observe({
       #  req(featSplotBi_react())
@@ -6107,6 +6307,36 @@ server <- function(input, output, session) {
       #})
       #
       ### Multivariate Plots ------------------------------------------------------
+      output$dnldMultiVarForest_SVG <- shiny::downloadHandler(
+        filename = function() {
+          project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+          paste0(project,"_Multivariate_Forest_",Sys.Date(),".svg")
+        },
+        content = function(file) {
+          ggplot2::ggsave(filename = file, plot = MultivarForestPlot_react(),
+                          width = input$PlotDnldWidth, height = input$PlotDnldHight,units = input$PlotDnldUnits)
+        })
+      observe({
+        req(MultiFeatMultivarForestPlot_react())
+        plot <- MultiFeatMultivarForestPlot_react()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_Multivariate_MultiFeatureForest_",Sys.Date(),".svg")
+        dnldPlot_server("dnldMultiFeatMultivarForestPlot_SVG",plot,file_name,type = "forest")
+      })
+      observe({
+        req(MultiFeatMultivarForestPlotTab_react())
+        plot <- MultiFeatMultivarForestPlotTab_react()[,-7]
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_Multivariate_MultiFeatureForest_",Sys.Date(),".txt")
+        dnldDF_server("dnldMultiFeatMultivarForestPlot_table",plot,file_name)
+      })
+      observe({
+        req(MultiFeat_InterForestMeta())
+        plot <- MultiFeat_InterForestMeta()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_Multivariate_MultiFeatureForestData_",Sys.Date(),".txt")
+        dnldDF_server("dnldmultiForestPlotTable",plot,file_name)
+      })
       #
       ##observe({
       ##  req(MultivarForestPlot_react())
@@ -6141,6 +6371,127 @@ server <- function(input, output, session) {
       #})
       #
       ### Data Exploration Plots ------------------------------------------------------
+      observe({
+        req(ssGSEAmeta())
+        plot <- ssGSEAmeta()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_Clinical_",Sys.Date(),".txt")
+        dnldDF_server("DnldClin",plot,file_name)
+      })
+      exprDnld <- reactive({
+        req(exprSub())
+        expr <- as.data.frame(exprSub())
+        expr$Gene <- rownames(expr)
+        expr <- expr %>%
+          relocate(Gene)
+        expr
+      })
+      observe({
+        req(exprDnld())
+        plot <- exprDnld()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_Expression_",Sys.Date(),".txt")
+        dnldDF_server("DnldExpr",plot,file_name)
+      })
+      observe({
+        req(ssgseaDensity_react())
+        plot <- ssgseaDensity_react()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_Density_",Sys.Date(),".svg")
+        dnldPlot_server("dnldssgseaDensity_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(ssGSEAmeta())
+        plot <- ssGSEAmeta()[,c(colnames(ssGSEAmeta())[1],names(gs_react()))]
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        geneset_name <- gsub("[[:space:]]|[[:punct:]]","",geneset_name)
+        file_name <- paste0(project,"_",geneset_name,"_DensityData_",Sys.Date(),".txt")
+        dnldDF_server("dnldssgseaDensityTable",plot,file_name)
+      })
+      observe({
+        req(FeatCompScatter_react())
+        plot <- FeatCompScatter_react()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_ScatterComparisonTable_",Sys.Date(),".txt")
+        dnldDF_server("dnldFeatCompScatterTable",plot,file_name)
+      })
+      observe({
+        req(Sboxplot_react())
+        plot <- Sboxplot_react()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_RiskStrat_Boxplot_",Sys.Date(),".svg")
+        dnldPlot_server("dnldSboxplot_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(SboxplotReact())
+        req(input$SurvivalType_id)
+        req(input$SurvivalType_time)
+        plot <- as.data.frame(SboxplotReact()[,c(colnames(SboxplotReact())[1],input$SurvivalType_time,input$SurvivalType_id,names(gs_react()),"SurvivalCutoff")])
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_RiskStrat_BoxplotTable_",Sys.Date(),".txt")
+        dnldDF_server("dnldSBoxplotTab",plot,file_name)
+      })
+      dnldHeatExpr <- reactive({
+        req(exprSub())
+        req(gs_react())
+        expr <- exprSub()
+        GSgenes <- unname(unlist(gs_react()))
+        if (length(GSgenes) > 0) {
+          expr <- as.data.frame(expr[which(rownames(expr) %in% GSgenes),])
+          expr$Gene <- rownames(expr)
+          expr <- expr %>%
+            relocate(Gene)
+          expr
+        }
+      })
+      observe({
+        req(Sheatmap_react())
+        plot <- Sheatmap_react()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_RiskStrat_Heatmap_",Sys.Date(),".svg")
+        dnldPlot_server("dnldSheatmap_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,type = "complex")
+      })
+      observe({
+        req(dnldHeatExpr())
+        plot <- dnldHeatExpr()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_RiskStrat_Heatmap_Expression",Sys.Date(),".txt")
+        dnldDF_server("dnldSheatmapexpr",plot,file_name)
+      })
+      observe({
+        req(Featureboxplot_react())
+        plot <- Featureboxplot_react()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_FeatureStrat_Boxplot_",Sys.Date(),".svg")
+        dnldPlot_server("dnldFboxplot_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,input$PlotDnldUnits)
+      })
+      observe({
+        req(ssGSEAmeta())
+        req(input$BoxplotFeature)
+        plot <- as.data.frame(ssGSEAmeta()[,c(colnames(ssGSEAmeta())[1],input$BoxplotFeature,names(gs_react()))])
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_FeatureStrat_BoxplotTable_",Sys.Date(),".txt")
+        dnldDF_server("dnldFeatureboxplotTab",plot,file_name)
+      })
+      observe({
+        req(FeatureHeatmap_react())
+        plot <- FeatureHeatmap_react()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_FeatureStrat_Heatmap_",Sys.Date(),".svg")
+        dnldPlot_server("dnldFheatmap_SVG",plot,file_name,input$PlotDnldHight,input$PlotDnldWidth,type = "complex")
+      })
+      observe({
+        req(dnldHeatExpr())
+        plot <- dnldHeatExpr()
+        project <- gsub("[[:space:]]|[[:punct:]]","",ProjectName_react())
+        file_name <- paste0(project,"_FeatureStrat_Heatmap_Expression",Sys.Date(),".txt")
+        dnldDF_server("dnldFheatmapexpr",plot,file_name)
+      })
       #
       #observe({
       #  req(ssGSEAmeta())
