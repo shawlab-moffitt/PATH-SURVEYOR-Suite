@@ -3317,14 +3317,17 @@ server <- function(input, output, session) {
         surv_id_col <- input$SurvivalType_id
         colnames(meta)[1] <- "SampleName"
         FeatCols <- c("SampleName",surv_time_col,surv_id_col,input$MultiFeatUnivarSelect)
-        metaSub <- meta[,FeatCols]
-        continuousCols <- GetColsOfType(metaSub[,-c(1:3), drop = F],"continuous")
-        metaSub[,continuousCols] <- apply(metaSub[,continuousCols, drop = F],2,function(x) highlow2(x))
-        if (paste0(geneset_name,"_MedianCutP") %in% colnames(metaSub)) {
-          metaSub[,paste0(geneset_name,"_MedianCutP")] <- as.factor(metaSub[,paste0(geneset_name,"_MedianCutP")])
-          metaSub[,paste0(geneset_name,"_MedianCutP")] <- relevel(metaSub[,paste0(geneset_name,"_MedianCutP")], ref = "Low")
+        #print(FeatCols)
+        if (all(FeatCols) %in% colnames(meta)) {
+          metaSub <- meta[,FeatCols]
+          continuousCols <- GetColsOfType(metaSub[,-c(1:3), drop = F],"continuous")
+          metaSub[,continuousCols] <- apply(metaSub[,continuousCols, drop = F],2,function(x) highlow2(x))
+          if (paste0(geneset_name,"_MedianCutP") %in% colnames(metaSub)) {
+            metaSub[,paste0(geneset_name,"_MedianCutP")] <- as.factor(metaSub[,paste0(geneset_name,"_MedianCutP")])
+            metaSub[,paste0(geneset_name,"_MedianCutP")] <- relevel(metaSub[,paste0(geneset_name,"_MedianCutP")], ref = "Low")
+          }
+          metaSub
         }
-        metaSub
         
       })
       output$univarForestPlotTable <- DT::renderDataTable({
