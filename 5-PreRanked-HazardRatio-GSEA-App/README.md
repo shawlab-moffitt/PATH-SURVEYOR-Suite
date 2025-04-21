@@ -6,7 +6,7 @@ The integration of patient genome expression data, phenotypye data, and clinical
 
 Here we focus on Gene Set Enrichment Analysis (GSEA) with a pre-ranked list of genes through the use of the DRPPM-Hazard-Ratio-Ranked-GSEA R Shiny App. This app utilizes the list of hazard ratio ranked genes that would be output from the [PATH-SURVEYOR pipeline](https://github.com/shawlab-moffitt/PATH-SURVEYOR-Pipeline) when the user chooses to analyze raw gene expression, in general this app can accept any file of pre-ranked genes if desired. This allows the user to control what the method for ranking and alaysis to determine which gene sets may be significantly enriched from the expression data. The user can perform GSEA with many available gene sets within the app, such as MSigDB, LINCS L1000, Cell Marker, ER Stress, Immune Signatures, as well as upload their own gene set file to use. Furthermore, the user can visualize each gene set as an enrichment plot and the leading edge genes within that gene set.
 
-An example Pre-Ranked GSEA R Shiny App is hosted here: http://shawlab.science/shiny/PATH_SURVEYOR_PreRanked_GSEA_App/ where you are welcome to use the example inputs provided in the GitHub or your own to explore.
+An example Pre-Ranked GSEA R Shiny App is hosted here: https://shawlab-moffitt.shinyapps.io/preranked_hazardratio_gsea/ where you are welcome to use the example inputs provided in the GitHub or your own to explore.
 
 ## The PATH-SURVEYOR Family
 
