@@ -1,4 +1,4 @@
-version_id <- paste0("v2.0.20241023")
+version_id <- paste0("v2.0.20250602")
 
 # User Input -------------------------------------------------------------------
 
@@ -13,7 +13,7 @@ MetaParam_File <- ''
 
 ## Password Settings -----------------------------------------------------------
 Password_Protected <- FALSE
-PasswordSet <- ""
+PasswordSet <- ''
 
 ## Pre-Selected Inputs ---------------------------------------------------------
 # An option from the meta, All, or NULL
@@ -27,7 +27,7 @@ PreSelect_SecondaryFeature <- NULL
 ## User make sure paths are correct
 GeneSet_File <- "Genesets/GeneSet_List_HS_v6.RData"
 GeneSetTable_File <- "Genesets/GeneSet_CatTable_v6.txt"
-About_MD_File <- "PurposeAndMethods.Rmd"
+About_MD_File <- "Example_Data/PurposeAndMethods.Rmd"
 ExampleExpr_File <- "Example_Data/TCGA_CHOL_Expression_PatientID.txt"
 ExampleClin_File <- "Example_Data/TCGA_CHOL_Clinical_PatientID.txt"
 ExampleParam_File <- "Example_Data/TCGA_SurvivalApp_Global_Parameters.txt"
@@ -35,7 +35,6 @@ ExampleParam_File <- "Example_Data/TCGA_SurvivalApp_Global_Parameters.txt"
 ## Check if Immune deconvolution package is installed
 immudecon <- "immunedeconv"
 immudecon_check <- immudecon %in% rownames(installed.packages())
-
 
 # Input Check ------------------------------------------------------------------
 
@@ -225,7 +224,8 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                                        textInput("userGeneSetText","Gene Symbols", placeholder = "Comma, space, or tab delimited")
                                                                       ),
                                                                       value = 3
-                                                             )
+                                                             )#,
+                                                             #selected = 2
                                                            ),
                                                            checkboxInput("ViewGeneSetGenes","View Genes in Selected Gene Set", value = F),
                                                            uiOutput("rendGenesInGeneSetTab")
@@ -1700,16 +1700,25 @@ server <- function(input, output, session) {
       })
       
       metacol_feature <- reactive({
-        req(metaP_react)
+        req(metaP_react())
+        req(gs_react())
         metaP <- metaP_react()
         geneset <- gs_react()
         geneset_name <- names(geneset)
         metacol_feature <- metaP[which(metaP[,2] == "Feature"),1]
-        if ("SampleType" %in% metaP[,2]) {
-          metacol_feature <- ifelse(is.null(metacol_sampletype()),metacol_feature,c(metacol_sampletype(),metacol_feature))
-          metacol_feature <- metacol_feature[-which(metacol_feature == input$FeatureSelection)]
-          metacol_feature <- ifelse(!is.null(input$SampleTypeSelection),metacol_feature[-which(metacol_feature == input$SampleTypeSelection)],metacol_feature)
-        }
+        #if ("SampleType" %in% metaP[,2]) {
+        #  metacol_sampletype <- metacol_sampletype()
+        #  sampType_select <- input$SampleTypeSelection
+        #  feat_select <- input$FeatureSelection
+        #  if (is.null(metacol_sampletype)) {
+        #    metacol_feature <- c(metacol_sampletype,metacol_feature)
+        #  }
+        #  metacol_feature <- metacol_feature[-which(metacol_feature == feat_select)]
+        #  if (!is.null(sampType_select)) {
+        #    metacol_feature <- metacol_feature[-which(metacol_feature == sampType_select)]
+        #  }
+        #}
+        #save(list = ls(), file = "metacol_feat.RData", envir = environment())
         metacol_feature <- c(metacol_feature,geneset_name,paste0(geneset_name,"_QuartileCutP"),paste0(geneset_name,"_MedianCutP"),
                              paste0(geneset_name,"_OptimalCutP"),paste0(geneset_name,"_TopBottomCutP"),paste0(geneset_name,"_UserCutP"))
         metacol_feature
@@ -1795,24 +1804,29 @@ server <- function(input, output, session) {
       output$rendSubFeatureSelection <- renderUI({
         req(input$FeatureSelection)
         meta <- meta_react()
-        if (isTruthy(input$SampleTypeSelection)) {
-          if (input$SampleTypeSelection != "All Sample Types") {
-            metacol_sampletype <- metacol_sampletype()
-            meta <- meta[which(meta[,metacol_sampletype] == input$SampleTypeChoices),]
+        SampleTypeSelection <- input$SampleTypeSelection
+        metacol_sampletype <- metacol_sampletype()
+        FeatureSelection <- input$FeatureSelection
+        PreSelect_SubFeature_react <- PreSelect_SubFeature_react()
+        #save(list = ls(), file = "subFeatureSelection.RData", envir = environment())
+        if (isTruthy(SampleTypeSelection)) {
+          if (SampleTypeSelection != "All Sample Types") {
+            meta <- meta[which(meta[,metacol_sampletype] == SampleTypeSelection),]
           } else {
             meta <- meta
           }
         }
-        if (input$FeatureSelection != "Show all Samples") {
-          SubFeatureChoices <- unique(meta[,input$FeatureSelection])
+        if (FeatureSelection != "Show all Samples") {
+          SubFeatureChoices <- unique(meta[,FeatureSelection])
           SubFeatureChoices <- sort(SubFeatureChoices, decreasing = T, na.last = T)
-          selectInput("subFeatureSelection","Feature Condition:",choices = SubFeatureChoices, selected = PreSelect_SubFeature_react())
+          selectInput("subFeatureSelection","Feature Condition:",choices = SubFeatureChoices, selected = PreSelect_SubFeature_react)
         }
       })
       
       observe({
         req(metacol_survtime())
         SurTimeChoices <- metacol_survtime()
+        
         updateSelectizeInput(session = session, inputId = "SurvivalType_time",choices = SurTimeChoices, server = T)
       })
       observe({
@@ -1998,7 +2012,7 @@ server <- function(input, output, session) {
         req(input$FeatureSelection)
         meta <- meta_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         if (isTruthy(SampleTypeSelected)) {
@@ -2038,8 +2052,10 @@ server <- function(input, output, session) {
         expr <- exprSub()
         geneset <- gs_react()
         geneset_name <- names(geneset)
+        decon_score_cols <- decon_score_cols()
         if (length(unname(unlist(geneset))) > 0) {
-          if (any(unname(unlist(geneset)) %in% rownames(expr))) {
+          if (geneset_name %in% decon_score_cols | any(unname(unlist(geneset)) %in% rownames(expr))) {
+            #if (any(unname(unlist(geneset)) %in% rownames(expr))) {
             if (isTruthy(input$SurvivalType_time) & isTruthy(input$SurvivalType_id) & isTruthy(geneset_name)) {
               SampleNameCol <- metacol_samplename_react()
               quantCutoff <- input$QuantPercent/100
@@ -2047,6 +2063,8 @@ server <- function(input, output, session) {
               surv_time_col <- input$SurvivalType_time
               surv_id_col <- input$SurvivalType_id
               scoreMethod <- input$ScoreMethod
+              geneset_tab <- input$GeneSetTabs
+              #save(list = ls(), file = "sureyor_ssgsea_metabolic_env.RData",envir = environment())
               ## Remove rows with NA in survival column
               meta <- meta[!is.na(meta[,surv_time_col]),]
               meta <- meta[!is.na(meta[,surv_id_col]),]
@@ -2124,7 +2142,10 @@ server <- function(input, output, session) {
                   
                   if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
                     if (length(meta_ssgsea_sdf[,4]) > 1) {
-                      res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name, minprop = 0.01)
+                      meta_ssgsea_sdf_temp <- meta_ssgsea_sdf
+                      colnames(meta_ssgsea_sdf_temp)[which(colnames(meta_ssgsea_sdf_temp) == geneset_name)] <- gsub("[[:punct::]","_",geneset_name)
+                      geneset_name_temp <- gsub("[[:punct::]","_",geneset_name)
+                      res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf_temp,time = surv_time_col, event = surv_id_col, variable = geneset_name_temp, minprop = 0.01)
                       cutp <- res.cut$cutpoint[["cutpoint"]]
                       res.cat <- surv_categorize(res.cut)
                       ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- res.cat[,3]
@@ -2138,7 +2159,9 @@ server <- function(input, output, session) {
                   ssGSEA[which(ssGSEA[,paste0(geneset_name,"_TopBottomCutP")] == "BetweenCutoff"),paste0(geneset_name,"_TopBottomCutP")] <- NA
                   ssGSEA[,paste0(geneset_name,"_UserCutP")] <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
                   
+                  #save(list = ls(), file = "sureyor_ssgsea_metabolic_env3.RData",envir = environment())
                   meta_ssGSEA <- merge(meta,ssGSEA)
+                  #save(list = ls(), file = "sureyor_ssgsea_metabolic_env4.RData",envir = environment())
                   meta_ssGSEA
                 }
               }
@@ -2211,8 +2234,27 @@ server <- function(input, output, session) {
       
       ## Median CutP -----------------------------------------------------------
       
+      observe({
+        ssGSEAmeta <- ssGSEAmeta()
+        survTime <- input$SurvivalType_time
+        survID <- input$SurvivalType_id
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        geneset_name_med <- paste0(geneset_name,"_MedianCutP")
+        #save(list = ls(), file = "sureyor_med_cutp_env.RData",envir = environment())
+      })
+      
       MedianCutP_react <- reactive({
         req(ssGSEAmeta())
+        
+        ssGSEAmeta <- ssGSEAmeta()
+        survTime <- input$SurvivalType_time
+        survID <- input$SurvivalType_id
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        geneset_name_med <- paste0(geneset_name,"_MedianCutP")
+        #save(list = ls(), file = "sureyor_med_cutp_env1.RData",envir = environment())
+        
         geneset <- gs_react()
         geneset_name <- names(geneset)
         SubsetSurvData(ssGSEAmeta(),input$SurvivalType_time,input$SurvivalType_id,paste0(geneset_name,"_MedianCutP"))
@@ -2223,9 +2265,13 @@ server <- function(input, output, session) {
         geneset <- gs_react()
         geneset_name <- names(geneset)
         MedianCutP_react <- MedianCutP_react()
+        #save(list = ls(), file = "sureyor_med_cutp_env2.RData",envir = environment())
         #save(list = ls(), file = "Surv_env.RData", envir = environment())
         CoxPHobj(MedianCutP_react(),paste0(geneset_name,"_MedianCutP"),"Low")
       })
+      #df <- MedianCutP_react
+      #feat <- paste0(geneset_name,"_MedianCutP")
+      #ref <- "Low"
       
       SBinaryHRtab_react <- reactive({
         req(MedianCutPTab_react())
@@ -2236,7 +2282,7 @@ server <- function(input, output, session) {
         HR_Tab <- SBinaryHRtab_react()
         Pval_Tab <- MedianCutPTab_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         geneset <- gs_react()
@@ -2262,7 +2308,7 @@ server <- function(input, output, session) {
         SurvFeature <- paste0(geneset_name,"_MedianCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
@@ -2274,16 +2320,11 @@ server <- function(input, output, session) {
         if (isTruthy(input$SurvXaxis)) {
           if (input$SurvYearOrMonth == "Years") {
             xaxlim <- input$SurvXaxis * 365.25
-            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
-            #xBreaks <- input$SurvXaxisBreaks * 365.25
           } else {
-            #xBreaks <- input$SurvXaxisBreaks * 30.4375
             xaxlim <- input$SurvXaxis * 30.4375
-            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
           }
         } else {
           xaxlim <- NULL
-          #xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -2422,7 +2463,7 @@ server <- function(input, output, session) {
         HR_Tab <- SQuartileHRtab_react()
         Pval_Tab <- QuartileCutPTab_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         geneset <- gs_react()
@@ -2448,7 +2489,7 @@ server <- function(input, output, session) {
         SurvFeature <- paste0(geneset_name,"_QuartileCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
@@ -2491,14 +2532,37 @@ server <- function(input, output, session) {
           }
         }
         
-        PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Quartile Cut-Point")
         
-        SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
-        form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
-        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
+        form <- paste0("Surv(time,ID) ~ Feature")
+        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
         names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
         names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
         names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        
+        
+        
+        
+        PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Quartile Cut-Point")
+        SurvFeature_save <- SurvFeature
+        
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
+        form <- paste0("Surv(time,ID) ~ Feature")
+        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
+        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
+        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        
+        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
+        #SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
+        #SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
+        #form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
+        ##save(list = ls(), file = "surv_plot_env.RData", envir = environment())
+        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        #names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
+        #names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        #names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
@@ -2595,7 +2659,7 @@ server <- function(input, output, session) {
         HR_Tab <- CutPointHRtab_react()
         Pval_Tab <- OptimalCutPTab_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         geneset <- gs_react()
@@ -2621,7 +2685,7 @@ server <- function(input, output, session) {
         SurvFeature <- paste0(geneset_name,"_OptimalCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
@@ -2666,13 +2730,24 @@ server <- function(input, output, session) {
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Optimal Cut-Point")
         
-        SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
-        form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
-        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        #SurvFeature_save <- SurvFeature
+        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
+        #SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
+        #SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
+        #form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
+        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        #names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
+        #names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        #names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        
+        
+        
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
+        form <- paste0("Surv(time,ID) ~ Feature")
+        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
         names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
         names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
         names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
-        
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
                  xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
@@ -2773,7 +2848,7 @@ server <- function(input, output, session) {
         HR_Tab <- SQuantileHRtab_react()
         Pval_Tab <- TopBottomCutPTab_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         geneset <- gs_react()
@@ -2799,7 +2874,7 @@ server <- function(input, output, session) {
         SurvFeature <- paste0(geneset_name,"_TopBottomCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
@@ -2844,9 +2919,20 @@ server <- function(input, output, session) {
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"top/bottom quantile cut-points")
         
-        SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
-        form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
-        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        #SurvFeature_save <- SurvFeature
+        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
+        #SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
+        #SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
+        #form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
+        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        #names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
+        #names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        #names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        
+        
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
+        form <- paste0("Surv(time,ID) ~ Feature")
+        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
         names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
         names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
         names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
@@ -2951,7 +3037,7 @@ server <- function(input, output, session) {
         HR_Tab <- SQuantileHR2tab_react()
         Pval_Tab <- UserCutPTab_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         geneset <- gs_react()
@@ -2977,7 +3063,7 @@ server <- function(input, output, session) {
         SurvFeature <- paste0(geneset_name,"_UserCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
-        SampleTypeSelected <- input$SampleTypeChoices
+        SampleTypeSelected <- input$SampleTypeSelection
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
@@ -3022,9 +3108,20 @@ server <- function(input, output, session) {
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"user cut-point")
         
-        SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
-        form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
-        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        #SurvFeature_save <- SurvFeature
+        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
+        #SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
+        #SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
+        #form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
+        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        #names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
+        #names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+        #names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        
+        
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
+        form <- paste0("Surv(time,ID) ~ Feature")
+        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
         names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
         names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
         names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
@@ -3155,8 +3252,8 @@ server <- function(input, output, session) {
             tab
           }
         } else {
-          colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("-","_",Feature)
-          Feature <- gsub("-","_",Feature)
+          colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("[[:punct:]]","_",Feature)
+          Feature <- gsub("[[:punct:]]","_",Feature)
           Feature <- sprintf(ifelse((grepl(" ", Feature) | !is.na(suppressWarnings(as.numeric(substring(Feature, 1, 1))))), "`%s`", "%s"), Feature)
           tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature)),data = meta_ssgsea_sdf)
           tab
@@ -3318,7 +3415,7 @@ server <- function(input, output, session) {
         colnames(meta)[1] <- "SampleName"
         FeatCols <- c("SampleName",surv_time_col,surv_id_col,input$MultiFeatUnivarSelect)
         #print(FeatCols)
-        if (all(FeatCols) %in% colnames(meta)) {
+        if (all(FeatCols %in% colnames(meta))) {
           metaSub <- meta[,FeatCols]
           continuousCols <- GetColsOfType(metaSub[,-c(1:3), drop = F],"continuous")
           metaSub[,continuousCols] <- apply(metaSub[,continuousCols, drop = F],2,function(x) highlow2(x))
@@ -3601,10 +3698,10 @@ server <- function(input, output, session) {
         df <- BiVarAddFeature_react()
         Feature1 <- input$SurvivalFeatureBi1
         Feature2 <- input$SurvivalFeatureBi2
-        colnames(df)[which(colnames(df) == Feature1)] <- gsub("-","_",Feature1)
-        Feature1 <- gsub("-","_",Feature1)
-        colnames(df)[which(colnames(df) == Feature2)] <- gsub("-","_",Feature2)
-        Feature2 <- gsub("-","_",Feature2)
+        colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
+        Feature1 <- gsub("[[:punct:]]","_",Feature1)
+        colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
+        Feature2 <- gsub("[[:punct:]]","_",Feature2)
         Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
         Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
         tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2))),data = df)
@@ -3613,8 +3710,8 @@ server <- function(input, output, session) {
       BiVarAddTabFeat1_react <- reactive({
         Feature1 <- input$SurvivalFeatureBi1
         df <- BiVarAddFeature_react()
-        colnames(df)[which(colnames(df) == Feature1)] <- gsub("-","_",Feature1)
-        Feature1 <- gsub("-","_",Feature1)
+        colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
+        Feature1 <- gsub("[[:punct:]]","_",Feature1)
         Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
         tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature1)),data = df)
         tab
@@ -3622,8 +3719,8 @@ server <- function(input, output, session) {
       BiVarAddTabFeat2_react <- reactive({
         Feature2 <- input$SurvivalFeatureBi2
         df <- BiVarAddFeature_react()
-        colnames(df)[which(colnames(df) == Feature2)] <- gsub("-","_",Feature2)
-        Feature2 <- gsub("-","_",Feature2)
+        colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
+        Feature2 <- gsub("[[:punct:]]","_",Feature2)
         Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
         tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature2)),data = df)
         tab
@@ -3732,37 +3829,41 @@ server <- function(input, output, session) {
         meta_ssgsea <- ssGSEAmeta()
         Feature1 <- input$SurvivalFeatureBi1Inter
         Feature1ref <- input$SurvFeatVariableBi1Inter
-        if (Feature1 %in% colnames(meta_ssgsea)) {
-          if (input$BiVarIntNAcheck1 == TRUE) {
-            meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
-            meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
-            meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
-          }
-          if (input$BiVarIntContCheck1 == TRUE) {
-            if (input$BiVarIntContHiLoCheck1 == TRUE) {
-              meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
+        if (Feature1ref %in% meta_ssgsea[,Feature1]) {
+          if (Feature1 %in% colnames(meta_ssgsea)) {
+            if (input$BiVarIntNAcheck1 == TRUE) {
+              meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+              meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
+              meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
             }
-          }
-          if (input$BiVarIntContCheck1 == FALSE) {
-            meta_ssgsea[,Feature1] <- factor(meta_ssgsea[,Feature1])
-            meta_ssgsea[,Feature1] <- relevel(meta_ssgsea[,Feature1], ref = Feature1ref)
+            if (input$BiVarIntContCheck1 == TRUE) {
+              if (input$BiVarIntContHiLoCheck1 == TRUE) {
+                meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
+              }
+            }
+            if (input$BiVarIntContCheck1 == FALSE) {
+              meta_ssgsea[,Feature1] <- factor(meta_ssgsea[,Feature1])
+              meta_ssgsea[,Feature1] <- relevel(meta_ssgsea[,Feature1], ref = Feature1ref)
+            }
           }
           
           Feature2 <- input$SurvivalFeatureBi2Inter
           Feature2ref <- input$SurvFeatVariableBi2Inter
-          if (input$BiVarIntNAcheck2 == TRUE) {
-            meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
-            meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
-            meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
-          }
-          if (input$BiVarIntContCheck2 == TRUE) {
-            if (input$BiVarIntContHiLoCheck2 == TRUE) {
-              meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
+          if (Feature2ref %in% meta_ssgsea[,Feature2]) {
+            if (input$BiVarIntNAcheck2 == TRUE) {
+              meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+              meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
+              meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
             }
-          }
-          if (input$BiVarIntContCheck2 == FALSE) {
-            meta_ssgsea[,Feature2] <- factor(meta_ssgsea[,Feature2])
-            meta_ssgsea[,Feature2] <- relevel(meta_ssgsea[,Feature2], ref = Feature2ref)
+            if (input$BiVarIntContCheck2 == TRUE) {
+              if (input$BiVarIntContHiLoCheck2 == TRUE) {
+                meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
+              }
+            }
+            if (input$BiVarIntContCheck2 == FALSE) {
+              meta_ssgsea[,Feature2] <- factor(meta_ssgsea[,Feature2])
+              meta_ssgsea[,Feature2] <- relevel(meta_ssgsea[,Feature2], ref = Feature2ref)
+            }
           }
           SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature1,Feature2)
         }
@@ -3775,10 +3876,11 @@ server <- function(input, output, session) {
         df <- BiVarIntFeature_react()
         Feature1 <- input$SurvivalFeatureBi1Inter
         Feature2 <- input$SurvivalFeatureBi2Inter
-        colnames(df)[which(colnames(df) == Feature1)] <- gsub("-","_",Feature1)
-        Feature1 <- gsub("-","_",Feature1)
-        colnames(df)[which(colnames(df) == Feature2)] <- gsub("-","_",Feature2)
-        Feature2 <- gsub("-","_",Feature2)
+        #save(list = ls(), file = "bivar_plot_env.RData", envir = environment())
+        colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
+        Feature1 <- gsub("[[:punct:]]","_",Feature1)
+        colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
+        Feature2 <- gsub("[[:punct:]]","_",Feature2)
         Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
         Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"*",Feature2)))
@@ -3791,10 +3893,10 @@ server <- function(input, output, session) {
         df <- BiVarIntFeature_react()
         Feature1 <- input$SurvivalFeatureBi1Inter
         Feature2 <- input$SurvivalFeatureBi2Inter
-        colnames(df)[which(colnames(df) == Feature1)] <- gsub("-","_",Feature1)
-        Feature1 <- gsub("-","_",Feature1)
-        colnames(df)[which(colnames(df) == Feature2)] <- gsub("-","_",Feature2)
-        Feature2 <- gsub("-","_",Feature2)
+        colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
+        Feature1 <- gsub("[[:punct:]]","_",Feature1)
+        colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
+        Feature2 <- gsub("[[:punct:]]","_",Feature2)
         Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
         Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
@@ -3961,8 +4063,8 @@ server <- function(input, output, session) {
         req(input$SurvivalFeature)
         meta_ssgsea_sdf <- MultiVarFeatCat_react()
         Feature <- input$SurvivalFeature
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("-","_",Feature)
-        Feature <- gsub("-","_",Feature)
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("[[:punct:]]","_",Feature)
+        Feature <- gsub("[[:punct:]]","_",Feature)
         Feature <- sprintf(ifelse((grepl(" ", Feature) | !is.na(suppressWarnings(as.numeric(substring(Feature, 1, 1))))), "`%s`", "%s"), Feature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste(Feature,collapse = "+")))
         tab <- eval(substitute(coxph(form,data = meta_ssgsea_sdf)))
@@ -3972,8 +4074,8 @@ server <- function(input, output, session) {
       MultiVarTabCont_react <- reactive({
         meta_ssgsea_sdf <- MultiVarFeatCont_react()
         Feature <- input$SurvivalFeature
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("-","_",Feature)
-        Feature <- gsub("-","_",Feature)
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("[[:punct:]]","_",Feature)
+        Feature <- gsub("[[:punct:]]","_",Feature)
         Feature <- sprintf(ifelse((grepl(" ", Feature) | !is.na(suppressWarnings(as.numeric(substring(Feature, 1, 1))))), "`%s`", "%s"), Feature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste(Feature,collapse = "+")))
         tab <- eval(substitute(coxph(form,data = meta_ssgsea_sdf)))
@@ -5701,40 +5803,57 @@ server <- function(input, output, session) {
         if (length(gs_react()) > 0) {
           geneset <- gs_react()
           GeneSet <- names(geneset)
-          if (GeneSet %in% names(geneset)) {
-            heatgenes <- geneset[[GeneSet]]
-            meta <- SboxplotReact()
-            expr_start <- exprSub()
-            samples <- meta[,1]
-            expr <- expr_start[which(rownames(expr_start) %in% heatgenes),colnames(expr_start) %in% samples, drop = F]
-            clmethod <- input$ClusterMethod
-            rowfont <- input$heatmapFontR
-            colfont <- input$heatmapFontC
-            colAnno <- riskheat_colAnn()
-            
-            dataset <- expr
-            dataset <- log2(dataset + 1)
-            zdataset <- apply(dataset, 1, scale)
-            zdataset <- apply(zdataset, 1, rev)
-            colnames(zdataset) <- names(dataset)
-            dataset <- as.matrix(zdataset)
-            dataset[is.na(dataset)] <- 0
-            dataset = dataset[apply(dataset[,-1], 1, function(x) !all(x==0)),]
-            
-            #col_fun = colorRamp2(c(min(dataset), 0, max(dataset)), c("blue", "white", "red"))
-            #lgd = Legend(col_fun = col_fun, title = "Expression")
-            
-            p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
-                                                          top_annotation = colAnno,
-                                                          clustering_method_rows = clmethod,
-                                                          show_row_names = T, show_column_names = T,
-                                                          #cluster_rows = clust_rows_opt,
-                                                          cluster_columns = FALSE,
-                                                          row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
-                                                          heatmap_legend_param = list(title = "Expression"),
-                                                          border = F))
-            draw(p, padding = unit(c(50, 50, 2, 2), "mm")) # unit(c(bottom,left,right,top))
-            #draw(lgd, x = unit(1, "npc"), y = unit(1, "npc"), just = c("right", "top"))
+          if (!is.numeric(geneset[[1]])) {
+            if (GeneSet %in% names(geneset)) {
+              heatgenes <- geneset[[GeneSet]]
+              meta <- SboxplotReact()
+              expr_start <- exprSub()
+              samples <- meta[,1]
+              expr <- expr_start[which(rownames(expr_start) %in% heatgenes),colnames(expr_start) %in% samples, drop = F]
+              clmethod <- input$ClusterMethod
+              rowfont <- input$heatmapFontR
+              colfont <- input$heatmapFontC
+              colAnno <- riskheat_colAnn()
+              
+              dataset <- expr
+              dataset <- log2(dataset + 1)
+              zdataset <- apply(dataset, 1, scale)
+              zdataset <- apply(zdataset, 1, rev)
+              colnames(zdataset) <- names(dataset)
+              dataset <- as.matrix(zdataset)
+              dataset[is.na(dataset)] <- 0
+              dataset = dataset[apply(dataset[,-1], 1, function(x) !all(x==0)),]
+              #save(list = ls(), file = "heatmap_env.RData", envir = environment())
+              
+              #col_fun = colorRamp2(c(min(dataset), 0, max(dataset)), c("blue", "white", "red"))
+              #lgd = Legend(col_fun = col_fun, title = "Expression")
+              
+              
+              if (isTruthy(dataset)) {
+                if (isTruthy(colAnno)) {
+                  p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
+                                                                top_annotation = colAnno,
+                                                                clustering_method_rows = clmethod,
+                                                                show_row_names = T, show_column_names = T,
+                                                                #cluster_rows = clust_rows_opt,
+                                                                cluster_columns = FALSE,
+                                                                row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
+                                                                heatmap_legend_param = list(title = "Expression"),
+                                                                border = F))
+                } else {
+                  p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
+                                                                clustering_method_rows = clmethod,
+                                                                show_row_names = T, show_column_names = T,
+                                                                #cluster_rows = clust_rows_opt,
+                                                                cluster_columns = FALSE,
+                                                                row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
+                                                                heatmap_legend_param = list(title = "Expression"),
+                                                                border = F))
+                }
+                draw(p, padding = unit(c(50, 50, 2, 2), "mm")) # unit(c(bottom,left,right,top))
+              }
+              #draw(lgd, x = unit(1, "npc"), y = unit(1, "npc"), just = c("right", "top"))
+            }
           }
         }
         
@@ -5889,41 +6008,56 @@ server <- function(input, output, session) {
         if (length(gs_react()) > 0) {
           geneset <- gs_react()
           GeneSet <- names(geneset)
-          if (GeneSet %in% names(geneset)) {
-            heatgenes <- geneset[[GeneSet]]
-            meta <- FeatureStrat_df()
-            expr_start <- exprSub()
-            samples <- meta[,1]
-            expr <- expr_start[which(rownames(expr_start) %in% heatgenes),colnames(expr_start) %in% samples, drop = F]
-            clmethod <- input$ClusterMethod2
-            rowfont <- input$heatmapFontR
-            colfont <- input$heatmapFontC
-            colAnno <- stratheat_colAnn()
-            
-            dataset <- expr
-            dataset <- log2(dataset + 1)
-            zdataset <- apply(dataset, 1, scale)
-            zdataset <- apply(zdataset, 1, rev)
-            colnames(zdataset) <- names(dataset)
-            dataset <- as.matrix(zdataset)
-            dataset[is.na(dataset)] <- 0
-            dataset = dataset[apply(dataset[,-1], 1, function(x) !all(x==0)),]
-            
-            #col_fun = colorRamp2(c(min(dataset), 0, max(dataset)), c("blue", "white", "red"))
-            #lgd = Legend(col_fun = col_fun, title = "Expression")
-            
-            p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
-                                                          top_annotation = colAnno,
-                                                          clustering_method_rows = clmethod,
-                                                          show_row_names = T, show_column_names = T,
-                                                          #cluster_rows = clust_rows_opt,
-                                                          cluster_columns = FALSE,
-                                                          row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
-                                                          heatmap_legend_param = list(title = "Expression"),
-                                                          border = F))
-            draw(p, padding = unit(c(50, 50, 2, 2), "mm")) # unit(c(bottom,left,right,top))
-            #draw(lgd, x = unit(1, "npc"), y = unit(1, "npc"), just = c("right", "top"))
+          if (!is.numeric(geneset[[1]])) {
+            if (GeneSet %in% names(geneset)) {
+              heatgenes <- geneset[[GeneSet]]
+              meta <- FeatureStrat_df()
+              expr_start <- exprSub()
+              samples <- meta[,1]
+              expr <- expr_start[which(rownames(expr_start) %in% heatgenes),colnames(expr_start) %in% samples, drop = F]
+              clmethod <- input$ClusterMethod2
+              rowfont <- input$heatmapFontR
+              colfont <- input$heatmapFontC
+              colAnno <- stratheat_colAnn()
+              
+              dataset <- expr
+              dataset <- log2(dataset + 1)
+              zdataset <- apply(dataset, 1, scale)
+              zdataset <- apply(zdataset, 1, rev)
+              colnames(zdataset) <- names(dataset)
+              dataset <- as.matrix(zdataset)
+              dataset[is.na(dataset)] <- 0
+              dataset = dataset[apply(dataset[,-1], 1, function(x) !all(x==0)),]
+              
+              
+              #col_fun = colorRamp2(c(min(dataset), 0, max(dataset)), c("blue", "white", "red"))
+              #lgd = Legend(col_fun = col_fun, title = "Expression")
+              if (isTruthy(dataset)) {
+                if (isTruthy(colAnno)) {
+                  p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
+                                                                top_annotation = colAnno,
+                                                                clustering_method_rows = clmethod,
+                                                                show_row_names = T, show_column_names = T,
+                                                                #cluster_rows = clust_rows_opt,
+                                                                cluster_columns = FALSE,
+                                                                row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
+                                                                heatmap_legend_param = list(title = "Expression"),
+                                                                border = F))
+                } else {
+                  p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
+                                                                clustering_method_rows = clmethod,
+                                                                show_row_names = T, show_column_names = T,
+                                                                #cluster_rows = clust_rows_opt,
+                                                                cluster_columns = FALSE,
+                                                                row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
+                                                                heatmap_legend_param = list(title = "Expression"),
+                                                                border = F))
+                }
+                draw(p, padding = unit(c(50, 50, 2, 2), "mm")) # unit(c(bottom,left,right,top))
+              }
+            }
           }
+          
         }
         
       })

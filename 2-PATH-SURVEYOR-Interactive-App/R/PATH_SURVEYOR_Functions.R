@@ -155,8 +155,11 @@ SubsetSurvData <- function(df,time,id,feat,feat2 = NULL) {
 CoxPHobj <- function(df,feat,ref) {
   df[,feat] <- as.factor(df[,feat])
   df[,feat] <- relevel(df[,feat], ref = ref)
-  colnames(df)[which(colnames(df) == feat)] <- gsub("-","_",feat)
-  feat <- gsub("-","_",feat)
+  #colnames(df)[which(colnames(df) == feat)] <- gsub("-","_",feat)
+  #feat <- gsub("-","_",feat)
+  colnames(df)[which(colnames(df) == feat)] <- gsub("[[:punct:]]","_",feat)
+  feat <- gsub("[[:punct:]]","_",feat)
+  # checks for spaces, first character numerics
   feat <- sprintf(ifelse((grepl(" ", feat) | !is.na(suppressWarnings(as.numeric(substring(feat, 1, 1))))), "`%s`", "%s"), feat)
   tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",feat)),data = df)
   return(tab)
@@ -236,7 +239,6 @@ SurvPlotExpl <- function(CutPlabel,surv_time_col,geneset_name,scoreMethod,metaco
   }
   
 }
-
 SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Years",xBreaks = 365.25) {
   if (toupper(xScale) == "MONTHS") {
     xScale <- "d_m"
@@ -268,20 +270,6 @@ SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Ye
                                   risk.table.height = 0.20,
                                   surv.median.line = median
   )
-  #test1 <- levels(ggsurv[["table"]][["data"]][["strata"]])
-  #test2 <- as.character(levels(ggsurv[["table"]][["data"]][["strata"]]))
-  #test3 <- gsub("_"," ",levels(ggsurv[["table"]][["data"]][["strata"]]))
-  #test4 <- gsub("_","-",levels(ggsurv[["table"]][["data"]][["strata"]]))
-  #test5 <- gsub("_"," ",levels(ggsurv[["data.survtable"]][["strata"]]))
-  #
-  #str_wrap(test1,width = 20, whitespace_only = FALSE)
-  #str_wrap(test2,width = 20, whitespace_only = FALSE)
-  #levels(ggsurv[["table"]][["data"]][["strata"]]) <- str_wrap(test3,width = 25, whitespace_only = FALSE)
-  #str_wrap(test4,width = 22, whitespace_only = FALSE)
-  #levels(ggsurv[["data.survtable"]][["strata"]]) <- str_wrap(test5,width = 25, whitespace_only = TRUE)
-  #
-  #
-  #levels(ggsurv[["table"]][["data"]][["strata"]]) <- str_wrap(levels(ggsurv[["table"]][["data"]][["strata"]]),width = 20, whitespace_only = FALSE)
   if (median != "none") {
     MedSurvItem <- ggsurv[["plot"]][["layers"]][length(ggsurv[["plot"]][["layers"]])]
     MedSurvItem_df <- MedSurvItem[[1]][["data"]]
@@ -299,23 +287,16 @@ SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Ye
     ggsurv$table$coordinates$limits$x <- c(0,xlim)
   }
   ggsurv$table <- ggsurv$table + theme_cleantable()
+  
+  
+  #ggsurv$table <- ggsurv$table +
+  #  scale_y_discrete(labels = names(fit[["strata"]]))
+  
+  
   ggsurv
 }
 
-#df = meta_ssgsea_sdf
-#title = PlotTitle
-#ylab = paste(SurvDateType,"Survival Probability")
-#pval = show_pval
-#conf = ShowConfInt
-#legend = showLegend
-#median = showMedSurv
-#xlim = xaxlim
-#xScale = "Years"
-#xBreaks = 365.25
-#
-#SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-#         pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-#         xScale = "Years", xBreaks = xBreaks)
+#tab <- ggsurvtable(fit, data = df)
 
 SurvPlotTitle <- function(SampleTypeSelected,geneset_name = NULL,scoreMethodLab,Feature,subFeature,CutPLabel,univar = NULL,multivar = NULL) {
   if (isTruthy(geneset_name)) {
