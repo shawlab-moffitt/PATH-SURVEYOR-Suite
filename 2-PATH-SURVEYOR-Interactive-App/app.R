@@ -1,4 +1,4 @@
-version_id <- paste0("v2.0.20250602")
+version_id <- paste0("v2.0.20250603")
 
 # User Input -------------------------------------------------------------------
 
@@ -17,8 +17,8 @@ PasswordSet <- ''
 
 ## Pre-Selected Inputs ---------------------------------------------------------
 # An option from the meta, All, or NULL
-PreSelect_SamplyType <- "All"
-PreSelect_Feature <- "All"
+PreSelect_SamplyType <- 'All'
+PreSelect_Feature <- 'All'
 # An option from the meta or NULL
 PreSelect_SubFeature <- NULL
 PreSelect_SecondaryFeature <- NULL
@@ -1804,22 +1804,18 @@ server <- function(input, output, session) {
       output$rendSubFeatureSelection <- renderUI({
         req(input$FeatureSelection)
         meta <- meta_react()
-        SampleTypeSelection <- input$SampleTypeSelection
-        metacol_sampletype <- metacol_sampletype()
-        FeatureSelection <- input$FeatureSelection
-        PreSelect_SubFeature_react <- PreSelect_SubFeature_react()
-        #save(list = ls(), file = "subFeatureSelection.RData", envir = environment())
-        if (isTruthy(SampleTypeSelection)) {
-          if (SampleTypeSelection != "All Sample Types") {
-            meta <- meta[which(meta[,metacol_sampletype] == SampleTypeSelection),]
+        if (isTruthy(input$SampleTypeSelection)) {
+          if (input$SampleTypeSelection != "All Sample Types") {
+            metacol_sampletype <- metacol_sampletype()
+            meta <- meta[which(meta[,metacol_sampletype] == input$SampleTypeChoices),]
           } else {
             meta <- meta
           }
         }
-        if (FeatureSelection != "Show all Samples") {
-          SubFeatureChoices <- unique(meta[,FeatureSelection])
+        if (input$FeatureSelection != "Show all Samples") {
+          SubFeatureChoices <- unique(meta[,input$FeatureSelection])
           SubFeatureChoices <- sort(SubFeatureChoices, decreasing = T, na.last = T)
-          selectInput("subFeatureSelection","Feature Condition:",choices = SubFeatureChoices, selected = PreSelect_SubFeature_react)
+          selectInput("subFeatureSelection","Feature Condition:",choices = SubFeatureChoices, selected = PreSelect_SubFeature_react())
         }
       })
       
@@ -2012,7 +2008,7 @@ server <- function(input, output, session) {
         req(input$FeatureSelection)
         meta <- meta_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         if (isTruthy(SampleTypeSelected)) {
@@ -2112,6 +2108,7 @@ server <- function(input, output, session) {
                     ssGSEA <- expr_sub
                   }
                   
+                  #save(list = ls(), file = "ssGSEAmeta.RData", envir = environment())
                   #ssGSEA
                   
                   # Subset columns needed for plot and rename for surv function
@@ -2149,7 +2146,11 @@ server <- function(input, output, session) {
                       cutp <- res.cut$cutpoint[["cutpoint"]]
                       res.cat <- surv_categorize(res.cut)
                       ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- res.cat[,3]
+                    } else {
+                      ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- "low"
                     }
+                  } else {
+                    ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- "low"
                   }
                   
                   ssGSEA[,paste0(geneset_name,"_VAR_Q")] <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
@@ -2267,7 +2268,9 @@ server <- function(input, output, session) {
         MedianCutP_react <- MedianCutP_react()
         #save(list = ls(), file = "sureyor_med_cutp_env2.RData",envir = environment())
         #save(list = ls(), file = "Surv_env.RData", envir = environment())
-        CoxPHobj(MedianCutP_react(),paste0(geneset_name,"_MedianCutP"),"Low")
+        if (nlevels(factor(MedianCutP_react()[,paste0(geneset_name,"_MedianCutP")])) > 1) {
+          CoxPHobj(MedianCutP_react(),paste0(geneset_name,"_MedianCutP"),"Low")
+        }
       })
       #df <- MedianCutP_react
       #feat <- paste0(geneset_name,"_MedianCutP")
@@ -2282,7 +2285,7 @@ server <- function(input, output, session) {
         HR_Tab <- SBinaryHRtab_react()
         Pval_Tab <- MedianCutPTab_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         geneset <- gs_react()
@@ -2308,7 +2311,7 @@ server <- function(input, output, session) {
         SurvFeature <- paste0(geneset_name,"_MedianCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
@@ -2357,14 +2360,22 @@ server <- function(input, output, session) {
         colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
         form <- paste0("Surv(time,ID) ~ Feature")
         fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
-        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        if (!is.null(fit[["strata"]])) {
+          names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
+          names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+          names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        }
+        #save(list = ls(), file = "SurvPlotEnv.RData", envir = environment())
+        
         
         #save(list = ls(),file = "survPlot_env.RData", envir = environment())
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
                  xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
+        #p <- SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
+        #         pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+        #         xScale = "Year", xBreaks = xBreaks)
+        #p2 <- p
       })
       
       #survP <- SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
@@ -2451,7 +2462,9 @@ server <- function(input, output, session) {
         req(QuartileCutP_react())
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        CoxPHobj(QuartileCutP_react(),paste0(geneset_name,"_QuartileCutP"),"Q1_Low")
+        if (nlevels(factor(QuartileCutP_react()[,paste0(geneset_name,"_QuartileCutP")])) > 1) {
+          CoxPHobj(QuartileCutP_react(),paste0(geneset_name,"_QuartileCutP"),"Q1_Low")
+        }
       })
       
       SQuartileHRtab_react <- reactive({
@@ -2463,7 +2476,7 @@ server <- function(input, output, session) {
         HR_Tab <- SQuartileHRtab_react()
         Pval_Tab <- QuartileCutPTab_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         geneset <- gs_react()
@@ -2489,7 +2502,7 @@ server <- function(input, output, session) {
         SurvFeature <- paste0(geneset_name,"_QuartileCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
@@ -2532,37 +2545,19 @@ server <- function(input, output, session) {
           }
         }
         
-        
-        
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
-        form <- paste0("Surv(time,ID) ~ Feature")
-        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
-        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
-        
-        
-        
-        
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Quartile Cut-Point")
         SurvFeature_save <- SurvFeature
-        
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
-        form <- paste0("Surv(time,ID) ~ Feature")
-        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
-        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
-        
-        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
-        #SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
-        #SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
-        #form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
-        ##save(list = ls(), file = "surv_plot_env.RData", envir = environment())
-        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
-        #names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
-        #names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        #names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
+        SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
+        SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
+        form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
+        #save(list = ls(), file = "surv_plot_env.RData", envir = environment())
+        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        if (!is.null(fit[["strata"]])) {
+          names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
+          names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+          names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        }
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
@@ -2647,7 +2642,9 @@ server <- function(input, output, session) {
         req(OptimalCutP_react())
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        CoxPHobj(OptimalCutP_react(),paste0(geneset_name,"_OptimalCutP"),"low")
+        if (nlevels(factor(OptimalCutP_react()[,paste0(geneset_name,"_OptimalCutP")])) > 1) {
+          CoxPHobj(OptimalCutP_react(),paste0(geneset_name,"_OptimalCutP"),"low")
+        }
       })
       
       CutPointHRtab_react <- reactive({
@@ -2659,7 +2656,7 @@ server <- function(input, output, session) {
         HR_Tab <- CutPointHRtab_react()
         Pval_Tab <- OptimalCutPTab_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         geneset <- gs_react()
@@ -2685,7 +2682,7 @@ server <- function(input, output, session) {
         SurvFeature <- paste0(geneset_name,"_OptimalCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
@@ -2730,24 +2727,18 @@ server <- function(input, output, session) {
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Optimal Cut-Point")
         
-        #SurvFeature_save <- SurvFeature
-        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
-        #SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
-        #SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
-        #form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
-        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
-        #names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
-        #names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        #names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        SurvFeature_save <- SurvFeature
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
+        SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
+        SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
+        form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
+        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        if (!is.null(fit[["strata"]])) {
+          names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
+          names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+          names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        }
         
-        
-        
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
-        form <- paste0("Surv(time,ID) ~ Feature")
-        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
-        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
                  xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
@@ -2836,7 +2827,9 @@ server <- function(input, output, session) {
         req(TopBottomCutP_react())
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        CoxPHobj(TopBottomCutP_react(),paste0(geneset_name,"_TopBottomCutP"),"Low")
+        if (nlevels(factor(TopBottomCutP_react()[,paste0(geneset_name,"_TopBottomCutP")])) > 1) {
+          CoxPHobj(TopBottomCutP_react(),paste0(geneset_name,"_TopBottomCutP"),"Low")
+        }
       })
       
       SQuantileHRtab_react <- reactive({
@@ -2848,7 +2841,7 @@ server <- function(input, output, session) {
         HR_Tab <- SQuantileHRtab_react()
         Pval_Tab <- TopBottomCutPTab_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         geneset <- gs_react()
@@ -2874,7 +2867,7 @@ server <- function(input, output, session) {
         SurvFeature <- paste0(geneset_name,"_TopBottomCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
@@ -2919,23 +2912,17 @@ server <- function(input, output, session) {
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"top/bottom quantile cut-points")
         
-        #SurvFeature_save <- SurvFeature
-        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
-        #SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
-        #SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
-        #form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
-        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
-        #names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
-        #names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        #names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
-        
-        
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
-        form <- paste0("Surv(time,ID) ~ Feature")
-        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
-        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        SurvFeature_save <- SurvFeature
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
+        SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
+        SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
+        form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
+        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        if (!is.null(fit[["strata"]])) {
+          names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
+          names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+          names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        }
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
@@ -3025,7 +3012,9 @@ server <- function(input, output, session) {
         req(UserCutP_react())
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        CoxPHobj(UserCutP_react(),paste0(geneset_name,"_UserCutP"),"Low")
+        if (nlevels(factor(UserCutP_react()[,paste0(geneset_name,"_UserCutP")])) > 1) {
+          CoxPHobj(UserCutP_react(),paste0(geneset_name,"_UserCutP"),"Low")
+        }
       })
       
       SQuantileHR2tab_react <- reactive({
@@ -3037,7 +3026,7 @@ server <- function(input, output, session) {
         HR_Tab <- SQuantileHR2tab_react()
         Pval_Tab <- UserCutPTab_react()
         metacol_sampletype <- metacol_sampletype()
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
         geneset <- gs_react()
@@ -3063,7 +3052,7 @@ server <- function(input, output, session) {
         SurvFeature <- paste0(geneset_name,"_UserCutP")
         Feature <- input$FeatureSelection
         subFeature <- input$subFeatureSelection
-        SampleTypeSelected <- input$SampleTypeSelection
+        SampleTypeSelected <- input$SampleTypeChoices
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
@@ -3108,23 +3097,17 @@ server <- function(input, output, session) {
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"user cut-point")
         
-        #SurvFeature_save <- SurvFeature
-        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
-        #SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
-        #SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
-        #form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
-        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
-        #names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
-        #names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        #names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
-        
-        
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- "Feature"
-        form <- paste0("Surv(time,ID) ~ Feature")
-        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-        names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature,"="),names(fit[["strata"]]))
-        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        SurvFeature_save <- SurvFeature
+        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == SurvFeature)] <- gsub("[[:punct:]]","_",SurvFeature)
+        SurvFeature <- gsub("[[:punct:]]","_",SurvFeature)
+        SurvFeature <- sprintf(ifelse((grepl(" ", SurvFeature) | !is.na(suppressWarnings(as.numeric(substring(SurvFeature, 1, 1))))), "`%s`", "%s"), SurvFeature)
+        form <- as.formula(paste0("Surv(time,ID) ~ ",SurvFeature))
+        fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
+        if (!is.null(fit[["strata"]])) {
+          names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
+          names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+          names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        }
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
@@ -3248,8 +3231,10 @@ server <- function(input, output, session) {
         #save(list = ls(), file = "UniVarFeatTab_react_env.RData", envir = environment())
         if ((input$UniVarContCheck == FALSE) | (input$UniVarContCheck == TRUE & input$UniVarContHiLoCheck == TRUE)) {
           if (ref_Feature %in% levels(factor(meta_ssgsea_sdf[,Feature]))) {
-            tab <- CoxPHobj(meta_ssgsea_sdf,Feature,ref_Feature)
-            tab
+            if (nlevels(factor(meta_ssgsea_sdf[,Feature])) > 1) {
+              tab <- CoxPHobj(meta_ssgsea_sdf,Feature,ref_Feature)
+              tab
+            }
           }
         } else {
           colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("[[:punct:]]","_",Feature)
@@ -3339,9 +3324,11 @@ server <- function(input, output, session) {
         colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- "Feature"
         form <- paste0("Surv(time,ID) ~ Feature")
         fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-        names(fit[["strata"]]) <- gsub("^Feature=",paste0(Feature,"="),names(fit[["strata"]]))
-        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        if (!is.null(fit[["strata"]])) {
+          names(fit[["strata"]]) <- gsub("^Feature=",paste0(Feature,"="),names(fit[["strata"]]))
+          names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+          names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        }
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
@@ -3415,7 +3402,7 @@ server <- function(input, output, session) {
         colnames(meta)[1] <- "SampleName"
         FeatCols <- c("SampleName",surv_time_col,surv_id_col,input$MultiFeatUnivarSelect)
         #print(FeatCols)
-        if (all(FeatCols %in% colnames(meta))) {
+        if (all(FeatCols) %in% colnames(meta)) {
           metaSub <- meta[,FeatCols]
           continuousCols <- GetColsOfType(metaSub[,-c(1:3), drop = F],"continuous")
           metaSub[,continuousCols] <- apply(metaSub[,continuousCols, drop = F],2,function(x) highlow2(x))
@@ -3978,10 +3965,12 @@ server <- function(input, output, session) {
         
         #save(list = ls(), file = "shiny_env_mutliInt.Rdata", envir = environment())
         fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-        names(fit[["strata"]]) <- gsub("^Feature1=",paste0(Feature1,"="),names(fit[["strata"]]))
-        names(fit[["strata"]]) <- gsub(", Feature2=",paste0(Feature2,"="),names(fit[["strata"]]))
-        names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-        names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        if (!is.null(fit[["strata"]])) {
+          names(fit[["strata"]]) <- gsub("^Feature1=",paste0(Feature1,"="),names(fit[["strata"]]))
+          names(fit[["strata"]]) <- gsub(", Feature2=",paste0(Feature2,"="),names(fit[["strata"]]))
+          names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+          names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        }
         
         #form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
         #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
