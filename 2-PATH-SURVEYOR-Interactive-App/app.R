@@ -4047,18 +4047,20 @@ server <- function(input, output, session) {
           surv_id_col <- input$SurvivalType_id
           meta_ssgsea <- ssGSEAmeta()
           SampleNameCol <- colnames(meta_ssgsea)[1]
-          if (input$UniVarNAcheck == TRUE) {
-            for (i in Feature) {
-              meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,i]) == FALSE),]
-              meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,i] != "Inf"),]
-              meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,i],ignore.case = T, invert = T),]
+          if (all(Feature %in% colnames(meta_ssgsea))) {
+            if (input$UniVarNAcheck == TRUE) {
+              for (i in Feature) {
+                meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,i]) == FALSE),]
+                meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,i] != "Inf"),]
+                meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,i],ignore.case = T, invert = T),]
+              }
             }
+            select_cols <- c(SampleNameCol,surv_time_col,surv_id_col,Feature)
+            meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+            colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_time_col)] <- "time"
+            colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_id_col)] <- "ID"
+            meta_ssgsea_sdf
           }
-          select_cols <- c(SampleNameCol,surv_time_col,surv_id_col,Feature)
-          meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
-          colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_time_col)] <- "time"
-          colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_id_col)] <- "ID"
-          meta_ssgsea_sdf
         }
       })
       
@@ -4081,7 +4083,11 @@ server <- function(input, output, session) {
         req(input$SurvivalFeature)
         meta_ssgsea_sdf <- MultiVarFeatCat_react()
         Feature <- input$SurvivalFeature
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("[[:punct:]]","_",Feature)
+        new_col_names <- sapply(colnames(meta_ssgsea_sdf),function(x) {
+          x_new <- ifelse(x %in% Feature,gsub("[[:punct:]]","_",x),x)
+        })
+        colnames(meta_ssgsea_sdf) <- new_col_names
+        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("[[:punct:]]","_",Feature)
         Feature <- gsub("[[:punct:]]","_",Feature)
         Feature <- sprintf(ifelse((grepl(" ", Feature) | !is.na(suppressWarnings(as.numeric(substring(Feature, 1, 1))))), "`%s`", "%s"), Feature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste(Feature,collapse = "+")))
@@ -4092,7 +4098,11 @@ server <- function(input, output, session) {
       MultiVarTabCont_react <- reactive({
         meta_ssgsea_sdf <- MultiVarFeatCont_react()
         Feature <- input$SurvivalFeature
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("[[:punct:]]","_",Feature)
+        new_col_names <- sapply(colnames(meta_ssgsea_sdf),function(x) {
+          x_new <- ifelse(x %in% Feature,gsub("[[:punct:]]","_",x),x)
+        })
+        colnames(meta_ssgsea_sdf) <- new_col_names
+        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("[[:punct:]]","_",Feature)
         Feature <- gsub("[[:punct:]]","_",Feature)
         Feature <- sprintf(ifelse((grepl(" ", Feature) | !is.na(suppressWarnings(as.numeric(substring(Feature, 1, 1))))), "`%s`", "%s"), Feature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste(Feature,collapse = "+")))
@@ -4154,6 +4164,10 @@ server <- function(input, output, session) {
         tab <- MultiVarTabCat_react()
         meta_ssgsea_sdf <- MultiVarFeat_react()
         Feature <- input$SurvivalFeature
+        new_col_names <- sapply(colnames(meta_ssgsea_sdf),function(x) {
+          x_new <- ifelse(x %in% Feature,gsub("[[:punct:]]","_",x),x)
+        })
+        colnames(meta_ssgsea_sdf) <- new_col_names
         forest <- forestPlot_Simple(tab,meta_ssgsea_sdf,paste0(Feature,collapse = ", "),input$ForestFontSize)
       })
       output$MultivarForestPlot <- renderPlot({
@@ -4317,14 +4331,14 @@ server <- function(input, output, session) {
         FeatColsDF$P.Value <- ifelse(is.na(FeatColsDF$P.Value), "", FeatColsDF$P.Value)
         FeatColsDF$N <- ifelse(is.na(FeatColsDF$N), "", FeatColsDF$N)
         
-        if (any(grepl(paste(StatCols,collapse = "|"),FeatColsDF$Variable))) {
-          found <- grep(paste(StatCols,collapse = "|"),FeatColsDF$Variable)
-          for (i in found) {
-            coln <- strsplit(FeatColsDF[i,1],"\\s+")[[1]][1]
-            ref <- strsplit(FeatColsDF[i,1],"\\s+")[[1]][2]
-            FeatColsDF[i,1] <- paste0(geneset_name,"_",coln," ",ref)
-          }
-        }
+        #if (any(grepl(paste(StatCols,collapse = "|"),FeatColsDF$Variable))) {
+        #  found <- grep(paste(StatCols,collapse = "|"),FeatColsDF$Variable)
+        #  for (i in found) {
+        #    coln <- strsplit(FeatColsDF[i,1],"\\s+")[[1]][1]
+        #    ref <- strsplit(FeatColsDF[i,1],"\\s+")[[1]][2]
+        #    FeatColsDF[i,1] <- paste0(geneset_name,"_",coln," ",ref)
+        #  }
+        #}
         FeatColsDF$Variable <- paste(FeatColsDF$Variable,"     ")
         
         FeatColsDF
