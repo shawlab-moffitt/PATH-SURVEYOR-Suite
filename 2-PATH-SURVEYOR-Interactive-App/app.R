@@ -1,4 +1,4 @@
-version_id <- paste0("v2.0.20250708")
+version_id <- paste0("v2.0.20250806")
 
 # User Input -------------------------------------------------------------------
 
@@ -3195,6 +3195,23 @@ server <- function(input, output, session) {
         updateSelectizeInput(session = session,inputId = "SingleSurvivalFeature", choices = metacol_feature(), selected = paste0(geneset_name,"_MedianCutP"), server = T)
       })
       
+      observe({
+        req(input$SingleSurvivalFeature)
+        req(ssGSEAmeta())
+        Feature <- input$SingleSurvivalFeature
+        meta <- ssGSEAmeta()
+        
+        if (Feature %in% colnames(meta)) {
+          if (is.numeric(meta[,Feature]) & !is.logical(meta[,Feature])) {
+            updateCheckboxInput(session,"UniVarContCheck",value = TRUE)
+            updateCheckboxInput(session,"UniVarContHiLoCheck",value = TRUE)
+          } else {
+            updateCheckboxInput(session,"UniVarContCheck",value = FALSE)
+            updateCheckboxInput(session,"UniVarContHiLoCheck",value = FALSE)
+          }
+        }
+      })
+      
       output$rendSurvFeatVariableUni <- renderUI({
         req(input$SingleSurvivalFeature)
         req(ssGSEAmeta())
@@ -3210,6 +3227,7 @@ server <- function(input, output, session) {
         req(input$SurvivalType_id)
         req(input$SingleSurvivalFeature)
         Feature <- input$SingleSurvivalFeature
+        ref_Feature <- input$SurvFeatVariableUni
         meta_ssgsea <- ssGSEAmeta()
         if (Feature %in% colnames(meta_ssgsea)) {
           if (input$UniVarNAcheck == TRUE) {
@@ -3221,10 +3239,41 @@ server <- function(input, output, session) {
             if (input$UniVarContHiLoCheck == TRUE) {
               meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
             }
+            if ((ref_Feature %in% levels(factor(meta_ssgsea[,Feature])))) {
+              if (length(levels(factor(meta_ssgsea[,Feature]))) > 1) {
+                meta_ssgsea[,Feature] <- factor(meta_ssgsea[,Feature])
+                meta_ssgsea[,Feature] <- relevel(meta_ssgsea[,Feature], ref = ref_Feature)
+              }
+            }
           }
-          meta_ssgsea_sdf <- SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature)
-          meta_ssgsea_sdf
+          if (length(levels(factor(meta_ssgsea[,Feature]))) > 1) {
+            meta_ssgsea_sdf <- SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature)
+            meta_ssgsea_sdf
+          }
         }
+        #if (Feature %in% colnames(meta_ssgsea)) {
+        #  if ((is.numeric(meta_ssgsea[,Feature]) & !is.logical(meta_ssgsea[,Feature])) | input$UniVarContCheck) {
+        #    if (input$UniVarContCheck == TRUE) {
+        #      if (input$UniVarContHiLoCheck == TRUE) {
+        #        meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
+        #      }
+        #    } else {
+        #      meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
+        #    }
+        #  }
+        #  if (input$UniVarNAcheck == TRUE) {
+        #    meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
+        #    meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
+        #    meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
+        #  }
+        #  #if (input$UniVarContCheck == TRUE) {
+        #  #  if (input$UniVarContHiLoCheck == TRUE) {
+        #  #    meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
+        #  #  }
+        #  #}
+        #  meta_ssgsea_sdf <- SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature)
+        #  meta_ssgsea_sdf
+        #}
         
       })
       
@@ -3280,8 +3329,8 @@ server <- function(input, output, session) {
         #meta_ssgsea_sdf <- UniVarFeat_react()
         Feature <- input$SingleSurvivalFeature
         #ref_Feature <- input$SurvFeatVariableUni
-        Feature <- 
-          tab <- UniVarFeatTab_react()
+        #Feature <- 
+        tab <- UniVarFeatTab_react()
         Feature <- names(tab[["xlevels"]][1])
         #names(tab[["assign"]]) <- gsub("^Feature",Feature,names(tab[["assign"]]))
         tabOut <- CoxPHtabUni(tab,Feature)
@@ -3431,7 +3480,7 @@ server <- function(input, output, session) {
         colnames(meta)[1] <- "SampleName"
         FeatCols <- c("SampleName",surv_time_col,surv_id_col,input$MultiFeatUnivarSelect)
         #print(FeatCols)
-        if (all(FeatCols) %in% colnames(meta)) {
+        if (all(FeatCols %in% colnames(meta))) {
           metaSub <- meta[,FeatCols]
           continuousCols <- GetColsOfType(metaSub[,-c(1:3), drop = F],"continuous")
           metaSub[,continuousCols] <- apply(metaSub[,continuousCols, drop = F],2,function(x) highlow2(x))
@@ -3475,51 +3524,53 @@ server <- function(input, output, session) {
         } else {HighRisk <- FALSE}
         FeatColsList <- list()
         for (feat in FeatCols) {
-          metaSubSet <- metaSub[,c("SampleName",surv_time_col,surv_id_col,feat)]
-          metaSubSet <- metaSubSet[which(is.na(metaSubSet[,feat]) == FALSE),]
-          metaSubSet <- metaSubSet[which(metaSubSet[,feat] != "Inf"),]
-          metaSubSet <- metaSubSet[grep("unknown",metaSubSet[,feat],ignore.case = T, invert = T),]
-          colnames(metaSubSet)[c(2:4)] <- c("time","status","feature")
-          tab <- coxph(Surv(time,status) ~ feature, data = metaSubSet)
-          tabData <- get_tabData(tab)
-          tabData[1] <- feat
-          colnames(metaSubSet)[4] <- feat
-          if (HighRisk) {
-            if (as.numeric(tabData[3]) > 1) {
-              levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
-              tabData[1] <- feat
-              tabData[1] <- paste(tabData[1],levelLabel)
-              FeatColsList[[feat]] <- tabData
+          if (feat %in% colnames(metaSub)) {
+            metaSubSet <- metaSub[,c("SampleName",surv_time_col,surv_id_col,feat)]
+            metaSubSet <- metaSubSet[which(is.na(metaSubSet[,feat]) == FALSE),]
+            metaSubSet <- metaSubSet[which(metaSubSet[,feat] != "Inf"),]
+            metaSubSet <- metaSubSet[grep("unknown",metaSubSet[,feat],ignore.case = T, invert = T),]
+            colnames(metaSubSet)[c(2:4)] <- c("time","status","feature")
+            tab <- coxph(Surv(time,status) ~ feature, data = metaSubSet)
+            tabData <- get_tabData(tab)
+            tabData[1] <- feat
+            colnames(metaSubSet)[4] <- feat
+            if (HighRisk) {
+              if (as.numeric(tabData[3]) > 1) {
+                levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
+                tabData[1] <- feat
+                tabData[1] <- paste(tabData[1],levelLabel)
+                FeatColsList[[feat]] <- tabData
+              } else {
+                metaSubSet[,feat]  <- metaSubSet[,feat] %>% as.factor() %>% forcats::fct_rev()
+                colnames(metaSubSet)[c(2:4)] <- c("time","status","feature")
+                tab <- coxph(Surv(time,status) ~ feature, data = metaSubSet)
+                colnames(metaSubSet)[4] <- feat
+                tabData <- get_tabData(tab)
+                levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
+                tabData[1] <- feat
+                tabData[1] <- paste(tabData[1],levelLabel)
+                FeatColsList[[feat]] <- tabData
+              }
             } else {
-              metaSubSet[,feat]  <- metaSubSet[,feat] %>% as.factor() %>% forcats::fct_rev()
-              colnames(metaSubSet)[c(2:4)] <- c("time","status","feature")
-              tab <- coxph(Surv(time,status) ~ feature, data = metaSubSet)
-              colnames(metaSubSet)[4] <- feat
-              tabData <- get_tabData(tab)
-              levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
-              tabData[1] <- feat
-              tabData[1] <- paste(tabData[1],levelLabel)
-              FeatColsList[[feat]] <- tabData
-            }
-          } else {
-            if (as.numeric(tabData[3]) < 1) {
-              levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
-              tabData[1] <- feat
-              tabData[1] <- paste(tabData[1],levelLabel)
-              FeatColsList[[feat]] <- tabData
-            } else {
-              metaSubSet[,feat]  <- metaSubSet[,feat] %>% as.factor() %>% forcats::fct_rev()
-              colnames(metaSubSet)[c(2:4)] <- c("time","status","feature")
-              tab <- coxph(Surv(time,status) ~ feature, data = metaSubSet)
-              colnames(metaSubSet)[4] <- feat
-              tabData <- get_tabData(tab)
-              levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
-              tabData[1] <- feat
-              tabData[1] <- paste(tabData[1],levelLabel)
-              FeatColsList[[feat]] <- tabData
+              if (as.numeric(tabData[3]) < 1) {
+                levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
+                tabData[1] <- feat
+                tabData[1] <- paste(tabData[1],levelLabel)
+                FeatColsList[[feat]] <- tabData
+              } else {
+                metaSubSet[,feat]  <- metaSubSet[,feat] %>% as.factor() %>% forcats::fct_rev()
+                colnames(metaSubSet)[c(2:4)] <- c("time","status","feature")
+                tab <- coxph(Surv(time,status) ~ feature, data = metaSubSet)
+                colnames(metaSubSet)[4] <- feat
+                tabData <- get_tabData(tab)
+                levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
+                tabData[1] <- feat
+                tabData[1] <- paste(tabData[1],levelLabel)
+                FeatColsList[[feat]] <- tabData
+              }
             }
           }
-        }
+          }
         FeatColsDF <- as.data.frame(do.call(rbind, FeatColsList))
         rownames(FeatColsDF) <- NULL
         FeatColsDF$Low <- as.numeric(FeatColsDF$Low)
@@ -3618,7 +3669,24 @@ server <- function(input, output, session) {
       })
       
       ## Bivar Add -------------------------------------------------------------
-      
+      #observe({
+      #  
+      #  meta_ssgsea <- ssGSEAmeta()
+      #  geneset <- gs_react()
+      #  geneset_name <- names(geneset)
+      #  Feature1 <- input$SurvivalFeatureBi1
+      #  Feature1ref <- input$SurvFeatVariableBi1
+      #  Feature2 <- input$SurvivalFeatureBi2
+      #  Feature2ref <- input$SurvFeatVariableBi2
+      #  BiVarAddNAcheck1 <- input$BiVarAddNAcheck1
+      #  BiVarAddContCheck1 <- input$BiVarAddContCheck1
+      #  BiVarAddContHiLoCheck1 <- input$BiVarAddContHiLoCheck1
+      #  BiVarAddNAcheck2 <- input$BiVarAddNAcheck2
+      #  BiVarAddContCheck2 <- input$BiVarAddContCheck2
+      #  BiVarAddContHiLoCheck2 <- input$BiVarAddContHiLoCheck2
+      #  save(list = ls(), file = "BiVarAdd_react.RData", envir = environment())
+      #  
+      #})
       observe({
         req(ssGSEAmeta())
         meta <- ssGSEAmeta()
@@ -3643,12 +3711,51 @@ server <- function(input, output, session) {
         } else { selec <- FeatureChoices[1] }
         updateSelectizeInput(session = session,inputId = "SurvivalFeatureBi2", choices = FeatureChoices,selected = selec, server = T)
       })
+      observe({
+        req(input$SurvivalFeatureBi1)
+        req(ssGSEAmeta())
+        Feature <- input$SurvivalFeatureBi1
+        meta <- ssGSEAmeta()
+        
+        if (Feature %in% colnames(meta)) {
+          if (is.numeric(meta[,Feature]) & !is.logical(meta[,Feature])) {
+            updateCheckboxInput(session,"BiVarAddContCheck1",value = TRUE)
+            updateCheckboxInput(session,"BiVarAddContHiLoCheck1",value = TRUE)
+          } else {
+            updateCheckboxInput(session,"BiVarAddContCheck1",value = FALSE)
+            updateCheckboxInput(session,"BiVarAddContHiLoCheck1",value = FALSE)
+          }
+        }
+      })
+      observe({
+        req(input$SurvivalFeatureBi2)
+        req(ssGSEAmeta())
+        Feature <- input$SurvivalFeatureBi2
+        meta <- ssGSEAmeta()
+        
+        if (Feature %in% colnames(meta)) {
+          if (is.numeric(meta[,Feature]) & !is.logical(meta[,Feature])) {
+            updateCheckboxInput(session,"BiVarAddContCheck2",value = TRUE)
+            updateCheckboxInput(session,"BiVarAddContHiLoCheck2",value = TRUE)
+          } else {
+            updateCheckboxInput(session,"BiVarAddContCheck2",value = FALSE)
+            updateCheckboxInput(session,"BiVarAddContHiLoCheck2",value = FALSE)
+          }
+        }
+      })
       output$rendSurvFeatVariableBi1 <- renderUI({
         req(ssGSEAmeta())
         req(input$SurvivalFeatureBi1)
         Feature <- input$SurvivalFeatureBi1
         meta <- ssGSEAmeta()
+        BiVarAddNAcheck1 <- input$BiVarAddNAcheck1
+        BiVarAddContCheck1 <- input$BiVarAddContCheck1
+        BiVarAddContHiLoCheck1 <- input$BiVarAddContHiLoCheck1
         Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarAddNAcheck1,input$BiVarAddContCheck1,input$BiVarAddContHiLoCheck1)
+        if (input$BiVarAddNAcheck1) {
+          Var_choices <- Var_choices[which(Var_choices != "Inf" & Var_choices != "N/A" & Var_choices != "n/a")]
+          Var_choices <- grep("unknown",Var_choices,ignore.case = T, invert = T, value = T)
+        }
         selectInput("SurvFeatVariableBi1","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
       output$rendSurvFeatVariableBi2 <- renderUI({
@@ -3656,7 +3763,15 @@ server <- function(input, output, session) {
         req(input$SurvivalFeatureBi2)
         Feature <- input$SurvivalFeatureBi2
         meta <- ssGSEAmeta()
+        BiVarAddNAcheck2 <- input$BiVarAddNAcheck2
+        BiVarAddContCheck2 <- input$BiVarAddContCheck2
+        BiVarAddContHiLoCheck2 <- input$BiVarAddContHiLoCheck2
+        #save(list = ls(), file = "SurvFeatVariableBi2.RData", envir = environment())
         Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarAddNAcheck2,input$BiVarAddContCheck2,input$BiVarAddContHiLoCheck2)
+        if (input$BiVarAddNAcheck2) {
+          Var_choices <- Var_choices[which(Var_choices != "Inf" & Var_choices != "N/A" & Var_choices != "n/a")]
+          Var_choices <- grep("unknown",Var_choices,ignore.case = T, invert = T, value = T)
+        }
         selectInput("SurvFeatVariableBi2","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
       })
       
@@ -3671,41 +3786,74 @@ server <- function(input, output, session) {
         Feature1ref <- input$SurvFeatVariableBi1
         Feature2 <- input$SurvivalFeatureBi2
         Feature2ref <- input$SurvFeatVariableBi2
+        BiVarAddNAcheck1 <- input$BiVarAddNAcheck1
+        BiVarAddContCheck1 <- input$BiVarAddContCheck1
+        BiVarAddContHiLoCheck1 <- input$BiVarAddContHiLoCheck1
+        BiVarAddNAcheck2 <- input$BiVarAddNAcheck2
+        BiVarAddContCheck2 <- input$BiVarAddContCheck2
+        BiVarAddContHiLoCheck2 <- input$BiVarAddContHiLoCheck2
+        #save(list = ls(), file = "BiVarAddFeature_react.RData", envir = environment())
         
-        if ((Feature1ref %in% levels(factor(meta_ssgsea[,Feature1]))) & (Feature2ref %in% levels(factor(meta_ssgsea[,Feature2])))) {
+        if (Feature1 %in% colnames(meta_ssgsea) & Feature2 %in% colnames(meta_ssgsea)) {
+          #if ((Feature1ref %in% levels(factor(meta_ssgsea[,Feature1]))) & (Feature2ref %in% levels(factor(meta_ssgsea[,Feature2])))) {
           if (input$BiVarAddNAcheck1 == TRUE) {
             meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
             meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
             meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
           }
-          if (input$BiVarAddContCheck1 == TRUE) {
-            if (input$BiVarAddContHiLoCheck1 == TRUE) {
-              meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
-            }
-          }
-          if (input$BiVarAddContCheck1 == FALSE) {
-            meta_ssgsea[,Feature1] <- factor(meta_ssgsea[,Feature1])
-            meta_ssgsea[,Feature1] <- relevel(meta_ssgsea[,Feature1], ref = Feature1ref)
-          }
-          
           if (input$BiVarAddNAcheck2 == TRUE) {
             meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
             meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
             meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
           }
+          if (input$BiVarAddContCheck1 == TRUE) {
+            if (input$BiVarAddContHiLoCheck1 == TRUE) {
+              meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
+            }
+            if ((Feature1ref %in% levels(factor(meta_ssgsea[,Feature1])))) {
+              if (length(levels(factor(meta_ssgsea[,Feature1]))) > 1) {
+                meta_ssgsea[,Feature1] <- factor(meta_ssgsea[,Feature1])
+                meta_ssgsea[,Feature1] <- relevel(meta_ssgsea[,Feature1], ref = Feature1ref)
+              }
+            }
+          }
           if (input$BiVarAddContCheck2 == TRUE) {
             if (input$BiVarAddContHiLoCheck2 == TRUE) {
               meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
             }
-          }
-          if (input$BiVarAddContCheck2 == FALSE) {
-            meta_ssgsea[,Feature2] <- factor(meta_ssgsea[,Feature2])
-            meta_ssgsea[,Feature2] <- relevel(meta_ssgsea[,Feature2], ref = Feature2ref)
+            if ((Feature2ref %in% levels(factor(meta_ssgsea[,Feature2])))) {
+              if (length(levels(factor(meta_ssgsea[,Feature2]))) > 1) {
+                meta_ssgsea[,Feature2] <- factor(meta_ssgsea[,Feature2])
+                meta_ssgsea[,Feature2] <- relevel(meta_ssgsea[,Feature2], ref = Feature2ref)
+              }
+            }
           }
           
-          SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature1,Feature2)
+          if (length(levels(factor(meta_ssgsea[,Feature1]))) > 1 & length(levels(factor(meta_ssgsea[,Feature2]))) > 1) {
+            SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature1,Feature2)
+          }
+            #if (input$BiVarAddContCheck1 == TRUE) {
+            #  if (input$BiVarAddContHiLoCheck1 == TRUE) {
+            #    meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
+            #  }
+            #  if ((Feature1ref %in% levels(factor(meta_ssgsea[,Feature1])))) {
+            #    meta_ssgsea[,Feature1] <- factor(meta_ssgsea[,Feature1])
+            #    meta_ssgsea[,Feature1] <- relevel(meta_ssgsea[,Feature1], ref = Feature1ref)
+            #  }
+            #}
+            #
+            #if (input$BiVarAddContCheck2 == TRUE) {
+            #  if (input$BiVarAddContHiLoCheck2 == TRUE) {
+            #    meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
+            #  }
+            #}
+            #if (input$BiVarAddContCheck2 == FALSE) {
+            #  meta_ssgsea[,Feature2] <- factor(meta_ssgsea[,Feature2])
+            #  meta_ssgsea[,Feature2] <- relevel(meta_ssgsea[,Feature2], ref = Feature2ref)
+            #}
+            
+          #}
         }
-        
       })
       BiVarAddTab_react <- reactive({
         req(input$SurvivalFeatureBi1)
@@ -3714,32 +3862,38 @@ server <- function(input, output, session) {
         df <- BiVarAddFeature_react()
         Feature1 <- input$SurvivalFeatureBi1
         Feature2 <- input$SurvivalFeatureBi2
-        colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
-        Feature1 <- gsub("[[:punct:]]","_",Feature1)
-        colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
-        Feature2 <- gsub("[[:punct:]]","_",Feature2)
-        Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
-        Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
-        tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2))),data = df)
-        tab
+        if (Feature1 %in% colnames(df) & Feature2 %in% colnames(df)) {
+          colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
+          Feature1 <- gsub("[[:punct:]]","_",Feature1)
+          colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
+          Feature2 <- gsub("[[:punct:]]","_",Feature2)
+          Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
+          Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
+          tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2))),data = df)
+          tab
+        }
       })
       BiVarAddTabFeat1_react <- reactive({
         Feature1 <- input$SurvivalFeatureBi1
         df <- BiVarAddFeature_react()
-        colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
-        Feature1 <- gsub("[[:punct:]]","_",Feature1)
-        Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
-        tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature1)),data = df)
-        tab
+        if (Feature1 %in% colnames(df)) {
+          colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
+          Feature1 <- gsub("[[:punct:]]","_",Feature1)
+          Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
+          tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature1)),data = df)
+          tab
+        }
       })
       BiVarAddTabFeat2_react <- reactive({
         Feature2 <- input$SurvivalFeatureBi2
         df <- BiVarAddFeature_react()
-        colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
-        Feature2 <- gsub("[[:punct:]]","_",Feature2)
-        Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
-        tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature2)),data = df)
-        tab
+        if (Feature2 %in% colnames(df)) {
+          colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
+          Feature2 <- gsub("[[:punct:]]","_",Feature2)
+          Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
+          tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature2)),data = df)
+          tab
+        }
       })
       BiVarAddHRTab_react <- reactive({
         if (isTruthy(BiVarAddTab_react())) {
@@ -3821,19 +3975,63 @@ server <- function(input, output, session) {
         } else { selec <- FeatureChoices[1] }
         updateSelectizeInput(session = session,inputId = "SurvivalFeatureBi2Inter", choices = FeatureChoices,selected = selec, server = T)
       })
+      observe({
+        req(input$SurvivalFeatureBi1Inter)
+        req(ssGSEAmeta())
+        Feature <- input$SurvivalFeatureBi1Inter
+        meta <- ssGSEAmeta()
+        
+        if (Feature %in% colnames(meta)) {
+          if (is.numeric(meta[,Feature]) & !is.logical(meta[,Feature])) {
+            updateCheckboxInput(session,"BiVarIntContCheck1",value = TRUE)
+            updateCheckboxInput(session,"BiVarIntContHiLoCheck1",value = TRUE)
+          } else {
+            updateCheckboxInput(session,"BiVarIntContCheck1",value = FALSE)
+            updateCheckboxInput(session,"BiVarIntContHiLoCheck1",value = FALSE)
+          }
+        }
+      })
+      observe({
+        req(input$SurvivalFeatureBi2Inter)
+        req(ssGSEAmeta())
+        Feature <- input$SurvivalFeatureBi2Inter
+        meta <- ssGSEAmeta()
+        
+        if (Feature %in% colnames(meta)) {
+          if (is.numeric(meta[,Feature]) & !is.logical(meta[,Feature])) {
+            updateCheckboxInput(session,"BiVarIntContCheck2",value = TRUE)
+            updateCheckboxInput(session,"BiVarIntContHiLoCheck2",value = TRUE)
+          } else {
+            updateCheckboxInput(session,"BiVarIntContCheck2",value = FALSE)
+            updateCheckboxInput(session,"BiVarIntContHiLoCheck2",value = FALSE)
+          }
+        }
+      })
       output$rendSurvFeatVariableBi1Inter <- renderUI({
         Feature <- input$SurvivalFeatureBi1Inter
         req(ssGSEAmeta())
         meta <- ssGSEAmeta()
-        Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarIntNAcheck1,input$BiVarIntContCheck1,input$BiVarIntContHiLoCheck1)
-        selectInput("SurvFeatVariableBi1Inter","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
+        if (Feature %in% colnames(meta)) {
+          Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarIntNAcheck1,input$BiVarIntContCheck1,input$BiVarIntContHiLoCheck1)
+          if (input$BiVarIntNAcheck1) {
+            Var_choices <- Var_choices[which(Var_choices != "Inf" & Var_choices != "N/A" & Var_choices != "n/a")]
+            Var_choices <- grep("unknown",Var_choices,ignore.case = T, invert = T, value = T)
+          }
+          selectInput("SurvFeatVariableBi1Inter","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
+        }
       })
       output$rendSurvFeatVariableBi2Inter <- renderUI({
         Feature <- input$SurvivalFeatureBi2Inter
         req(ssGSEAmeta())
         meta <- ssGSEAmeta()
-        Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarIntNAcheck2,input$BiVarIntContCheck2,input$BiVarIntContHiLoCheck2)
-        selectInput("SurvFeatVariableBi2Inter","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
+        if (Feature %in% colnames(meta)) {
+          Var_choices <- survFeatRefSelect(meta,Feature,input$BiVarIntNAcheck2,input$BiVarIntContCheck2,input$BiVarIntContHiLoCheck2)
+          if (input$BiVarIntNAcheck2) {
+            Var_choices <- Var_choices[which(Var_choices != "Inf" & Var_choices != "N/A" & Var_choices != "n/a")]
+            Var_choices <- grep("unknown",Var_choices,ignore.case = T, invert = T, value = T)
+          }
+          selectInput("SurvFeatVariableBi2Inter","Select Coxh Feature Reference:", choices = Var_choices, width = "80%")
+        }
       })
       
       BiVarIntFeature_react <- reactive({
@@ -3845,45 +4043,90 @@ server <- function(input, output, session) {
         meta_ssgsea <- ssGSEAmeta()
         Feature1 <- input$SurvivalFeatureBi1Inter
         Feature1ref <- input$SurvFeatVariableBi1Inter
-        if (Feature1ref %in% meta_ssgsea[,Feature1]) {
-          if (Feature1 %in% colnames(meta_ssgsea)) {
-            if (input$BiVarIntNAcheck1 == TRUE) {
-              meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
-              meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
-              meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        Feature2 <- input$SurvivalFeatureBi2Inter
+        Feature2ref <- input$SurvFeatVariableBi2Inter
+        
+        if (Feature1 %in% colnames(meta_ssgsea) & Feature2 %in% colnames(meta_ssgsea)) {
+          if (input$BiVarIntNAcheck1 == TRUE) {
+            meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+            meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
+            meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+          }
+          if (input$BiVarIntNAcheck2 == TRUE) {
+            meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+            meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
+            meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+          }
+          if (input$BiVarIntContCheck1 == TRUE) {
+            if (input$BiVarIntContHiLoCheck2 == TRUE) {
+              meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
             }
-            if (input$BiVarIntContCheck1 == TRUE) {
-              if (input$BiVarIntContHiLoCheck1 == TRUE) {
-                meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
+            if ((Feature1ref %in% levels(factor(meta_ssgsea[,Feature1])))) {
+              if (length(levels(factor(meta_ssgsea[,Feature1]))) > 1) {
+                meta_ssgsea[,Feature1] <- factor(meta_ssgsea[,Feature1])
+                meta_ssgsea[,Feature1] <- relevel(meta_ssgsea[,Feature1], ref = Feature1ref)
               }
             }
-            if (input$BiVarIntContCheck1 == FALSE) {
-              meta_ssgsea[,Feature1] <- factor(meta_ssgsea[,Feature1])
-              meta_ssgsea[,Feature1] <- relevel(meta_ssgsea[,Feature1], ref = Feature1ref)
-            }
           }
-          
-          Feature2 <- input$SurvivalFeatureBi2Inter
-          Feature2ref <- input$SurvFeatVariableBi2Inter
-          if (Feature2ref %in% meta_ssgsea[,Feature2]) {
-            if (input$BiVarIntNAcheck2 == TRUE) {
-              meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
-              meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
-              meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+          if (input$BiVarIntContCheck2 == TRUE) {
+            if (input$BiVarIntContHiLoCheck2 == TRUE) {
+              meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
             }
-            if (input$BiVarIntContCheck2 == TRUE) {
-              if (input$BiVarIntContHiLoCheck2 == TRUE) {
-                meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
+            if ((Feature2ref %in% levels(factor(meta_ssgsea[,Feature2])))) {
+              if (length(levels(factor(meta_ssgsea[,Feature2]))) > 1) {
+                meta_ssgsea[,Feature2] <- factor(meta_ssgsea[,Feature2])
+                meta_ssgsea[,Feature2] <- relevel(meta_ssgsea[,Feature2], ref = Feature2ref)
               }
             }
-            if (input$BiVarIntContCheck2 == FALSE) {
-              meta_ssgsea[,Feature2] <- factor(meta_ssgsea[,Feature2])
-              meta_ssgsea[,Feature2] <- relevel(meta_ssgsea[,Feature2], ref = Feature2ref)
-            }
           }
-          SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature1,Feature2)
+          if (length(levels(factor(meta_ssgsea[,Feature1]))) > 1 & length(levels(factor(meta_ssgsea[,Feature2]))) > 1) {
+            SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature1,Feature2)
+          }
         }
         
+        #if (Feature1 %in% colnames(meta_ssgsea)) {
+        #  if (Feature1ref %in% meta_ssgsea[,Feature1]) {
+        #    if (input$BiVarIntNAcheck1 == TRUE) {
+        #      meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        #      meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
+        #      meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        #    }
+        #    if (input$BiVarIntContCheck1 == TRUE) {
+        #      if (input$BiVarIntContHiLoCheck1 == TRUE) {
+        #        meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
+        #      }
+        #    }
+        #    if (Feature1ref %in% meta_ssgsea[,Feature1]) {
+        #      if (input$BiVarIntContCheck1 == FALSE) {
+        #        meta_ssgsea[,Feature1] <- factor(meta_ssgsea[,Feature1])
+        #        meta_ssgsea[,Feature1] <- relevel(meta_ssgsea[,Feature1], ref = Feature1ref)
+        #      }
+        #    }
+        #  }
+        #  Feature2 <- input$SurvivalFeatureBi2Inter
+        #  Feature2ref <- input$SurvFeatVariableBi2Inter
+        #  if (Feature2 %in% colnames(meta_ssgsea)) {
+        #    if (Feature2ref %in% meta_ssgsea[,Feature2]) {
+        #      if (input$BiVarIntNAcheck2 == TRUE) {
+        #        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        #        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
+        #        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        #      }
+        #      if (input$BiVarIntContCheck2 == TRUE) {
+        #        if (input$BiVarIntContHiLoCheck2 == TRUE) {
+        #          meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
+        #        }
+        #      }
+        #      if (Feature2ref %in% meta_ssgsea[,Feature2]) {
+        #        if (input$BiVarIntContCheck2 == FALSE) {
+        #          meta_ssgsea[,Feature2] <- factor(meta_ssgsea[,Feature2])
+        #          meta_ssgsea[,Feature2] <- relevel(meta_ssgsea[,Feature2], ref = Feature2ref)
+        #        }
+        #      }
+        #    }
+        #  }
+        #  SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature1,Feature2)
+        #}
       })
       
       BiVarIntTab_react <- reactive({
@@ -3892,16 +4135,19 @@ server <- function(input, output, session) {
         df <- BiVarIntFeature_react()
         Feature1 <- input$SurvivalFeatureBi1Inter
         Feature2 <- input$SurvivalFeatureBi2Inter
-        #save(list = ls(), file = "bivar_plot_env.RData", envir = environment())
-        colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
-        Feature1 <- gsub("[[:punct:]]","_",Feature1)
-        colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
-        Feature2 <- gsub("[[:punct:]]","_",Feature2)
-        Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
-        Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
-        form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"*",Feature2)))
-        tab <- eval(substitute(coxph(form,data = df)))
-        tab
+        if (Feature1 %in% colnames(df) & Feature2 %in% colnames(df)) {
+          #save(list = ls(), file = "bivar_plot_env.RData", envir = environment())
+          colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
+          Feature1 <- gsub("[[:punct:]]","_",Feature1)
+          colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
+          Feature2 <- gsub("[[:punct:]]","_",Feature2)
+          Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
+          Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
+          form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"*",Feature2)))
+          tab <- eval(substitute(coxph(form,data = df)))
+          tab
+        }
+        
       })
       BiVarIntTab4Annova_react <- reactive({
         req(input$SurvivalFeatureBi1Inter)
@@ -3909,15 +4155,17 @@ server <- function(input, output, session) {
         df <- BiVarIntFeature_react()
         Feature1 <- input$SurvivalFeatureBi1Inter
         Feature2 <- input$SurvivalFeatureBi2Inter
-        colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
-        Feature1 <- gsub("[[:punct:]]","_",Feature1)
-        colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
-        Feature2 <- gsub("[[:punct:]]","_",Feature2)
-        Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
-        Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
-        form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
-        tab <- eval(substitute(coxph(form,data = df)))
-        tab
+        if (Feature1 %in% colnames(df) & Feature2 %in% colnames(df)) {
+          colnames(df)[which(colnames(df) == Feature1)] <- gsub("[[:punct:]]","_",Feature1)
+          Feature1 <- gsub("[[:punct:]]","_",Feature1)
+          colnames(df)[which(colnames(df) == Feature2)] <- gsub("[[:punct:]]","_",Feature2)
+          Feature2 <- gsub("[[:punct:]]","_",Feature2)
+          Feature1 <- sprintf(ifelse((grepl(" ", Feature1) | !is.na(suppressWarnings(as.numeric(substring(Feature1, 1, 1))))), "`%s`", "%s"), Feature1)
+          Feature2 <- sprintf(ifelse((grepl(" ", Feature2) | !is.na(suppressWarnings(as.numeric(substring(Feature2, 1, 1))))), "`%s`", "%s"), Feature2)
+          form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
+          tab <- eval(substitute(coxph(form,data = df)))
+          tab
+        }
       })
       
       BiVarIntHRTab_react <- reactive({
@@ -3951,62 +4199,50 @@ server <- function(input, output, session) {
         subFeature <- input$subFeatureSelection
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
-        if (input$SurvYearOrMonth == "Years") {
-          xBreaks <- input$SurvXaxisBreaks * 365.25
-        } else {
-          xBreaks <- input$SurvXaxisBreaks * 30.4375
-        }
-        if (isTruthy(input$SurvXaxis)) {
+        if (Feature1 != Feature2) {
           if (input$SurvYearOrMonth == "Years") {
-            xaxlim <- input$SurvXaxis * 365.25
-            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
-            #xBreaks <- input$SurvXaxisBreaks * 365.25
+            xBreaks <- input$SurvXaxisBreaks * 365.25
           } else {
-            #xBreaks <- input$SurvXaxisBreaks * 30.4375
-            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
-            xaxlim <- input$SurvXaxis * 30.4375
+            xBreaks <- input$SurvXaxisBreaks * 30.4375
           }
-        } else {
-          xaxlim <- NULL
-          #xBreaks <- 365.25
+          if (isTruthy(input$SurvXaxis)) {
+            if (input$SurvYearOrMonth == "Years") {
+              xaxlim <- input$SurvXaxis * 365.25
+            } else {
+              xaxlim <- input$SurvXaxis * 30.4375
+            }
+          } else {
+            xaxlim <- NULL
+          }
+          surv_time_col <- input$SurvivalType_time
+          showLegend <- input$SurvLegendPos
+          showMedSurv <- input$ShowMedSurvLine
+          if (showMedSurv == T) {
+            showMedSurv <- "hv"
+          }
+          else if (showMedSurv == F) {
+            showMedSurv <- "none"
+          }
+          SurvDateType <- sub("\\..*","",surv_time_col)
+          
+          PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature,
+                                     multivar = paste0(Feature1," + ",Feature2))
+          colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature1)] <- "Feature1"
+          colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature2)] <- "Feature2"
+          form <- paste0("Surv(time,ID) ~ Feature1 + Feature2")
+          
+          fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
+          if (!is.null(fit[["strata"]])) {
+            names(fit[["strata"]]) <- gsub("^Feature1=",paste0(Feature1,"="),names(fit[["strata"]]))
+            names(fit[["strata"]]) <- gsub(", Feature2=",paste0(Feature2,"="),names(fit[["strata"]]))
+            names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+            names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+          }
+          SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
+                   pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                   xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
         }
-        surv_time_col <- input$SurvivalType_time
-        showLegend <- input$SurvLegendPos
-        showMedSurv <- input$ShowMedSurvLine
-        if (showMedSurv == T) {
-          showMedSurv <- "hv"
-        }
-        else if (showMedSurv == F) {
-          showMedSurv <- "none"
-        }
-        SurvDateType <- sub("\\..*","",surv_time_col)
         
-        PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature,
-                                   multivar = paste0(Feature1," + ",Feature2))
-        
-        
-        #Feature1 <- sprintf(ifelse(grepl(" ", Feature1), "`%s`", "%s"), Feature1)
-        #Feature2 <- sprintf(ifelse(grepl(" ", Feature2), "`%s`", "%s"), Feature2)
-        
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature1)] <- "Feature1"
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature2)] <- "Feature2"
-        form <- paste0("Surv(time,ID) ~ Feature1 + Feature2")
-        
-        #save(list = ls(), file = "shiny_env_mutliInt.Rdata", envir = environment())
-        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-        if (!is.null(fit[["strata"]])) {
-          names(fit[["strata"]]) <- gsub("^Feature1=",paste0(Feature1,"="),names(fit[["strata"]]))
-          names(fit[["strata"]]) <- gsub(", Feature2=",paste0(Feature2,"="),names(fit[["strata"]]))
-          names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-          names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
-        }
-        
-        #form <- as.formula(paste0("Surv(time,ID) ~ ",paste0(Feature1,"+",Feature2)))
-        #fit <- eval(substitute(survfit(form,data = meta_ssgsea_sdf, type="kaplan-meier")))
-        
-        SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
       })
       
       output$featSplotBi <- renderPlot({
@@ -4015,10 +4251,30 @@ server <- function(input, output, session) {
       })
       
       BivarLinearityPlotInter_react <- reactive({
+        req(BiVarIntTab_react())
+        req(input$SurvivalFeatureBi1Inter)
+        req(input$SurvivalFeatureBi2Inter)
+        req(input$ResidualTypeInter)
+        req(input$linPredict3)
+        req(input$linAxisFont)
+        req(input$linMainFont)
+        req(input$linTickFont)
+        
+        BiVarIntTab_react <- BiVarIntTab_react()
+        SurvivalFeatureBi1Inter <- input$SurvivalFeatureBi1Inter
+        SurvivalFeatureBi2Inter <- input$SurvivalFeatureBi2Inter
+        ResidualTypeInter <- input$ResidualTypeInter
+        linPredict3 <- input$linPredict3
+        linAxisFont <- input$linAxisFont
+        linMainFont <- input$linMainFont
+        linTickFont <- input$linTickFont
+        
+        #save(list = ls(), file = "BivarLinearityPlotInter_react.RData", envir = environment())
         
         if (length(input$SurvivalFeatureBi1Inter > 0) & length(input$SurvivalFeatureBi2Inter > 0)) {
-          P <- linearityPlot(BiVarIntTab_react(),paste0(input$SurvivalFeatureBi1Inter,"*",input$SurvivalFeatureBi2Inter),
+          p <- linearityPlot(BiVarIntTab_react(),paste0(input$SurvivalFeatureBi1Inter,"*",input$SurvivalFeatureBi2Inter),
                              input$ResidualTypeInter,input$linPredict3,input$linAxisFont,input$linMainFont,input$linTickFont)
+          p
         }
       })
       
@@ -4197,15 +4453,17 @@ server <- function(input, output, session) {
         req(ssGSEAmeta())
         meta <- ssGSEAmeta()
         Feature <- input$MultiFeatMultivarSelect
-        IsItCont <- GetColsOfType(meta[,Feature, drop = F],"continuous")
-        if (isTruthy(IsItCont)) {
-          if (IsItCont == Feature) {
-            meta[,Feature] <- apply(meta[,Feature, drop = F],2,function(x) highlow2(x))
+        if (Feature %in% colnames(meta)) {
+          IsItCont <- GetColsOfType(meta[,Feature, drop = F],"continuous")
+          if (isTruthy(IsItCont)) {
+            if (IsItCont == Feature) {
+              meta[,Feature] <- apply(meta[,Feature, drop = F],2,function(x) highlow2(x))
+            }
           }
+          opts <- unique(meta[,Feature])
+          opts <- sort(opts, decreasing = T, na.last = T)
+          selectInput("MultiFeatMultivarRefSelect", "Select Reference:", choices = opts)
         }
-        opts <- unique(meta[,Feature])
-        opts <- sort(opts, decreasing = T, na.last = T)
-        selectInput("MultiFeatMultivarRefSelect", "Select Reference:", choices = opts)
       })
       
       observe({
@@ -4237,20 +4495,23 @@ server <- function(input, output, session) {
         req(input$SurvivalType_id)
         req(input$MultiFeatMultivarSelect)
         req(input$MultiFeatMultivarRefSelect)
+        req(input$MultiFeatMultivarSubSelect)
         meta <- ssGSEAmeta()
         surv_time_col <- input$SurvivalType_time
         surv_id_col <- input$SurvivalType_id
         mainFeat <- input$MultiFeatMultivarSelect
         mainFeatRef <- input$MultiFeatMultivarRefSelect
         subFeats <- input$MultiFeatMultivarSubSelect
-        FeatCols <- c(colnames(meta)[1],surv_time_col,surv_id_col,mainFeat,subFeats)
-        metaSub <- meta[,FeatCols]
-        continuousCols <- GetColsOfType(metaSub[,-c(1:3), drop = F],"continuous")
-        metaSub[,continuousCols] <- apply(metaSub[,continuousCols, drop = F],2,function(x) highlow2(x))
-        if (mainFeatRef %in% metaSub[,mainFeat]) {
-          metaSub[,mainFeat] <- as.factor(metaSub[,mainFeat])
-          metaSub[,mainFeat] <- relevel(metaSub[,mainFeat], ref = mainFeatRef)
-          metaSub
+        if (mainFeat %in% colnames(meta)) {
+          if (mainFeatRef %in% meta[,mainFeat]) {
+            FeatCols <- c(colnames(meta)[1],surv_time_col,surv_id_col,mainFeat,subFeats)
+            metaSub <- meta[,FeatCols]
+            continuousCols <- GetColsOfType(metaSub[,-c(1:3), drop = F],"continuous")
+            metaSub[,continuousCols] <- apply(metaSub[,continuousCols, drop = F],2,function(x) highlow2(x))
+            metaSub[,mainFeat] <- as.factor(metaSub[,mainFeat])
+            metaSub[,mainFeat] <- relevel(metaSub[,mainFeat], ref = mainFeatRef)
+            metaSub
+          }
         }
       })
       
@@ -4281,69 +4542,64 @@ server <- function(input, output, session) {
         mainFeat <- input$MultiFeatMultivarSelect
         subFeats <- input$MultiFeatMultivarSubSelect
         tabTemp <- c(N = NA,`Hazard Ratio` = NA,`Standard Error` = NA,Low = NA,High = NA,P.Value = NA)
+        #save(list = ls(), file = "MultiFeatMultivarForestPlotTab_react.RData", envir = environment())
         
         FeatColsList <- list()
         j <- 1
         for (feat in subFeats) {
-          featVals <- unique(metaSub[,feat])
-          FeatColsList[[feat]] <- c(Variable = feat,tabTemp)
-          for (feat2 in featVals) {
-            metaSubSet <- metaSub[which(metaSub[,feat] == feat2),c(colnames(metaSub)[1],surv_time_col,surv_id_col,mainFeat)]
-            metaSubSet <- metaSubSet[which(is.na(metaSubSet[,mainFeat]) == FALSE),]
-            metaSubSet <- metaSubSet[which(metaSubSet[,mainFeat] != "Inf"),]
-            metaSubSet <- metaSubSet[grep("unknown",metaSubSet[,mainFeat],ignore.case = T, invert = T),]
-            if (nrow(metaSubSet) >= 6){
-              #if (length(levels(metaSubSet[,mainFeat])) >= 2){
-              colnames(metaSubSet)[2:4] <- c("time","status","feature")
-              tab <- coxph(Surv(time,status) ~ feature, dat = metaSubSet)
-              #tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",mainFeat,sep = "")), data = metaSubSet)
-              tabData <- get_tabData(tab)
-              tabData[1] <- feat2
-              FeatColsList[[as.character(j)]] <- tabData
-              j <- j+1
+          if (feat %in% colnames(metaSub)) {
+            featVals <- unique(metaSub[,feat])
+            FeatColsList[[feat]] <- c(Variable = feat,tabTemp)
+            for (feat2 in featVals) {
+              metaSubSet <- metaSub[which(metaSub[,feat] == feat2),c(colnames(metaSub)[1],surv_time_col,surv_id_col,mainFeat)]
+              metaSubSet <- metaSubSet[which(is.na(metaSubSet[,mainFeat]) == FALSE),]
+              metaSubSet <- metaSubSet[which(metaSubSet[,mainFeat] != "Inf"),]
+              metaSubSet <- metaSubSet[grep("unknown",metaSubSet[,mainFeat],ignore.case = T, invert = T),]
+              if (nrow(metaSubSet) >= 6){
+                #if (length(levels(metaSubSet[,mainFeat])) >= 2){
+                colnames(metaSubSet)[2:4] <- c("time","status","feature")
+                tab <- coxph(Surv(time,status) ~ feature, dat = metaSubSet)
+                #tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",mainFeat,sep = "")), data = metaSubSet)
+                tabData <- get_tabData(tab)
+                tabData[1] <- feat2
+                FeatColsList[[as.character(j)]] <- tabData
+                j <- j+1
+              }
+              
             }
-            
           }
           
         }
         
-        FeatColsDF <- as.data.frame(do.call(rbind, FeatColsList))
-        rownames(FeatColsDF) <- NULL
-        
-        FeatColsDF$Variable <- ifelse(is.na(FeatColsDF$N),
-                                      FeatColsDF$Variable,
-                                      paste0("   ", FeatColsDF$Variable))
-        
-        FeatColsDF$Low <- as.numeric(FeatColsDF$Low)
-        FeatColsDF$High <- as.numeric(FeatColsDF$High)
-        FeatColsDF$`Hazard Ratio` <- as.numeric(FeatColsDF$`Hazard Ratio`)
-        FeatColsDF$P.Value <- as.numeric(FeatColsDF$P.Value)
-        
-        FeatColsDF$` ` <- paste(rep(" ", 20), collapse = " ")
-        
-        FeatColsDF$`HR (95% CI)` <- ifelse(is.na(FeatColsDF$`Standard Error`), "",
-                                           sprintf("%.2f (%.2f to %.2f)",
-                                                   FeatColsDF$`Hazard Ratio`, FeatColsDF$Low, FeatColsDF$High))
-        FeatColsDF <- FeatColsDF %>%
-          relocate(P.Value, .after = `HR (95% CI)`)
-        FeatColsDF$P.Value <- ifelse(FeatColsDF$P.Value < 0.1,formatC(FeatColsDF$P.Value, format = "e", digits = 1),FeatColsDF$P.Value)
-        
-        FeatColsDF$P.Value <- ifelse(is.na(FeatColsDF$P.Value), "", FeatColsDF$P.Value)
-        FeatColsDF$N <- ifelse(is.na(FeatColsDF$N), "", FeatColsDF$N)
-        
-        #if (any(grepl(paste(StatCols,collapse = "|"),FeatColsDF$Variable))) {
-        #  found <- grep(paste(StatCols,collapse = "|"),FeatColsDF$Variable)
-        #  for (i in found) {
-        #    coln <- strsplit(FeatColsDF[i,1],"\\s+")[[1]][1]
-        #    ref <- strsplit(FeatColsDF[i,1],"\\s+")[[1]][2]
-        #    FeatColsDF[i,1] <- paste0(geneset_name,"_",coln," ",ref)
-        #  }
-        #}
-        FeatColsDF$Variable <- paste(FeatColsDF$Variable,"     ")
-        
-        FeatColsDF
-        
-        
+        if (length(FeatColsList)>0) {
+          FeatColsDF <- as.data.frame(do.call(rbind, FeatColsList))
+          rownames(FeatColsDF) <- NULL
+          
+          FeatColsDF$Variable <- ifelse(is.na(FeatColsDF$N),
+                                        FeatColsDF$Variable,
+                                        paste0("   ", FeatColsDF$Variable))
+          
+          FeatColsDF$Low <- as.numeric(FeatColsDF$Low)
+          FeatColsDF$High <- as.numeric(FeatColsDF$High)
+          FeatColsDF$`Hazard Ratio` <- as.numeric(FeatColsDF$`Hazard Ratio`)
+          FeatColsDF$P.Value <- as.numeric(FeatColsDF$P.Value)
+          
+          FeatColsDF$` ` <- paste(rep(" ", 20), collapse = " ")
+          
+          FeatColsDF$`HR (95% CI)` <- ifelse(is.na(FeatColsDF$`Standard Error`), "",
+                                             sprintf("%.2f (%.2f to %.2f)",
+                                                     FeatColsDF$`Hazard Ratio`, FeatColsDF$Low, FeatColsDF$High))
+          FeatColsDF <- FeatColsDF %>%
+            relocate(P.Value, .after = `HR (95% CI)`)
+          FeatColsDF$P.Value <- ifelse(FeatColsDF$P.Value < 0.1,formatC(FeatColsDF$P.Value, format = "e", digits = 1),FeatColsDF$P.Value)
+          
+          FeatColsDF$P.Value <- ifelse(is.na(FeatColsDF$P.Value), "", FeatColsDF$P.Value)
+          FeatColsDF$N <- ifelse(is.na(FeatColsDF$N), "", FeatColsDF$N)
+          
+          FeatColsDF$Variable <- paste(FeatColsDF$Variable,"     ")
+          
+          FeatColsDF
+        }
       })
       
       MultiFeatMultivarForestPlot_react <- reactive({
@@ -4366,55 +4622,58 @@ server <- function(input, output, session) {
         surv_id_col <- input$SurvivalType_id
         mainFeat <- input$MultiFeatMultivarSelect
         mainFeatRef <- input$MultiFeatMultivarRefSelect
-        metaSub[,mainFeat] <- as.factor(metaSub[,mainFeat])
-        metaSub[,mainFeat] <- relevel(metaSub[,mainFeat], ref = mainFeatRef)
-        ref <- levels(metaSub[,mainFeat])[2]
-        PlotTitle <- paste0("Forest plot featuring ",mainFeat," - ",ref," amoung selected features\n")
+        if (mainFeat %in% colnames(metaSub)) {
+          metaSub[,mainFeat] <- as.factor(metaSub[,mainFeat])
+          metaSub[,mainFeat] <- relevel(metaSub[,mainFeat], ref = mainFeatRef)
+          ref <- levels(metaSub[,mainFeat])[2]
+          PlotTitle <- paste0("Forest plot featuring ",mainFeat," - ",ref," amoung selected features\n")
+          
+          tm <- forest_theme(base_size = 16,
+                             title_cex = 1.5,
+                             # Confidence interval point shape, line type/color/width
+                             ci_pch = 15,
+                             ci_col = "black",
+                             ci_fill = "black",
+                             ci_alpha = 0.8,
+                             ci_lty = 1,
+                             ci_lwd = 1.5,
+                             ci_Theight = 0.2, # Set an T end at the end of CI
+                             # Reference line width/type/color
+                             refline_lwd = 1,
+                             refline_lty = "dashed",
+                             refline_col = "grey20",
+                             # Vertical line width/type/color
+                             vertline_lwd = 1,
+                             vertline_lty = "dashed",
+                             vertline_col = "grey20",
+                             # Change summary color for filling and borders
+                             summary_fill = "#4575b4",
+                             summary_col = "#4575b4")
+          
+          
+          p_OS <- forest(FeatColsDF[,c(1:2,7:9)],
+                         title = PlotTitle,
+                         est = FeatColsDF$`Hazard Ratio`,
+                         lower = FeatColsDF$Low,
+                         upper = FeatColsDF$High,
+                         #sizes = coxOS$`Standard Error`,
+                         x_trans = Xtrans,
+                         xlab = XLabel,
+                         ci_column = 3,
+                         ref_line = 1,
+                         arrow_lab = c("Low Risk", "High Risk"),
+                         xlim = c(Xlims_low, Xlims_high),
+                         #ticks_at = c(0.5, 1, 2, 3, 4, 5),
+                         theme = tm
+                         
+          )
+          
+          p_OS$heights[length(p_OS$heights)-1] <- unit((as.numeric(p_OS$heights[length(p_OS$heights)-1])+8),"mm")
+          p_wh<-get_wh(p_OS)
+          plothtMulti(round(unname(p_wh[2])*100)-100)
+          p_OS
+        }
         
-        tm <- forest_theme(base_size = 16,
-                           title_cex = 1.5,
-                           # Confidence interval point shape, line type/color/width
-                           ci_pch = 15,
-                           ci_col = "black",
-                           ci_fill = "black",
-                           ci_alpha = 0.8,
-                           ci_lty = 1,
-                           ci_lwd = 1.5,
-                           ci_Theight = 0.2, # Set an T end at the end of CI
-                           # Reference line width/type/color
-                           refline_lwd = 1,
-                           refline_lty = "dashed",
-                           refline_col = "grey20",
-                           # Vertical line width/type/color
-                           vertline_lwd = 1,
-                           vertline_lty = "dashed",
-                           vertline_col = "grey20",
-                           # Change summary color for filling and borders
-                           summary_fill = "#4575b4",
-                           summary_col = "#4575b4")
-        
-        
-        p_OS <- forest(FeatColsDF[,c(1:2,7:9)],
-                       title = PlotTitle,
-                       est = FeatColsDF$`Hazard Ratio`,
-                       lower = FeatColsDF$Low,
-                       upper = FeatColsDF$High,
-                       #sizes = coxOS$`Standard Error`,
-                       x_trans = Xtrans,
-                       xlab = XLabel,
-                       ci_column = 3,
-                       ref_line = 1,
-                       arrow_lab = c("Low Risk", "High Risk"),
-                       xlim = c(Xlims_low, Xlims_high),
-                       #ticks_at = c(0.5, 1, 2, 3, 4, 5),
-                       theme = tm
-                       
-        )
-        
-        p_OS$heights[length(p_OS$heights)-1] <- unit((as.numeric(p_OS$heights[length(p_OS$heights)-1])+8),"mm")
-        p_wh<-get_wh(p_OS)
-        plothtMulti(round(unname(p_wh[2])*100)-100)
-        p_OS
         
       })
       
