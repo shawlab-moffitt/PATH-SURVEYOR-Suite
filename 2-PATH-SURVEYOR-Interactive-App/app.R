@@ -1,4 +1,4 @@
-version_id <- paste0("v2.0.20250806")
+version_id <- paste0("v2.0.20250807")
 
 # User Input -------------------------------------------------------------------
 
@@ -3251,29 +3251,7 @@ server <- function(input, output, session) {
             meta_ssgsea_sdf
           }
         }
-        #if (Feature %in% colnames(meta_ssgsea)) {
-        #  if ((is.numeric(meta_ssgsea[,Feature]) & !is.logical(meta_ssgsea[,Feature])) | input$UniVarContCheck) {
-        #    if (input$UniVarContCheck == TRUE) {
-        #      if (input$UniVarContHiLoCheck == TRUE) {
-        #        meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
-        #      }
-        #    } else {
-        #      meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
-        #    }
-        #  }
-        #  if (input$UniVarNAcheck == TRUE) {
-        #    meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
-        #    meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
-        #    meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
-        #  }
-        #  #if (input$UniVarContCheck == TRUE) {
-        #  #  if (input$UniVarContHiLoCheck == TRUE) {
-        #  #    meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
-        #  #  }
-        #  #}
-        #  meta_ssgsea_sdf <- SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature)
-        #  meta_ssgsea_sdf
-        #}
+        
         
       })
       
@@ -3285,7 +3263,6 @@ server <- function(input, output, session) {
         meta_ssgsea_sdf <- UniVarFeat_react()
         Feature <- input$SingleSurvivalFeature
         ref_Feature <- input$SurvFeatVariableUni
-        #save(list = ls(), file = "UniVarFeatTab_react_env.RData", envir = environment())
         if ((input$UniVarContCheck == FALSE) | (input$UniVarContCheck == TRUE & input$UniVarContHiLoCheck == TRUE)) {
           if (ref_Feature %in% levels(factor(meta_ssgsea_sdf[,Feature]))) {
             if (nlevels(factor(meta_ssgsea_sdf[,Feature])) > 1) {
@@ -3299,24 +3276,7 @@ server <- function(input, output, session) {
           colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature_save)] <- gsub("[[:punct:]]","_",Feature)
           Feature <- gsub("[[:punct:]]","_",Feature)
           Feature <- sprintf(ifelse((grepl(" ", Feature)), "`%s`", "%s"), Feature)
-          #Feature <- sprintf(ifelse((grepl(" ", Feature) | !is.na(suppressWarnings(as.numeric(substring(Feature, 1, 1))))), "`%s`", "%s"), Feature)
           tab <- coxph(as.formula(paste0("Surv(time,ID) ~ ",Feature)),data = meta_ssgsea_sdf)
-          
-          #if (!is.null(fit[["strata"]])) {
-          #  names(fit[["strata"]]) <- gsub("^Feature=",paste0(SurvFeature_save,"="),names(fit[["strata"]]))
-          #  names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-          #  names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
-          #}
-          #
-          #obj <- obj %>%
-          #  gtsummary::tbl_regression(exp = TRUE,
-          #                            label = list(Feature ~ Feature)) %>%
-          #  as_gt()
-          #tab_df <- as.data.frame(obj)
-          #tab_df <- tab_df %>%
-          #  dplyr::select(label,estimate,ci,p.value)
-          #colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
-          #tab_df <- sapply(tab_df,function(x) { gsub("<br />", "", x) })
           
           tab
         }
@@ -3325,14 +3285,9 @@ server <- function(input, output, session) {
       
       SSingleFeatureHRtab_react <- reactive({
         
-        #Feature <- input$SingleSurvivalFeature
-        #meta_ssgsea_sdf <- UniVarFeat_react()
         Feature <- input$SingleSurvivalFeature
-        #ref_Feature <- input$SurvFeatVariableUni
-        #Feature <- 
         tab <- UniVarFeatTab_react()
         Feature <- names(tab[["xlevels"]][1])
-        #names(tab[["assign"]]) <- gsub("^Feature",Feature,names(tab[["assign"]]))
         tabOut <- CoxPHtabUni(tab,Feature)
         tabOut
       })
@@ -3348,6 +3303,7 @@ server <- function(input, output, session) {
         subFeature <- input$subFeatureSelection
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
+        SurvYearOrMonth <- input$SurvYearOrMonth
         if (input$SurvYearOrMonth == "Years") {
           xBreaks <- input$SurvXaxisBreaks * 365.25
         } else {
@@ -3356,16 +3312,11 @@ server <- function(input, output, session) {
         if (isTruthy(input$SurvXaxis)) {
           if (input$SurvYearOrMonth == "Years") {
             xaxlim <- input$SurvXaxis * 365.25
-            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
-            #xBreaks <- input$SurvXaxisBreaks * 365.25
           } else {
-            #xBreaks <- input$SurvXaxisBreaks * 30.4375
-            #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,2] <= xaxlim),]
             xaxlim <- input$SurvXaxis * 30.4375
           }
         } else {
           xaxlim <- NULL
-          #xBreaks <- 365.25
         }
         surv_time_col <- input$SurvivalType_time
         showLegend <- input$SurvLegendPos
@@ -3398,19 +3349,21 @@ server <- function(input, output, session) {
         }
         
         
-        PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature, univar = Feature)
-        colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- "Feature"
-        form <- paste0("Surv(time,ID) ~ Feature")
-        fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-        if (!is.null(fit[["strata"]])) {
-          names(fit[["strata"]]) <- gsub("^Feature=",paste0(Feature,"="),names(fit[["strata"]]))
-          names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-          names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+        if (length(unique(meta_ssgsea_sdf[,Feature])) <= 50) {
+          PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature, univar = Feature)
+          colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- "Feature"
+          form <- paste0("Surv(time,ID) ~ Feature")
+          fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
+          if (!is.null(fit[["strata"]])) {
+            names(fit[["strata"]]) <- gsub("^Feature=",paste0(Feature,"="),names(fit[["strata"]]))
+            names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+            names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+          }
+          
+          SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
+                   pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                   xScale = SurvYearOrMonth, xBreaks = xBreaks)
         }
-        
-        SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                 pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
         
       })
       
@@ -3519,8 +3472,10 @@ server <- function(input, output, session) {
         FeatCols <- c(input$MultiFeatUnivarSelect)
         HR_Tab <- SBinaryHRtab_react()             # Hazard Ratio Table Reactive
         HR <- HR_Tab[3,2]
-        if (as.numeric(HR) > 1) {
-          HighRisk <- TRUE
+        if (isTruthy(HR)) {
+          if (as.numeric(gsub(",","",HR)) > 1) {
+            HighRisk <- TRUE
+          } else {HighRisk <- FALSE}
         } else {HighRisk <- FALSE}
         FeatColsList <- list()
         for (feat in FeatCols) {
@@ -3535,7 +3490,7 @@ server <- function(input, output, session) {
             tabData[1] <- feat
             colnames(metaSubSet)[4] <- feat
             if (HighRisk) {
-              if (as.numeric(tabData[3]) > 1) {
+              if (as.numeric(gsub(",","",tabData[3])) > 1) {
                 levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
                 tabData[1] <- feat
                 tabData[1] <- paste(tabData[1],levelLabel)
@@ -3552,7 +3507,7 @@ server <- function(input, output, session) {
                 FeatColsList[[feat]] <- tabData
               }
             } else {
-              if (as.numeric(tabData[3]) < 1) {
+              if (as.numeric(gsub(",","",tabData[3])) < 1) {
                 levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
                 tabData[1] <- feat
                 tabData[1] <- paste(tabData[1],levelLabel)
@@ -4225,22 +4180,25 @@ server <- function(input, output, session) {
           }
           SurvDateType <- sub("\\..*","",surv_time_col)
           
-          PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature,
-                                     multivar = paste0(Feature1," + ",Feature2))
-          colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature1)] <- "Feature1"
-          colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature2)] <- "Feature2"
-          form <- paste0("Surv(time,ID) ~ Feature1 + Feature2")
-          
-          fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
-          if (!is.null(fit[["strata"]])) {
-            names(fit[["strata"]]) <- gsub("^Feature1=",paste0(Feature1,"="),names(fit[["strata"]]))
-            names(fit[["strata"]]) <- gsub(", Feature2=",paste0(Feature2,"="),names(fit[["strata"]]))
-            names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
-            names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+          if (length(unique(meta_ssgsea_sdf[,Feature1])) <= 50 & length(unique(meta_ssgsea_sdf[,Feature2])) <= 50) {
+            
+            PlotTitle <- SurvPlotTitle(SampleTypeSelected = SampleType,Feature = Feature_sub, subFeature = subFeature,
+                                       multivar = paste0(Feature1," + ",Feature2))
+            colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature1)] <- "Feature1"
+            colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature2)] <- "Feature2"
+            form <- paste0("Surv(time,ID) ~ Feature1 + Feature2")
+            
+            fit <- eval(substitute(survfit(as.formula(form),data = meta_ssgsea_sdf, type="kaplan-meier")))
+            if (!is.null(fit[["strata"]])) {
+              names(fit[["strata"]]) <- gsub("^Feature1=",paste0(Feature1,"="),names(fit[["strata"]]))
+              names(fit[["strata"]]) <- gsub(", Feature2=",paste0(Feature2,"="),names(fit[["strata"]]))
+              names(fit[["strata"]]) <- gsub("_"," ",names(fit[["strata"]]))
+              names(fit[["strata"]]) <- str_wrap(names(fit[["strata"]]),width = 25, whitespace_only = FALSE)
+            }
+            SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
+                     pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
+                     xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
           }
-          SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
-                   pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-                   xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
         }
         
       })
@@ -6091,62 +6049,67 @@ server <- function(input, output, session) {
       Sheatmap_react  <- reactive({
         
         req(gs_react())
-        if (length(gs_react()) > 0) {
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          if (!is.numeric(geneset[[1]])) {
-            if (GeneSet %in% names(geneset)) {
-              heatgenes <- geneset[[GeneSet]]
-              meta <- SboxplotReact()
-              expr_start <- exprSub()
-              samples <- meta[,1]
-              expr <- expr_start[which(rownames(expr_start) %in% heatgenes),colnames(expr_start) %in% samples, drop = F]
-              clmethod <- input$ClusterMethod
-              rowfont <- input$heatmapFontR
-              colfont <- input$heatmapFontC
-              colAnno <- riskheat_colAnn()
-              
-              dataset <- expr
-              dataset <- log2(dataset + 1)
-              zdataset <- apply(dataset, 1, scale)
-              zdataset <- apply(zdataset, 1, rev)
-              colnames(zdataset) <- names(dataset)
-              dataset <- as.matrix(zdataset)
-              dataset[is.na(dataset)] <- 0
-              dataset = dataset[apply(dataset[,-1], 1, function(x) !all(x==0)),]
-              #save(list = ls(), file = "heatmap_env.RData", envir = environment())
-              
-              #col_fun = colorRamp2(c(min(dataset), 0, max(dataset)), c("blue", "white", "red"))
-              #lgd = Legend(col_fun = col_fun, title = "Expression")
-              
-              
-              if (isTruthy(dataset)) {
-                if (isTruthy(colAnno)) {
-                  p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
-                                                                top_annotation = colAnno,
-                                                                clustering_method_rows = clmethod,
-                                                                show_row_names = T, show_column_names = T,
-                                                                #cluster_rows = clust_rows_opt,
-                                                                cluster_columns = FALSE,
-                                                                row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
-                                                                heatmap_legend_param = list(title = "Expression"),
-                                                                border = F))
-                } else {
-                  p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
-                                                                clustering_method_rows = clmethod,
-                                                                show_row_names = T, show_column_names = T,
-                                                                #cluster_rows = clust_rows_opt,
-                                                                cluster_columns = FALSE,
-                                                                row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
-                                                                heatmap_legend_param = list(title = "Expression"),
-                                                                border = F))
+        req(exprSub())
+        req(SboxplotReact())
+        if (nrow(SboxplotReact()) > 0) {
+          if (length(gs_react()) > 0) {
+            geneset <- gs_react()
+            GeneSet <- names(geneset)
+            if (!is.numeric(geneset[[1]])) {
+              if (GeneSet %in% names(geneset)) {
+                heatgenes <- geneset[[GeneSet]]
+                meta <- SboxplotReact()
+                expr_start <- exprSub()
+                samples <- meta[,1]
+                expr <- expr_start[which(rownames(expr_start) %in% heatgenes),colnames(expr_start) %in% samples, drop = F]
+                clmethod <- input$ClusterMethod
+                rowfont <- input$heatmapFontR
+                colfont <- input$heatmapFontC
+                colAnno <- riskheat_colAnn()
+                
+                dataset <- expr
+                dataset <- log2(dataset + 1)
+                zdataset <- apply(dataset, 1, scale)
+                zdataset <- apply(zdataset, 1, rev)
+                colnames(zdataset) <- names(dataset)
+                dataset <- as.matrix(zdataset)
+                dataset[is.na(dataset)] <- 0
+                dataset = dataset[apply(dataset[,-1, drop = F], 1, function(x) !all(x==0)),]
+                #save(list = ls(), file = "heatmap_env.RData", envir = environment())
+                
+                #col_fun = colorRamp2(c(min(dataset), 0, max(dataset)), c("blue", "white", "red"))
+                #lgd = Legend(col_fun = col_fun, title = "Expression")
+                
+                
+                if (isTruthy(dataset)) {
+                  if (isTruthy(colAnno)) {
+                    p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
+                                                                  top_annotation = colAnno,
+                                                                  clustering_method_rows = clmethod,
+                                                                  show_row_names = T, show_column_names = T,
+                                                                  #cluster_rows = clust_rows_opt,
+                                                                  cluster_columns = FALSE,
+                                                                  row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
+                                                                  heatmap_legend_param = list(title = "Expression"),
+                                                                  border = F))
+                  } else {
+                    p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
+                                                                  clustering_method_rows = clmethod,
+                                                                  show_row_names = T, show_column_names = T,
+                                                                  #cluster_rows = clust_rows_opt,
+                                                                  cluster_columns = FALSE,
+                                                                  row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
+                                                                  heatmap_legend_param = list(title = "Expression"),
+                                                                  border = F))
+                  }
+                  draw(p, padding = unit(c(50, 50, 2, 2), "mm")) # unit(c(bottom,left,right,top))
                 }
-                draw(p, padding = unit(c(50, 50, 2, 2), "mm")) # unit(c(bottom,left,right,top))
+                #draw(lgd, x = unit(1, "npc"), y = unit(1, "npc"), just = c("right", "top"))
               }
-              #draw(lgd, x = unit(1, "npc"), y = unit(1, "npc"), just = c("right", "top"))
             }
           }
         }
+        
         
       })
       output$Sheatmap <- renderPlot({
@@ -6296,59 +6259,61 @@ server <- function(input, output, session) {
         req(input$ClusterMethod2)
         req(input$heatmapFontR)
         req(input$heatmapFontC)
-        if (length(gs_react()) > 0) {
-          geneset <- gs_react()
-          GeneSet <- names(geneset)
-          if (!is.numeric(geneset[[1]])) {
-            if (GeneSet %in% names(geneset)) {
-              heatgenes <- geneset[[GeneSet]]
-              meta <- FeatureStrat_df()
-              expr_start <- exprSub()
-              samples <- meta[,1]
-              expr <- expr_start[which(rownames(expr_start) %in% heatgenes),colnames(expr_start) %in% samples, drop = F]
-              clmethod <- input$ClusterMethod2
-              rowfont <- input$heatmapFontR
-              colfont <- input$heatmapFontC
-              colAnno <- stratheat_colAnn()
-              
-              dataset <- expr
-              dataset <- log2(dataset + 1)
-              zdataset <- apply(dataset, 1, scale)
-              zdataset <- apply(zdataset, 1, rev)
-              colnames(zdataset) <- names(dataset)
-              dataset <- as.matrix(zdataset)
-              dataset[is.na(dataset)] <- 0
-              dataset = dataset[apply(dataset[,-1], 1, function(x) !all(x==0)),]
-              
-              
-              #col_fun = colorRamp2(c(min(dataset), 0, max(dataset)), c("blue", "white", "red"))
-              #lgd = Legend(col_fun = col_fun, title = "Expression")
-              if (isTruthy(dataset)) {
-                if (isTruthy(colAnno)) {
-                  p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
-                                                                top_annotation = colAnno,
-                                                                clustering_method_rows = clmethod,
-                                                                show_row_names = T, show_column_names = T,
-                                                                #cluster_rows = clust_rows_opt,
-                                                                cluster_columns = FALSE,
-                                                                row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
-                                                                heatmap_legend_param = list(title = "Expression"),
-                                                                border = F))
-                } else {
-                  p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
-                                                                clustering_method_rows = clmethod,
-                                                                show_row_names = T, show_column_names = T,
-                                                                #cluster_rows = clust_rows_opt,
-                                                                cluster_columns = FALSE,
-                                                                row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
-                                                                heatmap_legend_param = list(title = "Expression"),
-                                                                border = F))
+        if (nrow(FeatureStrat_df()) > 0) {
+          if (length(gs_react()) > 0) {
+            geneset <- gs_react()
+            GeneSet <- names(geneset)
+            if (!is.numeric(geneset[[1]])) {
+              if (GeneSet %in% names(geneset)) {
+                heatgenes <- geneset[[GeneSet]]
+                meta <- FeatureStrat_df()
+                expr_start <- exprSub()
+                samples <- meta[,1]
+                expr <- expr_start[which(rownames(expr_start) %in% heatgenes),colnames(expr_start) %in% samples, drop = F]
+                clmethod <- input$ClusterMethod2
+                rowfont <- input$heatmapFontR
+                colfont <- input$heatmapFontC
+                colAnno <- stratheat_colAnn()
+                
+                dataset <- expr
+                dataset <- log2(dataset + 1)
+                zdataset <- apply(dataset, 1, scale)
+                zdataset <- apply(zdataset, 1, rev)
+                colnames(zdataset) <- names(dataset)
+                dataset <- as.matrix(zdataset)
+                dataset[is.na(dataset)] <- 0
+                dataset = dataset[apply(dataset[,-1, drop = F], 1, function(x) !all(x==0)),]
+                
+                
+                #col_fun = colorRamp2(c(min(dataset), 0, max(dataset)), c("blue", "white", "red"))
+                #lgd = Legend(col_fun = col_fun, title = "Expression")
+                if (isTruthy(dataset)) {
+                  if (isTruthy(colAnno)) {
+                    p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
+                                                                  top_annotation = colAnno,
+                                                                  clustering_method_rows = clmethod,
+                                                                  show_row_names = T, show_column_names = T,
+                                                                  #cluster_rows = clust_rows_opt,
+                                                                  cluster_columns = FALSE,
+                                                                  row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
+                                                                  heatmap_legend_param = list(title = "Expression"),
+                                                                  border = F))
+                  } else {
+                    p <- suppressMessages(ComplexHeatmap::Heatmap(dataset,
+                                                                  clustering_method_rows = clmethod,
+                                                                  show_row_names = T, show_column_names = T,
+                                                                  #cluster_rows = clust_rows_opt,
+                                                                  cluster_columns = FALSE,
+                                                                  row_names_gp = gpar(fontsize = rowfont), column_names_gp = gpar(fontsize = colfont),
+                                                                  heatmap_legend_param = list(title = "Expression"),
+                                                                  border = F))
+                  }
+                  draw(p, padding = unit(c(50, 50, 2, 2), "mm")) # unit(c(bottom,left,right,top))
                 }
-                draw(p, padding = unit(c(50, 50, 2, 2), "mm")) # unit(c(bottom,left,right,top))
               }
             }
+            
           }
-          
         }
         
       })
