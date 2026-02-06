@@ -1,4 +1,4 @@
-version_id <- paste0("v2.0.20250807")
+version_id <- paste0("v2.0.20260206")
 
 # User Input -------------------------------------------------------------------
 
@@ -2768,10 +2768,21 @@ server <- function(input, output, session) {
         ssgsea_scores <- ssGSEAmeta[,c(SampleNameCol,geneset_name)]
         meta_ssgsea_sdf <- merge(OptimalCutP_react(),ssgsea_scores)
         
-        if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
-          res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = "time", event = "ID", variable = geneset_name, minprop = 0.01)
-          cutp <- res.cut$cutpoint[["cutpoint"]]
+        if (length(meta_ssgsea_sdf[,geneset_name][meta_ssgsea_sdf[,geneset_name] > 0])/length(meta_ssgsea_sdf[,geneset_name]) > 0.01) {
+          if (length(meta_ssgsea_sdf[,geneset_name]) > 1) {
+            res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = "time", event = "ID", variable = geneset_name, minprop = 0.01)
+            cutp <- res.cut$cutpoint[["cutpoint"]]
+          } else {
+            cutp <- NA
+          }
+        } else {
+          cutp <- NA
         }
+        
+        #if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
+        #  res.cut <- survminer::surv_cutpoint(meta_ssgsea_sdf,time = "time", event = "ID", variable = geneset_name, minprop = 0.01)
+        #  cutp <- res.cut$cutpoint[["cutpoint"]]
+        #}
         
         quant_df <- data.frame(Quantile = cutp)
         quant_df$Quantile <- round(quant_df$Quantile,3)
@@ -3226,6 +3237,7 @@ server <- function(input, output, session) {
         req(input$SurvivalType_time)
         req(input$SurvivalType_id)
         req(input$SingleSurvivalFeature)
+        req(input$SurvFeatVariableUni)
         Feature <- input$SingleSurvivalFeature
         ref_Feature <- input$SurvFeatVariableUni
         meta_ssgsea <- ssGSEAmeta()
