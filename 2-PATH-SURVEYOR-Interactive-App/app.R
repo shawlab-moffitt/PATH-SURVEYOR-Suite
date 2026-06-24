@@ -1,4 +1,4 @@
-version_id <- paste0("v2.0.20260206")
+version_id <- paste0("v2.0.20260624")
 
 # User Input -------------------------------------------------------------------
 
@@ -16,12 +16,14 @@ Password_Protected <- FALSE
 PasswordSet <- ''
 
 ## Pre-Selected Inputs ---------------------------------------------------------
+PreSelect_SurvTime <- ''
+PreSelect_SurvID <- ''
 # An option from the meta, All, or NULL
 PreSelect_SamplyType <- 'All'
 PreSelect_Feature <- 'All'
 # An option from the meta or NULL
 PreSelect_SubFeature <- NULL
-PreSelect_SecondaryFeature <- NULL
+PreSelect_SecondaryFeature <- ''
 
 ## Provided Input --------------------------------------------------------------
 ## User make sure paths are correct
@@ -31,6 +33,13 @@ About_MD_File <- "Example_Data/PurposeAndMethods.Rmd"
 ExampleExpr_File <- "Example_Data/TCGA_CHOL_Expression_PatientID.txt"
 ExampleClin_File <- "Example_Data/TCGA_CHOL_Clinical_PatientID.txt"
 ExampleParam_File <- "Example_Data/TCGA_SurvivalApp_Global_Parameters.txt"
+
+SurvPlot_Height <- '550px'
+SurvPlot_Width <- '850px'
+
+
+# END USER INPUT ---------------------------------------------------------------
+
 
 ## Check if Immune deconvolution package is installed
 immudecon <- "immunedeconv"
@@ -67,8 +76,6 @@ GeneSetCats <- unique(GeneSetTable[,1])
 #increase file upload size
 options(shiny.maxRequestSize=5000*1024^2)
 
-SurvPlot_Height <- "550px"
-SurvPlot_Width <- "850px"
 
 StatCols <- c("MedianCutP","QuartileCutP","OptimalCutP","TopBottomCutP","UserCutP")
 
@@ -171,6 +178,84 @@ DataInput_tab <- tabPanel("Data Input",
 )
 #}
 
+## Data Subset Tab -------------------------------------------------------------
+DataInput_tab <- tabPanel("Subset Data",
+                          fluidPage(
+                            sidebarPanel(
+                              width = 3,
+                              id = "DataSubsetPanel",
+                              p(),
+                              textInput("UserProjectName","Project Name:", value = "Survival Analysis"),
+                              uiOutput("rendExprFileInput"),
+                              fluidRow(
+                                column(5, style = 'padding-right:2px;margin-top:-30px;',
+                                       checkboxInput("LogExprFile","Log2 Expression", value = F)
+                                ),
+                                column(7, style = 'padding-left:2px;margin-top:-30px;',
+                                       checkboxInput("ScaleNormExprFile","Scale Normalize Expression", value = F)
+                                )
+                              ),
+                              uiOutput("rendClinFileInput"),
+                              fluidRow(
+                                column(12, style = 'margin-top:-15px;',
+                                       actionButton("UseExpData","Load Example Data"),
+                                       tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/PATH_SURVEYOR_App/", "Download example data", target='_blank'),
+                                )
+                              ),
+                              shiny::hr(),
+                              uiOutput("rendClinParamHeader"),
+                              h4("Clinical Parameters"),
+                              fluidRow(
+                                column(12, style = 'margin-top:-20px;',
+                                       radioButtons("ParamChoice","", choices = c("Define Parameters","Upload Parameter File"), inline = T)
+                                )
+                              ),
+                              fluidRow(
+                                column(8,
+                                       uiOutput("rendClinParamFileInput"),
+                                       uiOutput("rendSurvTimeColSelect"),
+                                       uiOutput("rendSurvIDColSelect")
+                                ),
+                                column(4,
+                                       uiOutput("rendSurvTimeUnits")
+                                )
+                              )
+                            ),
+                            mainPanel(
+                              uiOutput("rendExprFilePrevHeader"),
+                              div(DT::dataTableOutput("ExprFile_Preview"), style = "font-size:10px"),
+                              uiOutput("rendClinFilePrevHeader"),
+                              div(DT::dataTableOutput("ClinFile_Preview"), style = "font-size:10px"),
+                              uiOutput("rendParamFilePrevHeader"),
+                              div(DT::dataTableOutput("ClinParamFile_Preview"), style = "font-size:10px")
+                            ),
+                            tagList(
+                              tags$head(
+                                tags$style(
+                                  HTML("
+                                     .info_box {
+                                     width: auto;
+                                     height: auto;
+                                     color: #000000;
+                                     background-color: #f5f5f5;
+                                     padding: 3px 8px;
+                                     font-size: 12px;
+                                     z-index : 9999;
+                                     }",
+                                       glue::glue("#{'AppVersion'} {{
+                                                position: {'fixed'};
+                                                top: 0;
+                                                right: 0;
+                                                }}")
+                                  )
+                                )
+                              ),
+                              div(id = "AppVersion", class = "info_box", version_id)
+                            )
+                          )
+)
+
+
 ## Survival Tab ----------------------------------------------------------------
 
 Survival_tab <- tabPanel("Survival Analysis",
@@ -224,11 +309,33 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                                        textInput("userGeneSetText","Gene Symbols", placeholder = "Comma, space, or tab delimited")
                                                                       ),
                                                                       value = 3
+                                                             ),
+                                                             tabPanel("Gene Ratio",
+                                                                      p(),
+                                                                      textInput("geneRatioName","Variable Name:",placeholder = "Gene_Ratio"),
+                                                                      h4("Select Gene(s):"),
+                                                                      selectizeInput("geneRatioNumerator","Numerator:", choices = NULL, selected = 1),
+                                                                      hr(style = "border-color:black"),
+                                                                      selectizeInput("geneRatioDenominator","Denominator:", choices = NULL, selected = 1),
+                                                                      actionButton("geneRatioRun","Run Ratio!",width = "100%"),
+                                                                      value = 4
+                                                             ),
+                                                             tabPanel("ssGSEA Difference",
+                                                                      p(),
+                                                                      textInput("ssGSEAdiffName","Variable Name:",placeholder = "ssGSEA_Diff"),
+                                                                      h4("Select Genes:"),
+                                                                      selectizeInput("ssGSEAdiff1","Gene Set A:", choices = NULL, multiple = T, selected = 1),
+                                                                      hr(style = "border-color:black"),
+                                                                      selectizeInput("ssGSEAdiff2","Gene Set B:", choices = NULL, multiple = T, selected = 1),
+                                                                      actionButton("ssGSEAdiffRun","Run Difference!",width = "100%"),
+                                                                      value = 5
                                                              )#,
                                                              #selected = 2
                                                            ),
-                                                           checkboxInput("ViewGeneSetGenes","View Genes in Selected Gene Set", value = F),
-                                                           uiOutput("rendGenesInGeneSetTab")
+                                                           conditionalPanel(condition = "input.GeneSetTabs != '4' & input.GeneSetTabs != '5'",
+                                                                            checkboxInput("ViewGeneSetGenes","View Genes in Selected Gene Set", value = F),
+                                                                            uiOutput("rendGenesInGeneSetTab")
+                                                           )
                                                   ),
                                                   tabPanel("Figure Parameters",
                                                            p(),
@@ -245,7 +352,8 @@ Survival_tab <- tabPanel("Survival Analysis",
                                                                                      radioButtons("SurvYearOrMonth","Survival X-Axis Units:",choices = c("Years","Months"), inline = T),
                                                                                      checkboxInput("ShowPval","Show P.Value",value = T),
                                                                                      checkboxInput("ShowConfInt","Show Confidence Interval",value = F),
-                                                                                     checkboxInput("ShowMedSurvLine","Show Median Survival Line",value = F)
+                                                                                     checkboxInput("ShowMedSurvLine","Show Median Survival Line",value = F),
+                                                                                     textInput("SurvYaxisLimit","Survival Y-Axis Limit (0-1):",value = "0-1", placeholder = "0-1")
                                                                               )
                                                                             )
                                                            ),
@@ -1193,6 +1301,8 @@ server <- function(input, output, session) {
       PreSelect_Feature_react <- reactiveVal(PreSelect_Feature)
       PreSelect_SubFeature_react <- reactiveVal(PreSelect_SubFeature)
       PreSelect_SecondaryFeature_react <- reactiveVal(PreSelect_SecondaryFeature)
+      PreSelect_SurvTime_react <- reactiveVal(PreSelect_SurvTime)
+      PreSelect_SurvID_react <- reactiveVal(PreSelect_SurvID)
       
       ## Set file reactives
       expr_raw <- reactiveVal()
@@ -1819,17 +1929,41 @@ server <- function(input, output, session) {
         }
       })
       
+      
       observe({
         req(metacol_survtime())
         SurTimeChoices <- metacol_survtime()
-        
-        updateSelectizeInput(session = session, inputId = "SurvivalType_time",choices = SurTimeChoices, server = T)
+        survTimeSelect <- PreSelect_SurvTime_react()
+        if (isTruthy(survTimeSelect)) {
+          selec <- survTimeSelect
+        } else {
+          selec <- SurTimeChoices[1]
+        }
+        updateSelectizeInput(session = session, inputId = "SurvivalType_time",choices = SurTimeChoices, selected = selec, server = T)
       })
       observe({
         req(metacol_survid())
         SurIDChoices <- metacol_survid()
-        updateSelectizeInput(session = session, inputId = "SurvivalType_id",choices = SurIDChoices, server = T)
+        survIDSelect <- PreSelect_SurvID_react()
+        if (isTruthy(survIDSelect)) {
+          selec <- survIDSelect
+        } else {
+          selec <- SurIDChoices[1]
+        }
+        updateSelectizeInput(session = session, inputId = "SurvivalType_id",choices = SurIDChoices, selected = selec,server = T)
       })
+      
+      #observe({
+      #  req(metacol_survtime())
+      #  SurTimeChoices <- metacol_survtime()
+      #  
+      #  updateSelectizeInput(session = session, inputId = "SurvivalType_time",choices = SurTimeChoices, server = T)
+      #})
+      #observe({
+      #  req(metacol_survid())
+      #  SurIDChoices <- metacol_survid()
+      #  updateSelectizeInput(session = session, inputId = "SurvivalType_id",choices = SurIDChoices, server = T)
+      #})
       
       
       observe({
@@ -1869,6 +2003,24 @@ server <- function(input, output, session) {
         expr <- expr_react()
         GenesDF <- data.frame(Genes = rownames(expr))
         GenesDF
+      })
+      
+      observe({
+        req(GeneGS_table())
+        gene_df <- GeneGS_table()
+        gene_vect <- gene_df[,1]
+        updateSelectizeInput(session,"geneRatioNumerator",choices = gene_vect,server = T, selected = 1,
+                             options = list(
+                               placeholder = 'Please select an option below',
+                               onInitialize = I('function() { this.setValue(""); }')
+                             ))
+        updateSelectizeInput(session,"geneRatioDenominator",choices = gene_vect,server = T, selected = 1,
+                             options = list(
+                               placeholder = 'Please select an option below',
+                               onInitialize = I('function() { this.setValue(""); }')
+                             ))
+        updateSelectizeInput(session,"ssGSEAdiff1",choices = gene_vect,server = T)
+        updateSelectizeInput(session,"ssGSEAdiff2",choices = gene_vect,server = T)
       })
       
       output$GeneGeneSetTable <- DT::renderDataTable({
@@ -1971,8 +2123,7 @@ server <- function(input, output, session) {
               }
               geneset
             }
-          }
-          else if (input$UserGSoption == "Text Box Input") {
+          } else if (input$UserGSoption == "Text Box Input") {
             user_gs_text <- input$userGeneSetText
             user_gs_name <- input$userGeneSetTextName
             user_gs_name <- gsub(" ",".",user_gs_name)
@@ -1984,6 +2135,32 @@ server <- function(input, output, session) {
             names(geneset) <- user_gs_name
             geneset
           }
+        } else if (input$GeneSetTabs == 4) {
+          req(input$geneRatioNumerator)
+          req(input$geneRatioDenominator)
+          gene_num <- input$geneRatioNumerator
+          gene_den <- input$geneRatioDenominator
+          ratio_name <- input$geneRatioName
+          ratio <- list(numerator = gene_num,
+                        denominator = gene_den)
+          geneset <- list(Gene_Ratio = ratio)
+          if (!isTruthy(ratio_name)) {
+            names(geneset)[1] <- "Gene_Ratio"
+          }
+          geneset
+        } else if (input$GeneSetTabs == 5) {
+          req(input$ssGSEAdiff1)
+          req(input$ssGSEAdiff2)
+          gene_num <- input$ssGSEAdiff1
+          gene_den <- input$ssGSEAdiff2
+          diff_name <- input$ssGSEAdiffName
+          diff <- list(ssGSEA_A = gene_num,
+                       ssGSEA_B = gene_den)
+          geneset <- list(ssGSEA_Diff = diff)
+          if (!isTruthy(diff_name)) {
+            names(geneset)[1] <- "ssGSEA_Diff"
+          }
+          geneset
         }
       })
       
@@ -2037,6 +2214,124 @@ server <- function(input, output, session) {
         expr
       })
       
+      geneRatio_runCount <- reactiveVal(input$geneRatioRun+1)
+      geneRatio_react <- eventReactive(input$geneRatioRun, {
+        
+        req(metaSub())
+        req(exprSub())
+        req(gs_react())
+        req(input$geneRatioNumerator)
+        req(input$geneRatioDenominator)
+        meta <- metaSub()
+        expr <- exprSub()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        SampleNameCol <- metacol_samplename_react()
+        surv_time_col <- input$SurvivalType_time
+        surv_id_col <- input$SurvivalType_id
+        scoreMethod <- input$ScoreMethod
+        meta <- meta[!is.na(meta[,surv_time_col]),]
+        meta <- meta[!is.na(meta[,surv_id_col]),]
+        meta[,surv_id_col] <- as.numeric(meta[,surv_id_col])
+        meta[,surv_time_col] <- as.numeric(meta[,surv_time_col])
+        gene_num <- geneset[[geneset_name]]$numerator
+        gene_den <- geneset[[geneset_name]]$denominator
+        
+        if (length(!is.na(meta[,surv_id_col])) > 0) {
+          if (any(colnames(expr) %in% meta[,1])) {
+            expr_sub <- expr[,colnames(expr) %in% meta[,1], drop = F]
+            expr_mat <- as.matrix(expr_sub)
+            rownames(expr_mat) <- rownames(expr_sub)
+            colnames(expr_mat) <- colnames(expr_sub)
+            ssGSEA_num <- data.frame(geneset_num = expr_mat[gene_num,])
+            ssGSEA_num[,SampleNameCol] <- rownames(ssGSEA_num)
+            ssGSEA_den <- data.frame(geneset_den = expr_mat[gene_den,])
+            ssGSEA_den[,SampleNameCol] <- rownames(ssGSEA_den)
+            expr_numden <- merge(ssGSEA_num,ssGSEA_den)
+            expr_numden <- expr_numden[which(expr_numden$geneset_num > 0 & expr_numden$geneset_den > 0),]
+            expr_numden[,geneset_name] <- expr_numden$geneset_num/expr_numden$geneset_den
+            ssGSEA <- expr_numden[,c(SampleNameCol,geneset_name)]
+            ssGSEA
+          }
+        }
+        
+      })
+      
+      ssGSEAdiff_react <- eventReactive(input$ssGSEAdiffRun, {
+        
+        req(metaSub())
+        req(exprSub())
+        req(gs_react())
+        req(input$ssGSEAdiff1)
+        req(input$ssGSEAdiff2)
+        meta <- metaSub()
+        expr <- exprSub()
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        SampleNameCol <- metacol_samplename_react()
+        surv_time_col <- input$SurvivalType_time
+        surv_id_col <- input$SurvivalType_id
+        scoreMethod <- input$ScoreMethod
+        meta <- meta[!is.na(meta[,surv_time_col]),]
+        meta <- meta[!is.na(meta[,surv_id_col]),]
+        meta[,surv_id_col] <- as.numeric(meta[,surv_id_col])
+        meta[,surv_time_col] <- as.numeric(meta[,surv_time_col])
+        gene_num <- geneset[[geneset_name]]$ssGSEA_A
+        gene_den <- geneset[[geneset_name]]$ssGSEA_B
+        
+        if (length(!is.na(meta[,surv_id_col])) > 0) {
+          if (any(colnames(expr) %in% meta[,1])) {
+            expr_sub <- expr[,colnames(expr) %in% meta[,1], drop = F]
+            expr_mat <- as.matrix(expr_sub)
+            rownames(expr_mat) <- rownames(expr_sub)
+            colnames(expr_mat) <- colnames(expr_sub)
+            geneset_num <- list(geneset_num = gene_num)
+            if (as.numeric(tools::file_path_sans_ext(packageVersion("GSVA"))) >= 1.5) {
+              if (scoreMethod == "ssgsea") {
+                ssGSEA_num_param <- GSVA::ssgseaParam(expr_mat,geneset_num)
+              } else if (scoreMethod == "gsva") {
+                ssGSEA_num_param <- GSVA::gsvaParam(expr_mat,geneset_num)
+              } else if (scoreMethod == "plage") {
+                ssGSEA_num_param <- GSVA::plageParam(expr_mat,geneset_num)
+              } else if (scoreMethod == "zscore") {
+                ssGSEA_num_param <- GSVA::zscoreParam(expr_mat,geneset_num)
+              }
+              ssGSEA_num <- GSVA::gsva(ssGSEA_num_param)
+              ssGSEA_num <- as.data.frame(t(ssGSEA_num))
+              ssGSEA_num[,SampleNameCol] <- rownames(ssGSEA_num)
+            } else {
+              ssGSEA_num <- gsva(expr_mat,geneset_num,method = scoreMethod, verbose = FALSE)
+              ssGSEA_num <- as.data.frame(t(ssGSEA_num))
+              ssGSEA_num[,SampleNameCol] <- rownames(ssGSEA_num)
+            }
+            geneset_den <- list(geneset_den = gene_den)
+            if (as.numeric(tools::file_path_sans_ext(packageVersion("GSVA"))) >= 1.5) {
+              if (scoreMethod == "ssgsea") {
+                ssGSEA_den_param <- GSVA::ssgseaParam(expr_mat,geneset_den)
+              } else if (scoreMethod == "gsva") {
+                ssGSEA_den_param <- GSVA::gsvaParam(expr_mat,geneset_den)
+              } else if (scoreMethod == "plage") {
+                ssGSEA_den_param <- GSVA::plageParam(expr_mat,geneset_den)
+              } else if (scoreMethod == "zscore") {
+                ssGSEA_den_param <- GSVA::zscoreParam(expr_mat,geneset_den)
+              }
+              ssGSEA_den <- GSVA::gsva(ssGSEA_den_param)
+              ssGSEA_den <- as.data.frame(t(ssGSEA_den))
+              ssGSEA_den[,SampleNameCol] <- rownames(ssGSEA_den)
+            } else {
+              ssGSEA_den <- gsva(expr_mat,geneset_den,method = scoreMethod, verbose = FALSE)
+              ssGSEA_den <- as.data.frame(t(ssGSEA_den))
+              ssGSEA_den[,SampleNameCol] <- rownames(ssGSEA_den)
+            }
+            expr_numden <- merge(ssGSEA_num,ssGSEA_den)
+            expr_numden[,geneset_name] <- expr_numden$geneset_num - expr_numden$geneset_den
+            ssGSEA <- expr_numden[,c(SampleNameCol,geneset_name)]
+            ssGSEA
+          }
+        }
+        
+      })
+      
       ### ssGSEA Reactive ------------------------------------------------------
       ## Perform ssGSEA and functions on new meta table
       ssGSEAmeta <- reactive({
@@ -2049,8 +2344,10 @@ server <- function(input, output, session) {
         geneset <- gs_react()
         geneset_name <- names(geneset)
         decon_score_cols <- decon_score_cols()
-        if (length(unname(unlist(geneset))) > 0) {
-          if (geneset_name %in% decon_score_cols | any(unname(unlist(geneset)) %in% rownames(expr))) {
+        geneset_tab <- as.numeric(input$GeneSetTabs)
+        #save(list = ls(), file = "ssGSEAmetapre.RData",envir = environment())
+        if (length(unname(unlist(geneset))) > 0 | geneset_tab == 4) {
+          if (geneset_name %in% decon_score_cols | any(unname(unlist(geneset)) %in% rownames(expr)) | geneset_tab == 4) {
             #if (any(unname(unlist(geneset)) %in% rownames(expr))) {
             if (isTruthy(input$SurvivalType_time) & isTruthy(input$SurvivalType_id) & isTruthy(geneset_name)) {
               SampleNameCol <- metacol_samplename_react()
@@ -2059,8 +2356,7 @@ server <- function(input, output, session) {
               surv_time_col <- input$SurvivalType_time
               surv_id_col <- input$SurvivalType_id
               scoreMethod <- input$ScoreMethod
-              geneset_tab <- input$GeneSetTabs
-              #save(list = ls(), file = "sureyor_ssgsea_metabolic_env.RData",envir = environment())
+              #save(list = ls(), file = "ssGSEAmeta.RData",envir = environment())
               ## Remove rows with NA in survival column
               meta <- meta[!is.na(meta[,surv_time_col]),]
               meta <- meta[!is.na(meta[,surv_id_col]),]
@@ -2106,35 +2402,16 @@ server <- function(input, output, session) {
                     colnames(expr_sub)[1] <- geneset_name
                     expr_sub[,SampleNameCol] <- rownames(expr_sub)
                     ssGSEA <- expr_sub
+                  } else if (input$GeneSetTabs == 4) {
+                    req(geneRatio_react())
+                    runCount <- geneRatio_runCount()
+                    ssGSEA <- geneRatio_react()
+                  } else if (input$GeneSetTabs == 5) {
+                    req(ssGSEAdiff_react())
+                    ssGSEA <- ssGSEAdiff_react()
                   }
-                  
-                  #save(list = ls(), file = "ssGSEAmeta.RData", envir = environment())
-                  #ssGSEA
-                  
-                  # Subset columns needed for plot and rename for surv function
-                  #print(head(meta[,c(SampleNameCol,surv_time_col,surv_id_col)]))
-                  #print(head(ssGSEA[,c(SampleNameCol,geneset_name)]))
                   meta_ssgsea_sdf <- merge(meta[,c(SampleNameCol,surv_time_col,surv_id_col)],ssGSEA[,c(SampleNameCol,geneset_name)])
                   
-                  #print(input$SurvXaxis)
-                  #print(input$SurvYearOrMonth)
-                  #if (isTruthy(input$SurvXaxis)) {
-                  #  if (input$SurvYearOrMonth == "Months") {
-                  #    xaxlim <- input$SurvXaxis * 30.4375
-                  #    meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
-                  #    ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
-                  #  } else {
-                  #    xaxlim <- input$SurvXaxis * 365.25
-                  #    meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
-                  #    ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
-                  #  }
-                  #} else {
-                  #  xaxlim <- max(meta_ssgsea_sdf[,surv_time_col],na.rm = T)
-                  #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf[,surv_time_col] <= xaxlim),]
-                  #  ssGSEA <- ssGSEA[meta_ssgsea_sdf[,SampleNameCol],]
-                  #}
-                  
-                  #print(head(meta_ssgsea_sdf))
                   #save(list = ls(), file = "ssgsea_env.RData", envir = environment())
                   
                   if (length(meta_ssgsea_sdf[,4][meta_ssgsea_sdf[,4] > 0])/length(meta_ssgsea_sdf[,4]) > 0.01) {
@@ -2146,23 +2423,34 @@ server <- function(input, output, session) {
                       cutp <- res.cut$cutpoint[["cutpoint"]]
                       rownames(res.cut$cutpoint)[1] <- geneset_name_temp
                       res.cat <- surv_categorize(res.cut)
-                      ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- res.cat[,3]
+                      meta_ssgsea_sdf[,paste0(geneset_name,"_OptimalCutP")] <- res.cat[,3]
+                      #ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- res.cat[,3]
                     } else {
-                      ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- "low"
+                      meta_ssgsea_sdf[,paste0(geneset_name,"_OptimalCutP")] <- "low"
+                      #ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- "low"
                     }
                   } else {
-                    ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- "low"
+                    meta_ssgsea_sdf[,paste0(geneset_name,"_OptimalCutP")] <- "low"
+                    #ssGSEA[,paste0(geneset_name,"_OptimalCutP")] <- "low"
                   }
                   
-                  ssGSEA[,paste0(geneset_name,"_VAR_Q")] <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
-                  ssGSEA[,paste0(geneset_name,"_QuartileCutP")] <- paste("", ssGSEA[,paste0(geneset_name,"_VAR_Q")], sep="")
-                  ssGSEA[,paste0(geneset_name,"_MedianCutP")] <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
-                  ssGSEA[,paste0(geneset_name,"_TopBottomCutP")] <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
-                  ssGSEA[which(ssGSEA[,paste0(geneset_name,"_TopBottomCutP")] == "BetweenCutoff"),paste0(geneset_name,"_TopBottomCutP")] <- NA
-                  ssGSEA[,paste0(geneset_name,"_UserCutP")] <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
+                  meta_ssgsea_sdf[,paste0(geneset_name,"_VAR_Q")] <- quartile_conversion(meta_ssgsea_sdf[, which(colnames(meta_ssgsea_sdf) == geneset_name)])
+                  meta_ssgsea_sdf[,paste0(geneset_name,"_QuartileCutP")] <- paste("", meta_ssgsea_sdf[,paste0(geneset_name,"_VAR_Q")], sep="")
+                  meta_ssgsea_sdf[,paste0(geneset_name,"_MedianCutP")] <- highlow(meta_ssgsea_sdf[, which(colnames(meta_ssgsea_sdf) == geneset_name)])
+                  meta_ssgsea_sdf[,paste0(geneset_name,"_TopBottomCutP")] <- quantile_conversion(meta_ssgsea_sdf[, which(colnames(meta_ssgsea_sdf) == geneset_name)], quantCutoff)
+                  meta_ssgsea_sdf[which(meta_ssgsea_sdf[,paste0(geneset_name,"_TopBottomCutP")] == "BetweenCutoff"),paste0(geneset_name,"_TopBottomCutP")] <- NA
+                  meta_ssgsea_sdf[,paste0(geneset_name,"_UserCutP")] <- quantile_conversion2(meta_ssgsea_sdf[, which(colnames(meta_ssgsea_sdf) == geneset_name)], quantCutoff2)
+                  
+                  #ssGSEA[,paste0(geneset_name,"_VAR_Q")] <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
+                  #ssGSEA[,paste0(geneset_name,"_QuartileCutP")] <- paste("", ssGSEA[,paste0(geneset_name,"_VAR_Q")], sep="")
+                  #ssGSEA[,paste0(geneset_name,"_MedianCutP")] <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
+                  #ssGSEA[,paste0(geneset_name,"_TopBottomCutP")] <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
+                  #ssGSEA[which(ssGSEA[,paste0(geneset_name,"_TopBottomCutP")] == "BetweenCutoff"),paste0(geneset_name,"_TopBottomCutP")] <- NA
+                  #ssGSEA[,paste0(geneset_name,"_UserCutP")] <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
                   
                   #save(list = ls(), file = "sureyor_ssgsea_metabolic_env3.RData",envir = environment())
-                  meta_ssGSEA <- merge(meta,ssGSEA)
+                  meta_ssGSEA <- merge(meta,meta_ssgsea_sdf[,-c(2,3)])
+                  #meta_ssGSEA <- merge(meta,ssGSEA)
                   #save(list = ls(), file = "sureyor_ssgsea_metabolic_env4.RData",envir = environment())
                   meta_ssGSEA
                 }
@@ -2301,6 +2589,12 @@ server <- function(input, output, session) {
         if (input$GeneSetTabs == 2) {
           scoreMethod <- "Gene Expression"
         }
+        if (input$GeneSetTabs == 4) {
+          scoreMethod <- "Expression Ratio"
+        }
+        if (input$GeneSetTabs == 5) {
+          scoreMethod <- "ssGSEA Score Difference"
+        }
         SurvPlotExpl("median cut-point",surv_time_col,geneset_name,scoreMethod,metacol_sampletype,SampleTypeSelected,Feature,subFeature,Pval_Tab,HR_Tab)
       })
       
@@ -2316,6 +2610,18 @@ server <- function(input, output, session) {
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
+        yaxislim <- input$SurvYaxisLimit
+        if (isTruthy(yaxislim)) {
+          yaxislim <- gsub("[)(]","",yaxislim)
+          yaxislim1 <- as.numeric(strsplit(yaxislim,"-")[[1]][1])
+          yaxislim2 <- as.numeric(strsplit(yaxislim,"-")[[1]][2])
+          y_lim <- c(yaxislim1,yaxislim2)
+          if (any(c(is.na(y_lim)))) {
+            y_lim <- c(0,1)
+          }
+        } else {
+          y_lim <- c(0,1)
+        }
         if (input$SurvYearOrMonth == "Years") {
           xBreaks <- input$SurvXaxisBreaks * 365.25
         } else {
@@ -2348,6 +2654,10 @@ server <- function(input, output, session) {
           } else {
             scoreMethodLab <- paste(scoreMethod, " score", sep = "")
           }
+        } else if (input$GeneSetTabs == 4) {
+          scoreMethodLab <- "Expression Ratio"
+        } else if (input$GeneSetTabs == 5) {
+          scoreMethodLab <- "ssGSEA Score Difference"
         }
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Median Cut-Point")
@@ -2372,7 +2682,7 @@ server <- function(input, output, session) {
         #save(list = ls(),file = "survPlot_env.RData", envir = environment())
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks,ylim = y_lim)
         #p <- SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
         #         pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
         #         xScale = "Year", xBreaks = xBreaks)
@@ -2443,6 +2753,9 @@ server <- function(input, output, session) {
       
       output$MedianCutPSumm <- renderPrint({
         req(MedianCutPTab_react())
+        #MedianCutPTab_react <- MedianCutPTab_react()
+        #save(list = ls(), file = "MedianCutPTab_react.RData", envir = environment())
+        
         CoxPHsumm(MedianCutPTab_react())
       })
       
@@ -2492,6 +2805,12 @@ server <- function(input, output, session) {
         if (input$GeneSetTabs == 2) {
           scoreMethod <- "Gene Expression"
         }
+        if (input$GeneSetTabs == 4) {
+          scoreMethod <- "Expression Ratio"
+        }
+        if (input$GeneSetTabs == 5) {
+          scoreMethod <- "ssGSEA Score Difference"
+        }
         SurvPlotExpl("quartile cut-point",surv_time_col,geneset_name,scoreMethod,metacol_sampletype,SampleTypeSelected,Feature,subFeature,Pval_Tab,HR_Tab)
       })
       
@@ -2507,6 +2826,18 @@ server <- function(input, output, session) {
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
+        yaxislim <- input$SurvYaxisLimit
+        if (isTruthy(yaxislim)) {
+          yaxislim <- gsub("[)(]","",yaxislim)
+          yaxislim1 <- as.numeric(strsplit(yaxislim,"-")[[1]][1])
+          yaxislim2 <- as.numeric(strsplit(yaxislim,"-")[[1]][2])
+          y_lim <- c(yaxislim1,yaxislim2)
+          if (any(c(is.na(y_lim)))) {
+            y_lim <- c(0,1)
+          }
+        } else {
+          y_lim <- c(0,1)
+        }
         if (input$SurvYearOrMonth == "Years") {
           xBreaks <- input$SurvXaxisBreaks * 365.25
         } else {
@@ -2544,6 +2875,10 @@ server <- function(input, output, session) {
           } else {
             scoreMethodLab <- paste(scoreMethod, " score", sep = "")
           }
+        } else if (input$GeneSetTabs == 4) {
+          scoreMethodLab <- "Expression Ratio"
+        } else if (input$GeneSetTabs == 5) {
+          scoreMethodLab <- "ssGSEA Score Difference"
         }
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Quartile Cut-Point")
@@ -2564,7 +2899,7 @@ server <- function(input, output, session) {
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks,ylim = y_lim)
       })
       output$Splot <- renderPlot({
         Splot_react()
@@ -2674,6 +3009,12 @@ server <- function(input, output, session) {
         if (input$GeneSetTabs == 2) {
           scoreMethod <- "Gene Expression"
         }
+        if (input$GeneSetTabs == 4) {
+          scoreMethod <- "Expression Ratio"
+        }
+        if (input$GeneSetTabs == 5) {
+          scoreMethod <- "ssGSEA Score Difference"
+        }
         SurvPlotExpl("optimal cut-point",surv_time_col,geneset_name,scoreMethod,metacol_sampletype,SampleTypeSelected,Feature,subFeature,Pval_Tab,HR_Tab)
       })
       
@@ -2689,6 +3030,18 @@ server <- function(input, output, session) {
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
+        yaxislim <- input$SurvYaxisLimit
+        if (isTruthy(yaxislim)) {
+          yaxislim <- gsub("[)(]","",yaxislim)
+          yaxislim1 <- as.numeric(strsplit(yaxislim,"-")[[1]][1])
+          yaxislim2 <- as.numeric(strsplit(yaxislim,"-")[[1]][2])
+          y_lim <- c(yaxislim1,yaxislim2)
+          if (any(c(is.na(y_lim)))) {
+            y_lim <- c(0,1)
+          }
+        } else {
+          y_lim <- c(0,1)
+        }
         if (input$SurvYearOrMonth == "Years") {
           xBreaks <- input$SurvXaxisBreaks * 365.25
         } else {
@@ -2726,6 +3079,10 @@ server <- function(input, output, session) {
           } else {
             scoreMethodLab <- paste(scoreMethod, " score", sep = "")
           }
+        } else if (input$GeneSetTabs == 4) {
+          scoreMethodLab <- "Expression Ratio"
+        } else if (input$GeneSetTabs == 5) {
+          scoreMethodLab <- "ssGSEA Score Difference"
         }
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"Optimal Cut-Point")
@@ -2747,7 +3104,7 @@ server <- function(input, output, session) {
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks,ylim = y_lim)
       })
       output$ScutPointPlot <- renderPlot({
         ScutPointPlot_react()
@@ -2873,6 +3230,12 @@ server <- function(input, output, session) {
         if (input$GeneSetTabs == 2) {
           scoreMethod <- "Gene Expression"
         }
+        if (input$GeneSetTabs == 4) {
+          scoreMethod <- "Expression Ratio"
+        }
+        if (input$GeneSetTabs == 5) {
+          scoreMethod <- "ssGSEA Score Difference"
+        }
         SurvPlotExpl("top/bottom quantile cut-point",surv_time_col,geneset_name,scoreMethod,metacol_sampletype,SampleTypeSelected,Feature,subFeature,Pval_Tab,HR_Tab)
       })
       
@@ -2888,6 +3251,18 @@ server <- function(input, output, session) {
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
+        yaxislim <- input$SurvYaxisLimit
+        if (isTruthy(yaxislim)) {
+          yaxislim <- gsub("[)(]","",yaxislim)
+          yaxislim1 <- as.numeric(strsplit(yaxislim,"-")[[1]][1])
+          yaxislim2 <- as.numeric(strsplit(yaxislim,"-")[[1]][2])
+          y_lim <- c(yaxislim1,yaxislim2)
+          if (any(c(is.na(y_lim)))) {
+            y_lim <- c(0,1)
+          }
+        } else {
+          y_lim <- c(0,1)
+        }
         if (input$SurvYearOrMonth == "Years") {
           xBreaks <- input$SurvXaxisBreaks * 365.25
         } else {
@@ -2925,6 +3300,10 @@ server <- function(input, output, session) {
           } else {
             scoreMethodLab <- paste(scoreMethod, " score", sep = "")
           }
+        } else if (input$GeneSetTabs == 4) {
+          scoreMethodLab <- "Expression Ratio"
+        } else if (input$GeneSetTabs == 5) {
+          scoreMethodLab <- "ssGSEA Score Difference"
         }
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"top/bottom quantile cut-points")
@@ -2944,7 +3323,7 @@ server <- function(input, output, session) {
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks,ylim = y_lim)
       })
       output$SquantPlot <- renderPlot({
         SquantPlot_react()
@@ -3059,6 +3438,12 @@ server <- function(input, output, session) {
         if (input$GeneSetTabs == 2) {
           scoreMethod <- "Gene Expression"
         }
+        if (input$GeneSetTabs == 4) {
+          scoreMethod <- "Expression Ratio"
+        }
+        if (input$GeneSetTabs == 5) {
+          scoreMethod <- "ssGSEA Score Difference"
+        }
         SurvPlotExpl("user cut-point",surv_time_col,geneset_name,scoreMethod,metacol_sampletype,SampleTypeSelected,Feature,subFeature,Pval_Tab,HR_Tab)
       })
       
@@ -3074,6 +3459,18 @@ server <- function(input, output, session) {
         scoreMethod <- input$ScoreMethod
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
+        yaxislim <- input$SurvYaxisLimit
+        if (isTruthy(yaxislim)) {
+          yaxislim <- gsub("[)(]","",yaxislim)
+          yaxislim1 <- as.numeric(strsplit(yaxislim,"-")[[1]][1])
+          yaxislim2 <- as.numeric(strsplit(yaxislim,"-")[[1]][2])
+          y_lim <- c(yaxislim1,yaxislim2)
+          if (any(c(is.na(y_lim)))) {
+            y_lim <- c(0,1)
+          }
+        } else {
+          y_lim <- c(0,1)
+        }
         if (input$SurvYearOrMonth == "Years") {
           xBreaks <- input$SurvXaxisBreaks * 365.25
         } else {
@@ -3111,6 +3508,10 @@ server <- function(input, output, session) {
           } else {
             scoreMethodLab <- paste(scoreMethod, " score", sep = "")
           }
+        } else if (input$GeneSetTabs == 4) {
+          scoreMethodLab <- "Expression Ratio"
+        } else if (input$GeneSetTabs == 5) {
+          scoreMethodLab <- "ssGSEA Score Difference"
         }
         
         PlotTitle <- SurvPlotTitle(SampleTypeSelected,geneset_name,scoreMethodLab,Feature,subFeature,"user cut-point")
@@ -3130,7 +3531,7 @@ server <- function(input, output, session) {
         
         SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                  pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
+                 xScale = input$SurvYearOrMonth, xBreaks = xBreaks,ylim = y_lim)
       })
       output$SquantPlot2 <- renderPlot({
         SquantPlot2_react()
@@ -3233,28 +3634,38 @@ server <- function(input, output, session) {
       })
       
       UniVarFeat_react <- reactive({
-        req(ssGSEAmeta())
+        req(input$SingleSurvivalFeature)
         req(input$SurvivalType_time)
         req(input$SurvivalType_id)
-        req(input$SingleSurvivalFeature)
-        req(input$SurvFeatVariableUni)
+        req(ssGSEAmeta())
+        meta_ssgsea <- ssGSEAmeta()
         Feature <- input$SingleSurvivalFeature
         ref_Feature <- input$SurvFeatVariableUni
-        meta_ssgsea <- ssGSEAmeta()
+        UniVarNAcheck <- input$UniVarNAcheck
+        UniVarContCheck <- input$UniVarContCheck
+        UniVarContHiLoCheck <- input$UniVarContHiLoCheck
+        req(exists("UniVarContCheck"))
+        req(exists("UniVarContHiLoCheck"))
+        #save(list = ls(), file = "UniVarFeat_react.RData", envir = environment())
         if (Feature %in% colnames(meta_ssgsea)) {
-          if (input$UniVarNAcheck == TRUE) {
+          if (UniVarNAcheck) {
             meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
             meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature] != "Inf" & meta_ssgsea[,Feature] != "N/A" & meta_ssgsea[,Feature] != "n/a"),]
             meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
           }
-          if (input$UniVarContCheck == TRUE) {
-            if (input$UniVarContHiLoCheck == TRUE) {
-              meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
-            }
-            if ((ref_Feature %in% levels(factor(meta_ssgsea[,Feature])))) {
-              if (length(levels(factor(meta_ssgsea[,Feature]))) > 1) {
-                meta_ssgsea[,Feature] <- factor(meta_ssgsea[,Feature])
-                meta_ssgsea[,Feature] <- relevel(meta_ssgsea[,Feature], ref = ref_Feature)
+          if (exists("UniVarContCheck")) {
+            if (UniVarContCheck) {
+              if (exists("UniVarContHiLoCheck")) {
+                if (UniVarContHiLoCheck) {
+                  meta_ssgsea[,Feature] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature)])
+                }
+              }
+              req(ref_Feature)
+              if ((ref_Feature %in% levels(factor(meta_ssgsea[,Feature])))) {
+                if (length(levels(factor(meta_ssgsea[,Feature]))) > 1) {
+                  meta_ssgsea[,Feature] <- factor(meta_ssgsea[,Feature])
+                  meta_ssgsea[,Feature] <- relevel(meta_ssgsea[,Feature], ref = ref_Feature)
+                }
               }
             }
           }
@@ -3263,8 +3674,6 @@ server <- function(input, output, session) {
             meta_ssgsea_sdf
           }
         }
-        
-        
       })
       
       UniVarFeatTab_react <- reactive({
@@ -3316,6 +3725,18 @@ server <- function(input, output, session) {
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
         SurvYearOrMonth <- input$SurvYearOrMonth
+        yaxislim <- input$SurvYaxisLimit
+        if (isTruthy(yaxislim)) {
+          yaxislim <- gsub("[)(]","",yaxislim)
+          yaxislim1 <- as.numeric(strsplit(yaxislim,"-")[[1]][1])
+          yaxislim2 <- as.numeric(strsplit(yaxislim,"-")[[1]][2])
+          y_lim <- c(yaxislim1,yaxislim2)
+          if (any(c(is.na(y_lim)))) {
+            y_lim <- c(0,1)
+          }
+        } else {
+          y_lim <- c(0,1)
+        }
         if (input$SurvYearOrMonth == "Years") {
           xBreaks <- input$SurvXaxisBreaks * 365.25
         } else {
@@ -3374,7 +3795,7 @@ server <- function(input, output, session) {
           
           SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                    pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-                   xScale = SurvYearOrMonth, xBreaks = xBreaks)
+                   xScale = SurvYearOrMonth, xBreaks = xBreaks,ylim = y_lim)
         }
         
       })
@@ -3472,7 +3893,7 @@ server <- function(input, output, session) {
       
       MultiFeatUnivarForestPlotTab_react <- reactive({
         req(MultiFeat_ForestMeta())
-        req(SBinaryHRtab_react())
+        req(SSingleFeatureHRtab_react())
         req(input$SurvivalType_time)
         req(input$SurvivalType_id)
         req(input$MultiFeatUnivarSelect)
@@ -3482,8 +3903,9 @@ server <- function(input, output, session) {
         surv_time_col <- input$SurvivalType_time
         surv_id_col <- input$SurvivalType_id
         FeatCols <- c(input$MultiFeatUnivarSelect)
-        HR_Tab <- SBinaryHRtab_react()             # Hazard Ratio Table Reactive
+        HR_Tab <- SSingleFeatureHRtab_react()             # Hazard Ratio Table Reactive
         HR <- HR_Tab[3,2]
+        #save(list = ls(), file = "MultiFeatUnivarForestPlotTab_react.RData", envir = environment())
         if (isTruthy(HR)) {
           if (as.numeric(gsub(",","",HR)) > 1) {
             HighRisk <- TRUE
@@ -3502,7 +3924,7 @@ server <- function(input, output, session) {
             tabData[1] <- feat
             colnames(metaSubSet)[4] <- feat
             if (HighRisk) {
-              if (as.numeric(gsub(",","",tabData[3])) > 1) {
+              if (as.numeric(gsub(",","",tabData[3])) > 1 & !is.na(as.numeric(gsub(",","",tabData[3])))) {
                 levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
                 tabData[1] <- feat
                 tabData[1] <- paste(tabData[1],levelLabel)
@@ -3519,7 +3941,7 @@ server <- function(input, output, session) {
                 FeatColsList[[feat]] <- tabData
               }
             } else {
-              if (as.numeric(gsub(",","",tabData[3])) < 1) {
+              if (as.numeric(gsub(",","",tabData[3])) < 1 & !is.na(as.numeric(gsub(",","",tabData[3])))) {
                 levelLabel <- paste0("(",levels(as.factor(metaSubSet[,feat]))[2],")")
                 tabData[1] <- feat
                 tabData[1] <- paste(tabData[1],levelLabel)
@@ -3537,7 +3959,7 @@ server <- function(input, output, session) {
               }
             }
           }
-          }
+        }
         FeatColsDF <- as.data.frame(do.call(rbind, FeatColsList))
         rownames(FeatColsDF) <- NULL
         FeatColsDF$Low <- as.numeric(FeatColsDF$Low)
@@ -3759,22 +4181,26 @@ server <- function(input, output, session) {
         BiVarAddNAcheck2 <- input$BiVarAddNAcheck2
         BiVarAddContCheck2 <- input$BiVarAddContCheck2
         BiVarAddContHiLoCheck2 <- input$BiVarAddContHiLoCheck2
+        req(exists("BiVarAddContCheck1"))
+        req(exists("BiVarAddContHiLoCheck1"))
+        req(exists("BiVarAddContCheck2"))
+        req(exists("BiVarAddContHiLoCheck2"))
         #save(list = ls(), file = "BiVarAddFeature_react.RData", envir = environment())
         
         if (Feature1 %in% colnames(meta_ssgsea) & Feature2 %in% colnames(meta_ssgsea)) {
           #if ((Feature1ref %in% levels(factor(meta_ssgsea[,Feature1]))) & (Feature2ref %in% levels(factor(meta_ssgsea[,Feature2])))) {
-          if (input$BiVarAddNAcheck1 == TRUE) {
+          if (BiVarAddNAcheck1 == TRUE) {
             meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
             meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
             meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
           }
-          if (input$BiVarAddNAcheck2 == TRUE) {
+          if (BiVarAddNAcheck2 == TRUE) {
             meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
             meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
             meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
           }
-          if (input$BiVarAddContCheck1 == TRUE) {
-            if (input$BiVarAddContHiLoCheck1 == TRUE) {
+          if (BiVarAddContCheck1 == TRUE) {
+            if (BiVarAddContHiLoCheck1) {
               meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
             }
             if ((Feature1ref %in% levels(factor(meta_ssgsea[,Feature1])))) {
@@ -3784,8 +4210,8 @@ server <- function(input, output, session) {
               }
             }
           }
-          if (input$BiVarAddContCheck2 == TRUE) {
-            if (input$BiVarAddContHiLoCheck2 == TRUE) {
+          if (BiVarAddContCheck2) {
+            if (BiVarAddContHiLoCheck2) {
               meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
             }
             if ((Feature2ref %in% levels(factor(meta_ssgsea[,Feature2])))) {
@@ -3799,27 +4225,6 @@ server <- function(input, output, session) {
           if (length(levels(factor(meta_ssgsea[,Feature1]))) > 1 & length(levels(factor(meta_ssgsea[,Feature2]))) > 1) {
             SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature1,Feature2)
           }
-            #if (input$BiVarAddContCheck1 == TRUE) {
-            #  if (input$BiVarAddContHiLoCheck1 == TRUE) {
-            #    meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
-            #  }
-            #  if ((Feature1ref %in% levels(factor(meta_ssgsea[,Feature1])))) {
-            #    meta_ssgsea[,Feature1] <- factor(meta_ssgsea[,Feature1])
-            #    meta_ssgsea[,Feature1] <- relevel(meta_ssgsea[,Feature1], ref = Feature1ref)
-            #  }
-            #}
-            #
-            #if (input$BiVarAddContCheck2 == TRUE) {
-            #  if (input$BiVarAddContHiLoCheck2 == TRUE) {
-            #    meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
-            #  }
-            #}
-            #if (input$BiVarAddContCheck2 == FALSE) {
-            #  meta_ssgsea[,Feature2] <- factor(meta_ssgsea[,Feature2])
-            #  meta_ssgsea[,Feature2] <- relevel(meta_ssgsea[,Feature2], ref = Feature2ref)
-            #}
-            
-          #}
         }
       })
       BiVarAddTab_react <- reactive({
@@ -4012,20 +4417,30 @@ server <- function(input, output, session) {
         Feature1ref <- input$SurvFeatVariableBi1Inter
         Feature2 <- input$SurvivalFeatureBi2Inter
         Feature2ref <- input$SurvFeatVariableBi2Inter
+        BiVarIntNAcheck1 <- input$BiVarIntNAcheck1
+        BiVarIntContCheck1 <- input$BiVarIntContCheck1
+        BiVarIntContHiLoCheck1 <- input$BiVarIntContHiLoCheck1
+        BiVarIntNAcheck2 <- input$BiVarIntNAcheck2
+        BiVarIntContCheck2 <- input$BiVarIntContCheck2
+        BiVarIntContHiLoCheck2 <- input$BiVarIntContHiLoCheck2
+        req(exists("BiVarIntContCheck1"))
+        req(exists("BiVarIntContHiLoCheck1"))
+        req(exists("BiVarIntContCheck2"))
+        req(exists("BiVarIntContHiLoCheck2"))
         
         if (Feature1 %in% colnames(meta_ssgsea) & Feature2 %in% colnames(meta_ssgsea)) {
-          if (input$BiVarIntNAcheck1 == TRUE) {
+          if (BiVarIntNAcheck1) {
             meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
             meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
             meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
           }
-          if (input$BiVarIntNAcheck2 == TRUE) {
+          if (BiVarIntNAcheck2) {
             meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
             meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
             meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
           }
-          if (input$BiVarIntContCheck1 == TRUE) {
-            if (input$BiVarIntContHiLoCheck2 == TRUE) {
+          if (BiVarIntContCheck1) {
+            if (BiVarIntContHiLoCheck1) {
               meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
             }
             if ((Feature1ref %in% levels(factor(meta_ssgsea[,Feature1])))) {
@@ -4035,8 +4450,8 @@ server <- function(input, output, session) {
               }
             }
           }
-          if (input$BiVarIntContCheck2 == TRUE) {
-            if (input$BiVarIntContHiLoCheck2 == TRUE) {
+          if (BiVarIntContCheck2) {
+            if (BiVarIntContHiLoCheck2) {
               meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
             }
             if ((Feature2ref %in% levels(factor(meta_ssgsea[,Feature2])))) {
@@ -4050,50 +4465,6 @@ server <- function(input, output, session) {
             SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature1,Feature2)
           }
         }
-        
-        #if (Feature1 %in% colnames(meta_ssgsea)) {
-        #  if (Feature1ref %in% meta_ssgsea[,Feature1]) {
-        #    if (input$BiVarIntNAcheck1 == TRUE) {
-        #      meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
-        #      meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature1] != "Inf" & meta_ssgsea[,Feature1] != "N/A" & meta_ssgsea[,Feature1] != "n/a"),]
-        #      meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
-        #    }
-        #    if (input$BiVarIntContCheck1 == TRUE) {
-        #      if (input$BiVarIntContHiLoCheck1 == TRUE) {
-        #        meta_ssgsea[,Feature1] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature1)])
-        #      }
-        #    }
-        #    if (Feature1ref %in% meta_ssgsea[,Feature1]) {
-        #      if (input$BiVarIntContCheck1 == FALSE) {
-        #        meta_ssgsea[,Feature1] <- factor(meta_ssgsea[,Feature1])
-        #        meta_ssgsea[,Feature1] <- relevel(meta_ssgsea[,Feature1], ref = Feature1ref)
-        #      }
-        #    }
-        #  }
-        #  Feature2 <- input$SurvivalFeatureBi2Inter
-        #  Feature2ref <- input$SurvFeatVariableBi2Inter
-        #  if (Feature2 %in% colnames(meta_ssgsea)) {
-        #    if (Feature2ref %in% meta_ssgsea[,Feature2]) {
-        #      if (input$BiVarIntNAcheck2 == TRUE) {
-        #        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
-        #        meta_ssgsea <- meta_ssgsea[which(meta_ssgsea[,Feature2] != "Inf" & meta_ssgsea[,Feature2] != "N/A" & meta_ssgsea[,Feature2] != "n/a"),]
-        #        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
-        #      }
-        #      if (input$BiVarIntContCheck2 == TRUE) {
-        #        if (input$BiVarIntContHiLoCheck2 == TRUE) {
-        #          meta_ssgsea[,Feature2] <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == Feature2)])
-        #        }
-        #      }
-        #      if (Feature2ref %in% meta_ssgsea[,Feature2]) {
-        #        if (input$BiVarIntContCheck2 == FALSE) {
-        #          meta_ssgsea[,Feature2] <- factor(meta_ssgsea[,Feature2])
-        #          meta_ssgsea[,Feature2] <- relevel(meta_ssgsea[,Feature2], ref = Feature2ref)
-        #        }
-        #      }
-        #    }
-        #  }
-        #  SubsetSurvData(meta_ssgsea,input$SurvivalType_time,input$SurvivalType_id,Feature1,Feature2)
-        #}
       })
       
       BiVarIntTab_react <- reactive({
@@ -4166,6 +4537,18 @@ server <- function(input, output, session) {
         subFeature <- input$subFeatureSelection
         show_pval <- input$ShowPval
         ShowConfInt <- input$ShowConfInt
+        yaxislim <- input$SurvYaxisLimit
+        if (isTruthy(yaxislim)) {
+          yaxislim <- gsub("[)(]","",yaxislim)
+          yaxislim1 <- as.numeric(strsplit(yaxislim,"-")[[1]][1])
+          yaxislim2 <- as.numeric(strsplit(yaxislim,"-")[[1]][2])
+          y_lim <- c(yaxislim1,yaxislim2)
+          if (any(c(is.na(y_lim)))) {
+            y_lim <- c(0,1)
+          }
+        } else {
+          y_lim <- c(0,1)
+        }
         if (Feature1 != Feature2) {
           if (input$SurvYearOrMonth == "Years") {
             xBreaks <- input$SurvXaxisBreaks * 365.25
@@ -4209,7 +4592,7 @@ server <- function(input, output, session) {
             }
             SurvPlot(fit,meta_ssgsea_sdf,PlotTitle,ylab = paste(SurvDateType,"Survival Probability"),
                      pval = show_pval,conf = ShowConfInt,legend = showLegend,median = showMedSurv,xlim = xaxlim,
-                     xScale = input$SurvYearOrMonth, xBreaks = xBreaks)
+                     xScale = input$SurvYearOrMonth, xBreaks = xBreaks,ylim = y_lim)
           }
         }
         
@@ -4313,7 +4696,6 @@ server <- function(input, output, session) {
           x_new <- ifelse(x %in% Feature,gsub("[[:punct:]]","_",x),x)
         })
         colnames(meta_ssgsea_sdf) <- new_col_names
-        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("[[:punct:]]","_",Feature)
         Feature <- gsub("[[:punct:]]","_",Feature)
         Feature <- sprintf(ifelse((grepl(" ", Feature) | !is.na(suppressWarnings(as.numeric(substring(Feature, 1, 1))))), "`%s`", "%s"), Feature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste(Feature,collapse = "+")))
@@ -4328,7 +4710,6 @@ server <- function(input, output, session) {
           x_new <- ifelse(x %in% Feature,gsub("[[:punct:]]","_",x),x)
         })
         colnames(meta_ssgsea_sdf) <- new_col_names
-        #colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == Feature)] <- gsub("[[:punct:]]","_",Feature)
         Feature <- gsub("[[:punct:]]","_",Feature)
         Feature <- sprintf(ifelse((grepl(" ", Feature) | !is.na(suppressWarnings(as.numeric(substring(Feature, 1, 1))))), "`%s`", "%s"), Feature)
         form <- as.formula(paste0("Surv(time,ID) ~ ",paste(Feature,collapse = "+")))
@@ -5786,7 +6167,13 @@ server <- function(input, output, session) {
         if (input$GeneSetTabs == 2) {
           scoreMethod <- "Gene Expression Score"
         }
-        if (input$GeneSetTabs != 2 & !(geneset_name %in% decon_score_cols)) {
+        if (input$GeneSetTabs == 4) {
+          scoreMethod <- "Expression Ratio"
+        }
+        if (input$GeneSetTabs == 5) {
+          scoreMethod <- "ssGSEA Score Difference"
+        }
+        if (input$GeneSetTabs != 2 & !(geneset_name %in% decon_score_cols) & input$GeneSetTabs != 4 & input$GeneSetTabs != 5) {
           scoreMethod <- paste(scoreMethod,"Score")
         }
         if ("Log x-axis" %in% LogChoice) {
@@ -5988,7 +6375,13 @@ server <- function(input, output, session) {
         if (input$GeneSetTabs == 2) {
           scoreMethod <- "Gene Expression Score"
         }
-        if (input$GeneSetTabs != 2 & !(GeneSet %in% decon_score_cols)) {
+        if (input$GeneSetTabs == 4) {
+          scoreMethod <- "Expression Ratio"
+        }
+        if (input$GeneSetTabs == 5) {
+          scoreMethod <- "ssGSEA Score Difference"
+        }
+        if (input$GeneSetTabs != 2 & !(GeneSet %in% decon_score_cols) & input$GeneSetTabs != 4 & input$GeneSetTabs != 5) {
           scoreMethod <- paste(scoreMethod,"Score")
         }
         
@@ -6024,14 +6417,14 @@ server <- function(input, output, session) {
       output$heatmap_error_message <- renderUI({
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        if (geneset_name %in% decon_score_cols() | input$GeneSetTabs == 2) {
+        if (geneset_name %in% decon_score_cols() | input$GeneSetTabs == 2 | input$GeneSetTabs == 4 | input$GeneSetTabs == 5) {
           p("Heatmap not available for Pre-Processed scores or single gene analysis", style = "color:red")
         }
       })
       output$heatmap_error_message2 <- renderUI({
         geneset <- gs_react()
         geneset_name <- names(geneset)
-        if (geneset_name %in% decon_score_cols() | input$GeneSetTabs == 2) {
+        if (geneset_name %in% decon_score_cols() | input$GeneSetTabs == 2 | input$GeneSetTabs == 4 | input$GeneSetTabs == 5) {
           p("Heatmap not available for Pre-Processed scores or single gene analysis", style = "color:red")
         }
       })
@@ -6058,6 +6451,7 @@ server <- function(input, output, session) {
           colAnn
         }
       })
+      
       Sheatmap_react  <- reactive({
         
         req(gs_react())
@@ -6069,7 +6463,11 @@ server <- function(input, output, session) {
             GeneSet <- names(geneset)
             if (!is.numeric(geneset[[1]])) {
               if (GeneSet %in% names(geneset)) {
-                heatgenes <- geneset[[GeneSet]]
+                if (is.list(geneset[[GeneSet]])) {
+                  heatgenes <- unlist(unname(geneset[[GeneSet]]))
+                } else {
+                  heatgenes <- geneset[[GeneSet]]
+                }
                 meta <- SboxplotReact()
                 expr_start <- exprSub()
                 samples <- meta[,1]
@@ -6192,7 +6590,13 @@ server <- function(input, output, session) {
         if (input$GeneSetTabs == 2) {
           scoreMethod <- "Gene Expression Score"
         }
-        if (input$GeneSetTabs != 2 & !(GeneSet %in% decon_score_cols)) {
+        if (input$GeneSetTabs == 4) {
+          scoreMethod <- "Expression Ratio"
+        }
+        if (input$GeneSetTabs == 5) {
+          scoreMethod <- "ssGSEA Score Difference"
+        }
+        if (input$GeneSetTabs != 2 & !(GeneSet %in% decon_score_cols) & input$GeneSetTabs != 4 & input$GeneSetTabs != 5) {
           scoreMethod <- paste(scoreMethod,"Score")
         }
         
@@ -6277,7 +6681,11 @@ server <- function(input, output, session) {
             GeneSet <- names(geneset)
             if (!is.numeric(geneset[[1]])) {
               if (GeneSet %in% names(geneset)) {
-                heatgenes <- geneset[[GeneSet]]
+                if (is.list(geneset[[GeneSet]])) {
+                  heatgenes <- unlist(unname(geneset[[GeneSet]]))
+                } else {
+                  heatgenes <- geneset[[GeneSet]]
+                }
                 meta <- FeatureStrat_df()
                 expr_start <- exprSub()
                 samples <- meta[,1]

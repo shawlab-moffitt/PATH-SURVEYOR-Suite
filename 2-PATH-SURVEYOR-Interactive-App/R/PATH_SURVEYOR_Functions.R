@@ -136,6 +136,8 @@ SubsetSurvData <- function(df,time,id,feat,feat2 = NULL) {
   SampleNameCol <- colnames(df)[1]
   if (is.null(feat2)) {
     df <- df[,c(SampleNameCol,time,id,feat)]
+    df[,time] <- as.numeric(df[,time])
+    df[,id] <- as.numeric(df[,id])
     if ("TopBottomCutP" %in% c(feat,feat2)) {
       df <- df[which(df$TopBottomCutP != "BetweenCutoff"),]
     }
@@ -239,7 +241,7 @@ SurvPlotExpl <- function(CutPlabel,surv_time_col,geneset_name,scoreMethod,metaco
   }
   
 }
-SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Years",xBreaks = 365.25) {
+SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,ylim,xlim,xScale = "Years",xBreaks = 365.25) {
   if (toupper(xScale) == "MONTHS") {
     xScale <- "d_m"
     xLabel <- "Months"
@@ -255,6 +257,7 @@ SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Ye
                                   break.time.by=xBreaks,
                                   xlab = xLabel,
                                   ylab = ylab,
+                                  ylim = ylim,
                                   submain = "Based on Kaplan-Meier estimates",
                                   caption = "created with survminer",
                                   pval = pval,
@@ -287,7 +290,11 @@ SurvPlot <- function(fit,df,title,ylab,pval,conf,legend,median,xlim,xScale = "Ye
     ggsurv$table$coordinates$limits$x <- c(0,xlim)
   }
   ggsurv$table <- ggsurv$table + theme_cleantable()
-  
+  ggsurv$plot <- ggsurv$plot + theme(
+    legend.key.height = unit(1.5, "cm"), # Adjust height (e.g., to 1.5 cm)
+    legend.spacing.y = unit(0.5, "cm")   # Adjust vertical spacing between legend items
+  )
+
   
   #ggsurv$table <- ggsurv$table +
   #  scale_y_discrete(labels = names(fit[["strata"]]))
