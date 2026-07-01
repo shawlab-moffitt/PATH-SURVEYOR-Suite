@@ -33,6 +33,7 @@ suppressPackageStartupMessages(library(glmnet))
 suppressPackageStartupMessages(library(svglite))
 suppressPackageStartupMessages(library(shinyjs))
 suppressPackageStartupMessages(library(broom.helpers))
+suppressPackageStartupMessages(library(estimate))
 
 suppressPackageStartupMessages(library(BiocManager))
 suppressPackageStartupMessages(library(GSVA))

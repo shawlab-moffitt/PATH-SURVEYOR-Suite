@@ -1,4 +1,4 @@
-version_id <- paste0("v2.0.20260624")
+version_id <- paste0("v2.0.20260701")
 
 # User Input -------------------------------------------------------------------
 
@@ -101,85 +101,95 @@ login_tab <- tabPanel(
 
 ## Data Input Tab --------------------------------------------------------------
 #if (!FileProvided) {
-DataInput_tab <- tabPanel("Data Input",
-                          fluidPage(
-                            sidebarPanel(
-                              width = 3,
-                              id = "DataInputPanel",
-                              p(),
-                              textInput("UserProjectName","Project Name:", value = "Survival Analysis"),
-                              uiOutput("rendExprFileInput"),
-                              fluidRow(
-                                column(5, style = 'padding-right:2px;margin-top:-30px;',
-                                       checkboxInput("LogExprFile","Log2 Expression", value = F)
-                                ),
-                                column(7, style = 'padding-left:2px;margin-top:-30px;',
-                                       checkboxInput("ScaleNormExprFile","Scale Normalize Expression", value = F)
-                                )
-                              ),
-                              uiOutput("rendClinFileInput"),
-                              fluidRow(
-                                column(12, style = 'margin-top:-15px;',
-                                       actionButton("UseExpData","Load Example Data"),
-                                       tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/PATH_SURVEYOR_App/", "Download example data", target='_blank'),
-                                )
-                              ),
-                              shiny::hr(),
-                              uiOutput("rendClinParamHeader"),
-                              h4("Clinical Parameters"),
-                              fluidRow(
-                                column(12, style = 'margin-top:-20px;',
-                                       radioButtons("ParamChoice","", choices = c("Define Parameters","Upload Parameter File"), inline = T)
-                                )
-                              ),
-                              fluidRow(
-                                column(8,
-                                       uiOutput("rendClinParamFileInput"),
-                                       uiOutput("rendSurvTimeColSelect"),
-                                       uiOutput("rendSurvIDColSelect")
-                                ),
-                                column(4,
-                                       uiOutput("rendSurvTimeUnits")
-                                )
-                              )
-                            ),
-                            mainPanel(
-                              uiOutput("rendExprFilePrevHeader"),
-                              div(DT::dataTableOutput("ExprFile_Preview"), style = "font-size:10px"),
-                              uiOutput("rendClinFilePrevHeader"),
-                              div(DT::dataTableOutput("ClinFile_Preview"), style = "font-size:10px"),
-                              uiOutput("rendParamFilePrevHeader"),
-                              div(DT::dataTableOutput("ClinParamFile_Preview"), style = "font-size:10px")
-                            ),
-                            tagList(
-                              tags$head(
-                                tags$style(
-                                  HTML("
-                                     .info_box {
-                                     width: auto;
-                                     height: auto;
-                                     color: #000000;
-                                     background-color: #f5f5f5;
-                                     padding: 3px 8px;
-                                     font-size: 12px;
-                                     z-index : 9999;
-                                     }",
-                                       glue::glue("#{'AppVersion'} {{
-                                                position: {'fixed'};
-                                                top: 0;
-                                                right: 0;
-                                                }}")
-                                  )
-                                )
-                              ),
-                              div(id = "AppVersion", class = "info_box", version_id)
-                            )
-                          )
-)
+#DataInput_tab <- tabPanel("Data Input",
+#                          fluidPage(
+#                            sidebarPanel(
+#                              width = 3,
+#                              id = "DataInputPanel",
+#                              p(),
+#                              textInput("UserProjectName","Project Name:", value = "Survival Analysis"),
+#                              uiOutput("rendExprFileInput"),
+#                              fluidRow(
+#                                column(5, style = 'padding-right:2px;margin-top:-30px;',
+#                                       checkboxInput("LogExprFile","Log2 Expression", value = F)
+#                                ),
+#                                column(7, style = 'padding-left:2px;margin-top:-30px;',
+#                                       checkboxInput("ScaleNormExprFile","Scale Normalize Expression", value = F)
+#                                )
+#                              ),
+#                              radioButtons(
+#                                inputId = "purity_adjustment",
+#                                label = "Purity-based expression adjustment",
+#                                choices = c(
+#                                  "No adjustment" = "none",
+#                                  "Tumor-cell signal: divide by tumor purity" = "tumor",
+#                                  "Immune/stromal signal: divide by estimated non-tumor fraction" = "immune_stromal"
+#                                ),
+#                                selected = "none"
+#                              ),
+#                              uiOutput("rendClinFileInput"),
+#                              fluidRow(
+#                                column(12, style = 'margin-top:-15px;',
+#                                       actionButton("UseExpData","Load Example Data"),
+#                                       tags$a(href="http://shawlab.science/shiny/PATH_SURVEYOR_ExampleData/PATH_SURVEYOR_App/", "Download example data", target='_blank'),
+#                                )
+#                              ),
+#                              shiny::hr(),
+#                              uiOutput("rendClinParamHeader"),
+#                              h4("Clinical Parameters"),
+#                              fluidRow(
+#                                column(12, style = 'margin-top:-20px;',
+#                                       radioButtons("ParamChoice","", choices = c("Define Parameters","Upload Parameter File"), inline = T)
+#                                )
+#                              ),
+#                              fluidRow(
+#                                column(8,
+#                                       uiOutput("rendClinParamFileInput"),
+#                                       uiOutput("rendSurvTimeColSelect"),
+#                                       uiOutput("rendSurvIDColSelect")
+#                                ),
+#                                column(4,
+#                                       uiOutput("rendSurvTimeUnits")
+#                                )
+#                              )
+#                            ),
+#                            mainPanel(
+#                              uiOutput("rendExprFilePrevHeader"),
+#                              div(DT::dataTableOutput("ExprFile_Preview"), style = "font-size:10px"),
+#                              uiOutput("rendClinFilePrevHeader"),
+#                              div(DT::dataTableOutput("ClinFile_Preview"), style = "font-size:10px"),
+#                              uiOutput("rendParamFilePrevHeader"),
+#                              div(DT::dataTableOutput("ClinParamFile_Preview"), style = "font-size:10px")
+#                            ),
+#                            tagList(
+#                              tags$head(
+#                                tags$style(
+#                                  HTML("
+#                                     .info_box {
+#                                     width: auto;
+#                                     height: auto;
+#                                     color: #000000;
+#                                     background-color: #f5f5f5;
+#                                     padding: 3px 8px;
+#                                     font-size: 12px;
+#                                     z-index : 9999;
+#                                     }",
+#                                       glue::glue("#{'AppVersion'} {{
+#                                                position: {'fixed'};
+#                                                top: 0;
+#                                                right: 0;
+#                                                }}")
+#                                  )
+#                                )
+#                              ),
+#                              div(id = "AppVersion", class = "info_box", version_id)
+#                            )
+#                          )
+#)
 #}
 
 ## Data Subset Tab -------------------------------------------------------------
-DataInput_tab <- tabPanel("Subset Data",
+DataInput_tab <- tabPanel("Data Input",
                           fluidPage(
                             sidebarPanel(
                               width = 3,
@@ -194,6 +204,21 @@ DataInput_tab <- tabPanel("Subset Data",
                                 column(7, style = 'padding-left:2px;margin-top:-30px;',
                                        checkboxInput("ScaleNormExprFile","Scale Normalize Expression", value = F)
                                 )
+                              ),
+                              radioButtons(
+                                inputId = "purity_adjustment",
+                                label = "Adjust expression for estimated compartment fraction",
+                                choiceNames = list(
+                                  "None: use original expression",
+                                  tags$span("Tumor-associated signal:", tags$br(), "expression / tumor purity"),
+                                  tags$span("Immune/stromal-associated signal:", tags$br(), "expression / (1 - tumor purity)")
+                                ),
+                                choiceValues = c(
+                                  "none",
+                                  "tumor",
+                                  "immune_stromal"
+                                ),
+                                selected = "none"
                               ),
                               uiOutput("rendClinFileInput"),
                               fluidRow(
@@ -1737,6 +1762,21 @@ server <- function(input, output, session) {
         
       })
       
+      #observe({
+      #  
+      #  meta <- meta_react()
+      #  metaP <- metaP_react()
+      #  expr_raw <- expr_raw()
+      #  expr <- expr_react()
+      #  pur_adj <- input$purity_adjustment
+      #  LogExprFile <- input$LogExprFile
+      #  ScaleNormExprFile <- input$ScaleNormExprFile
+      #  estimateScore_react <- estimateScore_react()
+      #  save(list = ls(), file = "tumor_purr_test.RData", envir = environment())
+      #  
+      #})
+      
+      
       observeEvent(input$LogExprFile | input$ScaleNormExprFile,{
         req(input$LogExprFile)
         req(input$ScaleNormExprFile)
@@ -1777,6 +1817,54 @@ server <- function(input, output, session) {
           expr_react(expr)
         }
       })
+      
+      estimateScore_react <- reactiveVal()
+      observeEvent(input$purity_adjustment, {
+        req(input$purity_adjustment)
+        req(expr_raw())
+        expr <- expr_raw()
+        pur_adj <- input$purity_adjustment
+        isLogged <- input$LogExprFile
+        scaleNorm <- input$ScaleNormExprFile
+        if (isLogged) {
+          expr <- log2(expr + 0.00001)
+        }
+        if (scaleNorm) {
+          expr_col <- colnames(expr)
+          expr = apply(expr, 1, scale)
+          expr = apply(expr, 1, rev)
+          colnames(expr) <- expr_col
+        }
+        #save(list = ls(), file = "estimateScore_react.RData", envir = environment())
+        if (pur_adj == "none") {
+          expr_react(expr)
+        } else {
+          scores_common_genes <- estimate_score_df(expr,
+                                                   gene_col = NULL,
+                                                   log_input = isLogged,
+                                                   log_pseudocount = 0.00001)
+          estimateScore_react(scores_common_genes)
+          purity  <- setNames(scores_common_genes$purity, scores_common_genes$sample)
+          if (pur_adj == "tumor") {
+            expr_corrected  <- correct_for_purity(expr,
+                                                  purity,
+                                                  mode = "tumor",
+                                                  log_input = isLogged,
+                                                  log_pseudocount = 0.00001)
+          } else if (pur_adj == "immune_stromal") {
+            expr_corrected  <- correct_for_purity(expr,
+                                                  purity,
+                                                  mode = "immune",
+                                                  log_input = isLogged,
+                                                  log_pseudocount = 0.00001)
+          }
+          expr_react(expr_corrected)
+        }
+        
+      })
+      
+      
+      
       
       metacol_sampletype <- reactive({
         req(metaP_react())
